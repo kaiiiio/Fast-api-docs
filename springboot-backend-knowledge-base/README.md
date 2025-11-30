@@ -85,41 +85,38 @@ A comprehensive knowledge base for building production-grade Spring Boot backend
 - [Encrypting PII at Rest](09_authentication_and_security/encrypting_pii_at_rest.md)
 - [GDPR Compliance Design](09_authentication_and_security/gdpr_compliance_design.md)
 
-### 10 - Testing
-- [Unit Testing Services](10_testing/unit_testing_services.md)
-- [Integration Testing with Testcontainers](10_testing/integration_testing_with_testcontainers.md)
-- [Mocking External APIs and AI](10_testing/mocking_external_apis_and_ai.md)
-- [Testing Repositories](10_testing/testing_repositories.md)
-- [JUnit Fixtures and Setup](10_testing/junit_fixtures_and_setup.md)
-- [Contract Testing for APIs](10_testing/contract_testing_for_apis.md)
+### 10 - Real-Time and Sockets
+- [Spring Boot WebSockets: STOMP, SockJS](10_real_time_and_sockets/01_spring_websockets_stomp.md)
+- [Raw WebSockets vs STOMP](10_real_time_and_sockets/02_raw_websockets_vs_stomp.md)
+- [Securing WebSockets (Token Auth)](10_real_time_and_sockets/03_securing_websockets.md)
+- [Scaling with Message Broker (RabbitMQ/Redis)](10_real_time_and_sockets/04_scaling_with_message_broker.md)
+- [RSocket: Reactive Streams](10_real_time_and_sockets/05_rsocket_reactive_streams.md)
+- [Testing WebSockets](10_real_time_and_sockets/06_testing_websockets.md)
 
-### 11 - Observability
-- [Structured Logging with SLF4J](11_observability/structured_logging_with_slf4j.md)
-- [Database Query Logging](11_observability/database_query_logging.md)
-- [Metrics with Micrometer](11_observability/metrics_with_micrometer.md)
-- [Distributed Tracing with Sleuth](11_observability/distributed_tracing_with_sleuth.md)
-- [Alerting on Data Pipeline Failures](11_observability/alerting_on_data_pipeline_failures.md)
+### 11 - Testing
+- [Unit Testing Services](11_testing/unit_testing_services.md)
+- [Integration Testing with Testcontainers](11_testing/integration_testing_with_testcontainers.md)
+- [Mocking External APIs and AI](11_testing/mocking_external_apis_and_ai.md)
+- [Testing Repositories](11_testing/testing_repositories.md)
+- [JUnit Fixtures and Setup](11_testing/junit_fixtures_and_setup.md)
+- [Contract Testing for APIs](11_testing/contract_testing_for_apis.md)
 
-### 12 - Deployment and Performance
-- [Dockerizing Spring Boot](12_deployment_and_performance/dockerizing_spring_boot.md)
-- [Tuning Database Connection Pool](12_deployment_and_performance/tuning_database_connection_pool.md)
-- [Read Replicas for Scaling](12_deployment_and_performance/read_replicas_for_scaling.md)
-- [Health Checks with Actuator](12_deployment_and_performance/health_checks_with_actuator.md)
-- [Load Testing with JMeter](12_deployment_and_performance/load_testing_with_jmeter.md)
+### 12 - Observability
+- [Structured Logging with SLF4J](12_observability/structured_logging_with_slf4j.md)
+- [CQRS for Read Heavy Systems](14_system_design_patterns/cqrs_for_read_heavy_systems.md)
 
-### 13 - System Design Patterns
-- [Workflow State Machines](13_system_design_patterns/workflow_state_machines.md)
-- [Event Sourcing vs CRUD](13_system_design_patterns/event_sourcing_vs_crud.md)
-- [Outbox Pattern for Transactional Events](13_system_design_patterns/outbox_pattern_for_transactional_events.md)
-- [Saga Pattern for Distributed Transactions](13_system_design_patterns/saga_pattern_for_distributed_tx.md)
-- [CQRS for Read Heavy Systems](13_system_design_patterns/cqrs_for_read_heavy_systems.md)
+### 15 - Interview Mastery
+- [How Spring Boot Handles Concurrency](15_interview_mastery/how_spring_boot_handles_concurrency.md)
+- [Explain Your Data Model for an AI Job Platform](15_interview_mastery/explain_your_data_model_for_an_ai_job_platform.md)
+- [Design a Resume Parsing Pipeline](15_interview_mastery/design_a_resume_parsing_pipeline.md)
+- [How Would You Debug a Slow Query](15_interview_mastery/how_would_you_debug_a_slow_query.md)
+- [Tradeoffs: SQL vs MongoDB for AI Apps](15_interview_mastery/tradeoffs_sql_vs_mongodb_for_ai_apps.md)
 
-### 14 - Interview Mastery
-- [How Spring Boot Handles Concurrency](14_interview_mastery/how_spring_boot_handles_concurrency.md)
-- [Explain Your Data Model for an AI Job Platform](14_interview_mastery/explain_your_data_model_for_an_ai_job_platform.md)
-- [Design a Resume Parsing Pipeline](14_interview_mastery/design_a_resume_parsing_pipeline.md)
-- [How Would You Debug a Slow Query](14_interview_mastery/how_would_you_debug_a_slow_query.md)
-- [Tradeoffs: SQL vs MongoDB for AI Apps](14_interview_mastery/tradeoffs_sql_vs_mongodb_for_ai_apps.md)
+### 16 - File Storage and Media
+- [File Upload and Download Mastery](16_file_storage_and_media/01_file_upload_download.md)
+- [S3 Integration (AWS SDK v2)](16_file_storage_and_media/02_s3_integration.md)
+- [Image Processing (Thumbnailator)](16_file_storage_and_media/03_image_processing.md)
+- [Video Streaming (Range Requests)](16_file_storage_and_media/04_video_streaming.md)
 
 ## 🎯 Learning Path
 

@@ -1,0 +1,25 @@
+{
+    "nodes": [
+        "A",
+        "B",
+        "C"
+    ],
+    "matrix": [
+        [
+            0,
+            1,
+            1
+        ],
+        [
+            1,
+            0,
+            0
+        ],
+        [
+            1,
+            0,
+            0
+        ]
+    ],
+    "interpretation": "Row A has 1s at Col B and Col C. A is connected to B and C."
+}

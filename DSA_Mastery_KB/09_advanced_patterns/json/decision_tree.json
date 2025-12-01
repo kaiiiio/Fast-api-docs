@@ -1,0 +1,32 @@
+{
+    "root": "Start",
+    "children": [
+        {
+            "choice": "Take 1",
+            "children": [
+                {
+                    "choice": "Take 2",
+                    "result": "[1, 2]"
+                },
+                {
+                    "choice": "Skip 2",
+                    "result": "[1]"
+                }
+            ]
+        },
+        {
+            "choice": "Skip 1",
+            "children": [
+                {
+                    "choice": "Take 2",
+                    "result": "[2]"
+                },
+                {
+                    "choice": "Skip 2",
+                    "result": "[]"
+                }
+            ]
+        }
+    ],
+    "note": "Backtracking explores this tree Depth-First."
+}

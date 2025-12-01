@@ -1,0 +1,30 @@
+{
+    "array": [
+        10,
+        20,
+        5,
+        30,
+        40
+    ],
+    "mapping": {
+        "index_0": {
+            "val": 10,
+            "children": [
+                1,
+                2
+            ]
+        },
+        "index_1": {
+            "val": 20,
+            "children": [
+                3,
+                4
+            ]
+        },
+        "index_2": {
+            "val": 5,
+            "children": []
+        }
+    },
+    "note": "Index 0 is Root. Index 1 is Left Child of 0. Index 2 is Right Child of 0."
+}

@@ -1,0 +1,9 @@
+{
+    "items": [
+        "(",
+        "{",
+        "["
+    ],
+    "top_index": 2,
+    "operation": "Push '['"
+}

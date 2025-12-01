@@ -1,0 +1,27 @@
+{
+    "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4
+    ],
+    "parents": [
+        0,
+        0,
+        0,
+        3,
+        3
+    ],
+    "interpretation": {
+        "0": "Root of Set A",
+        "1": "Child of 0",
+        "2": "Child of 0",
+        "3": "Root of Set B",
+        "4": "Child of 3"
+    },
+    "sets": [
+        "{0, 1, 2}",
+        "{3, 4}"
+    ]
+}

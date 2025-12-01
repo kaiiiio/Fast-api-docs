@@ -1,0 +1,16 @@
+{
+    "root": {
+        "val": 10,
+        "left": {
+            "val": 5,
+            "left": null,
+            "right": null
+        },
+        "right": {
+            "val": 15,
+            "left": null,
+            "right": null
+        }
+    },
+    "property": "Left < Root < Right"
+}

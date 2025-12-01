@@ -1,0 +1,9 @@
+{
+    "map": {
+        "A": "Node(A)",
+        "B": "Node(B)"
+    },
+    "list": "Head <-> Node(A) <-> Node(B) <-> Tail",
+    "capacity": 2,
+    "state": "Full"
+}

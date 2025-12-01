@@ -1,0 +1,17 @@
+{
+    "A": [
+        "B",
+        "C"
+    ],
+    "B": [
+        "A",
+        "D"
+    ],
+    "C": [
+        "A"
+    ],
+    "D": [
+        "B"
+    ],
+    "note": "Keys are Nodes. Values are Lists of Neighbors."
+}

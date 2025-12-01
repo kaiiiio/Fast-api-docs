@@ -1,0 +1,11 @@
+{
+    "array": [
+        1,
+        3,
+        2,
+        4
+    ],
+    "memory_layout": "Contiguous",
+    "access_time": "O(1)",
+    "insert_time": "O(N)"
+}

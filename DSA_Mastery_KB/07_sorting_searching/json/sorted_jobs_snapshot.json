@@ -1,0 +1,17 @@
+[
+    {
+        "jobId": "J102",
+        "score": 0.95,
+        "title": "Senior Dev"
+    },
+    {
+        "jobId": "J505",
+        "score": 0.88,
+        "title": "Mid Dev"
+    },
+    {
+        "jobId": "J001",
+        "score": 0.72,
+        "title": "Junior Dev"
+    }
+]

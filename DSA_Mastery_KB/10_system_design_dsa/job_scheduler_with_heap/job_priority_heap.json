@@ -1,0 +1,14 @@
+[
+    {
+        "priority": 1,
+        "job": "Security Patch"
+    },
+    {
+        "priority": 5,
+        "job": "Email Report"
+    },
+    {
+        "priority": 10,
+        "job": "Cleanup Logs"
+    }
+]

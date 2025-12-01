@@ -1,0 +1,16 @@
+{
+    "window": {
+        "left": 0,
+        "right": 2,
+        "current_sum": 6,
+        "max_sum": 6
+    },
+    "array": [
+        1,
+        2,
+        3,
+        4,
+        5
+    ],
+    "action": "Expand Right"
+}

@@ -1,0 +1,20 @@
+{
+    "term": "fox",
+    "postings_list": [
+        {
+            "doc_id": 1,
+            "frequency": 1,
+            "positions": [
+                3
+            ]
+        },
+        {
+            "doc_id": 3,
+            "frequency": 1,
+            "positions": [
+                3
+            ]
+        }
+    ],
+    "note": "This allows O(1) lookup to find ALL documents containing 'fox'."
+}

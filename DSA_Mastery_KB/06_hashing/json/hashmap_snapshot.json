@@ -1,0 +1,16 @@
+{
+    "buckets": {
+        "1": [
+            "John",
+            "Jane"
+        ],
+        "2": [
+            "Bob"
+        ],
+        "5": [
+            "Alice"
+        ]
+    },
+    "load_factor": 0.75,
+    "capacity": 16
+}

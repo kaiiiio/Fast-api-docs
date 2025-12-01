@@ -499,6 +499,76 @@ await db.query(`
 7. **Use RETURNING**: When you need updated data back
 8. **Validate Constraints**: Check before updating
 
+## ORM Equivalents: Prisma and TypeORM
+
+### Prisma Syntax
+
+```javascript
+// Update single row
+const user = await prisma.user.update({
+    where: { id: 1 },
+    data: {
+        email: 'newemail@example.com',
+        name: 'John Smith'
+    }
+});
+
+// Update multiple rows
+const result = await prisma.user.updateMany({
+    where: { is_active: true },
+    data: {
+        last_login: new Date()
+    }
+});
+
+// Increment/decrement
+await prisma.post.update({
+    where: { id: 123 },
+    data: {
+        view_count: { increment: 1 }
+    }
+});
+
+// Update with calculations
+await prisma.product.update({
+    where: { id: 1 },
+    data: {
+        stock_quantity: { decrement: 5 }
+    }
+});
+```
+
+### TypeORM Syntax
+
+```typescript
+// Update single row
+const user = await userRepository.findOne({ where: { id: 1 } });
+user.email = 'newemail@example.com';
+user.name = 'John Smith';
+await userRepository.save(user);
+
+// Update multiple rows
+await userRepository.update(
+    { is_active: true },
+    { last_login: new Date() }
+);
+
+// Increment/decrement
+await userRepository.increment({ id: 123 }, 'view_count', 1);
+await userRepository.decrement({ id: 1 }, 'stock_quantity', 5);
+
+// Update with query builder
+await userRepository
+    .createQueryBuilder()
+    .update(User)
+    .set({
+        email: 'newemail@example.com',
+        updated_at: () => 'CURRENT_TIMESTAMP'
+    })
+    .where('id = :id', { id: 1 })
+    .execute();
+```
+
 ## Summary
 
 **UPDATE Statement Essentials:**

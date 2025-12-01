@@ -443,6 +443,64 @@ GROUP BY u.id, u.name;
 5. **Index Join Columns**: For performance
 6. **Be Explicit**: Use LEFT JOIN when you need all left table rows
 
+## ORM Equivalents: Prisma and TypeORM
+
+### Prisma Syntax
+
+```javascript
+// LEFT JOIN with include
+const usersWithOrders = await prisma.user.findMany({
+    include: {
+        orders: true  // LEFT JOIN - all users, even without orders
+    }
+});
+
+// Find users without orders
+const usersWithoutOrders = await prisma.user.findMany({
+    where: {
+        orders: {
+            none: {}  // No orders
+        }
+    }
+});
+
+// LEFT JOIN with conditions
+const usersWithRecentOrders = await prisma.user.findMany({
+    include: {
+        orders: {
+            where: {
+                created_at: {
+                    gte: new Date('2024-01-01')
+                }
+            }
+        }
+    }
+});
+```
+
+### TypeORM Syntax
+
+```typescript
+// LEFT JOIN with relations
+const usersWithOrders = await userRepository.find({
+    relations: ['orders']  // LEFT JOIN orders
+});
+
+// Query builder for explicit LEFT JOIN
+const usersWithOrders = await userRepository
+    .createQueryBuilder('user')
+    .leftJoin('user.orders', 'order')
+    .select(['user.id', 'user.email', 'order.id', 'order.total'])
+    .getMany();
+
+// Find users without orders
+const usersWithoutOrders = await userRepository
+    .createQueryBuilder('user')
+    .leftJoin('user.orders', 'order')
+    .where('order.id IS NULL')
+    .getMany();
+```
+
 ## Summary
 
 **LEFT JOIN Essentials:**

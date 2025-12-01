@@ -443,6 +443,83 @@ INNER JOIN orders o ON u.id = o.user_id;
 - You need all rows from both tables (use FULL JOIN)
 - You want to find records without relationships (use LEFT JOIN with WHERE IS NULL)
 
+## ORM Equivalents: Prisma and TypeORM
+
+### Prisma Syntax
+
+```javascript
+// INNER JOIN with include
+const usersWithOrders = await prisma.user.findMany({
+    include: {
+        orders: true  // INNER JOIN - only users with orders
+    }
+});
+
+// Select specific fields
+const usersWithOrders = await prisma.user.findMany({
+    select: {
+        id: true,
+        email: true,
+        name: true,
+        orders: {
+            select: {
+                id: true,
+                total: true,
+                created_at: true
+            }
+        }
+    },
+    where: {
+        orders: {
+            some: {}  // Only users who have orders
+        }
+    }
+});
+
+// Multiple joins
+const orders = await prisma.order.findMany({
+    include: {
+        user: true,      // INNER JOIN users
+        items: {
+            include: {
+                product: true  // INNER JOIN products
+            }
+        }
+    }
+});
+```
+
+### TypeORM Syntax
+
+```typescript
+// INNER JOIN with relations
+const usersWithOrders = await userRepository.find({
+    relations: ['orders']  // INNER JOIN orders
+});
+
+// Query builder for explicit joins
+const usersWithOrders = await userRepository
+    .createQueryBuilder('user')
+    .innerJoin('user.orders', 'order')
+    .select(['user.id', 'user.email', 'user.name', 'order.id', 'order.total'])
+    .getMany();
+
+// Multiple joins
+const orders = await orderRepository
+    .createQueryBuilder('order')
+    .innerJoin('order.user', 'user')
+    .innerJoin('order.items', 'item')
+    .innerJoin('item.product', 'product')
+    .select([
+        'order.id',
+        'order.total',
+        'user.email',
+        'item.quantity',
+        'product.name'
+    ])
+    .getMany();
+```
+
 ## Summary
 
 **INNER JOIN Essentials:**

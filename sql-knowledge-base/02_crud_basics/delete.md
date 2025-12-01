@@ -482,6 +482,53 @@ CREATE VIEW active_users AS
 SELECT * FROM users WHERE deleted_at IS NULL;
 ```
 
+## ORM Equivalents: Prisma and TypeORM
+
+### Prisma Syntax
+
+```javascript
+// Delete single row
+await prisma.user.delete({
+    where: { id: 1 }
+});
+
+// Delete multiple rows
+await prisma.user.deleteMany({
+    where: { is_active: false }
+});
+
+// Delete with relations (cascade)
+await prisma.user.delete({
+    where: { id: 1 },
+    include: {
+        orders: true  // Also deletes related orders if cascade
+    }
+});
+```
+
+### TypeORM Syntax
+
+```typescript
+// Delete single row
+await userRepository.delete(1);
+
+// Delete multiple rows
+await userRepository.delete({ is_active: false });
+
+// Delete with query builder
+await userRepository
+    .createQueryBuilder()
+    .delete()
+    .from(User)
+    .where('id = :id', { id: 1 })
+    .execute();
+
+// Soft delete (if implemented)
+const user = await userRepository.findOne({ where: { id: 1 } });
+user.deleted_at = new Date();
+await userRepository.save(user);
+```
+
 ## Summary
 
 **DELETE Statement Essentials:**

@@ -570,6 +570,111 @@ SELECT * FROM users WHERE LOWER(email) = LOWER('John@Example.com');
 **Key Takeaway:**
 SELECT is the foundation of data retrieval. Master filtering, sorting, and limiting to write efficient queries. Always be explicit about what columns you need and filter data as early as possible.
 
+## ORM Equivalents: Prisma and TypeORM
+
+### Prisma Syntax
+
+```javascript
+// Select all columns
+const users = await prisma.user.findMany();
+
+// Select specific columns
+const users = await prisma.user.findMany({
+    select: {
+        email: true,
+        name: true
+    }
+});
+
+// WHERE clause
+const user = await prisma.user.findUnique({
+    where: { id: 1 }
+});
+
+const activeUsers = await prisma.user.findMany({
+    where: {
+        is_active: true,
+        created_at: {
+            gte: new Date('2024-01-01'),
+            lt: new Date('2025-01-01')
+        }
+    }
+});
+
+// ORDER BY
+const users = await prisma.user.findMany({
+    orderBy: {
+        created_at: 'desc'
+    }
+});
+
+// LIMIT and OFFSET (pagination)
+const users = await prisma.user.findMany({
+    skip: 20,  // OFFSET
+    take: 10,   // LIMIT
+    orderBy: {
+        created_at: 'desc'
+    }
+});
+
+// DISTINCT
+const domains = await prisma.user.findMany({
+    select: {
+        email: true
+    },
+    distinct: ['email']
+});
+```
+
+### TypeORM Syntax
+
+```typescript
+// Select all columns
+const users = await userRepository.find();
+
+// Select specific columns
+const users = await userRepository.find({
+    select: ['email', 'name']
+});
+
+// WHERE clause
+const user = await userRepository.findOne({
+    where: { id: 1 }
+});
+
+const activeUsers = await userRepository.find({
+    where: {
+        is_active: true,
+        created_at: MoreThanOrEqual(new Date('2024-01-01'))
+    }
+});
+
+// ORDER BY
+const users = await userRepository.find({
+    order: {
+        created_at: 'DESC'
+    }
+});
+
+// LIMIT and OFFSET
+const users = await userRepository.find({
+    skip: 20,  // OFFSET
+    take: 10,   // LIMIT
+    order: {
+        created_at: 'DESC'
+    }
+});
+
+// Query Builder for complex queries
+const users = await userRepository
+    .createQueryBuilder('user')
+    .where('user.is_active = :isActive', { isActive: true })
+    .orderBy('user.created_at', 'DESC')
+    .skip(20)
+    .take(10)
+    .getMany();
+```
+
 **Next Steps:**
 - Learn [INSERT](../02_crud_basics/insert.md) to add data
 - Master [WHERE Clauses](../03_querying_deep_dive/where_clauses.md) for advanced filtering

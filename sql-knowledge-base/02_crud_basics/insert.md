@@ -464,6 +464,91 @@ COMMIT;
 6. **Use RETURNING**: When you need the inserted data
 7. **Consider Performance**: Use COPY for very large datasets
 
+## ORM Equivalents: Prisma and TypeORM
+
+### Prisma Syntax
+
+```javascript
+// Insert single row
+const user = await prisma.user.create({
+    data: {
+        email: 'john@example.com',
+        name: 'John Doe'
+    }
+});
+
+// Insert multiple rows
+const users = await prisma.user.createMany({
+    data: [
+        { email: 'alice@example.com', name: 'Alice Brown' },
+        { email: 'bob@example.com', name: 'Bob Johnson' },
+        { email: 'charlie@example.com', name: 'Charlie Wilson' }
+    ]
+});
+
+// Upsert (INSERT ... ON CONFLICT)
+const user = await prisma.user.upsert({
+    where: { email: 'john@example.com' },
+    update: { name: 'John Updated' },
+    create: {
+        email: 'john@example.com',
+        name: 'John Doe'
+    }
+});
+
+// Insert with relations
+const order = await prisma.order.create({
+    data: {
+        user_id: 1,
+        total: 99.99,
+        items: {
+            create: [
+                { product_id: 1, quantity: 2, price: 49.99 },
+                { product_id: 2, quantity: 1, price: 29.99 }
+            ]
+        }
+    }
+});
+```
+
+### TypeORM Syntax
+
+```typescript
+// Insert single row
+const user = userRepository.create({
+    email: 'john@example.com',
+    name: 'John Doe'
+});
+await userRepository.save(user);
+
+// Insert multiple rows
+const users = userRepository.create([
+    { email: 'alice@example.com', name: 'Alice Brown' },
+    { email: 'bob@example.com', name: 'Bob Johnson' }
+]);
+await userRepository.save(users);
+
+// Insert with query builder
+await userRepository
+    .createQueryBuilder()
+    .insert()
+    .into(User)
+    .values([
+        { email: 'alice@example.com', name: 'Alice Brown' },
+        { email: 'bob@example.com', name: 'Bob Johnson' }
+    ])
+    .execute();
+
+// Upsert (PostgreSQL)
+await userRepository
+    .createQueryBuilder()
+    .insert()
+    .into(User)
+    .values({ email: 'john@example.com', name: 'John Doe' })
+    .orUpdate(['name'], ['email'])
+    .execute();
+```
+
 ## Summary
 
 **INSERT Statement Essentials:**

@@ -1,0 +1,16 @@
+{
+    "key": "rate_limit:user_123",
+    "type": "Sorted Set (ZSET)",
+    "values": [
+        {
+            "timestamp": 1670000001,
+            "member": "req_id_1"
+        },
+        {
+            "timestamp": 1670000002,
+            "member": "req_id_2"
+        }
+    ],
+    "command": "ZREMRANGEBYSCORE key 0 (now - window)",
+    "note": "Redis ZSETs are perfect for Sliding Window Logs."
+}

@@ -1,0 +1,13 @@
+{
+    "capacity": 3,
+    "map": {
+        "A": "Node(A)",
+        "B": "Node(B)",
+        "C": "Node(C)"
+    },
+    "list": "Head <-> A <-> B <-> C <-> Tail",
+    "status": {
+        "LRU": "A (Left side)",
+        "MRU": "C (Right side)"
+    }
+}

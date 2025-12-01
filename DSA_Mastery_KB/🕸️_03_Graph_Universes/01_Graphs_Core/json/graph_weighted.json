@@ -1,0 +1,19 @@
+{
+    "A": [
+        {
+            "node": "B",
+            "weight": 5
+        },
+        {
+            "node": "C",
+            "weight": 10
+        }
+    ],
+    "B": [
+        {
+            "node": "A",
+            "weight": 5
+        }
+    ],
+    "note": "For weighted graphs, store Objects instead of Strings."
+}

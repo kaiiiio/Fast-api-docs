@@ -1,0 +1,21 @@
+{
+    "function": "factorial(3)",
+    "stack_frames": [
+        {
+            "id": 1,
+            "n": 3,
+            "status": "Waiting for factorial(2)"
+        },
+        {
+            "id": 2,
+            "n": 2,
+            "status": "Waiting for factorial(1)"
+        },
+        {
+            "id": 3,
+            "n": 1,
+            "status": "Active (Base Case)"
+        }
+    ],
+    "note": "Stack grows UP. Frame 3 is on TOP."
+}

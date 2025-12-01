@@ -1,0 +1,16 @@
+{
+    "head": {
+        "address": "0x100",
+        "val": 1,
+        "next": {
+            "address": "0x500",
+            "val": 2,
+            "next": {
+                "address": "0x200",
+                "val": 3,
+                "next": null
+            }
+        }
+    },
+    "note": "Nodes are SCATTERED in Heap memory (0x100, 0x500, 0x200). Unlike Arrays, they are NOT contiguous."
+}

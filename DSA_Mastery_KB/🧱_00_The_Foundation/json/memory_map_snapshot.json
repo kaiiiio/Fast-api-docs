@@ -1,0 +1,25 @@
+{
+  "stack": [
+    {
+      "address": "0x100",
+      "variable": "x",
+      "value": 10,
+      "type": "int"
+    },
+    {
+      "address": "0x104",
+      "variable": "ptr",
+      "value": "0x500",
+      "type": "reference"
+    }
+  ],
+  "heap": {
+    "0x500": {
+      "type": "User",
+      "data": {
+        "name": "Alice",
+        "age": 25
+      }
+    }
+  }
+}

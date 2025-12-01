@@ -1,0 +1,71 @@
+{
+    "algorithm": "Merge Sort",
+    "steps": [
+        {
+            "step": 1,
+            "arr": [
+                38,
+                27,
+                43,
+                3
+            ],
+            "action": "Split"
+        },
+        {
+            "step": 2,
+            "arr": [
+                [
+                    38,
+                    27
+                ],
+                [
+                    43,
+                    3
+                ]
+            ],
+            "action": "Split"
+        },
+        {
+            "step": 3,
+            "arr": [
+                [
+                    38
+                ],
+                [
+                    27
+                ],
+                [
+                    43
+                ],
+                [
+                    3
+                ]
+            ],
+            "action": "Base Case"
+        },
+        {
+            "step": 4,
+            "arr": [
+                [
+                    27,
+                    38
+                ],
+                [
+                    3,
+                    43
+                ]
+            ],
+            "action": "Merge"
+        },
+        {
+            "step": 5,
+            "arr": [
+                3,
+                27,
+                38,
+                43
+            ],
+            "action": "Final Merge"
+        }
+    ]
+}

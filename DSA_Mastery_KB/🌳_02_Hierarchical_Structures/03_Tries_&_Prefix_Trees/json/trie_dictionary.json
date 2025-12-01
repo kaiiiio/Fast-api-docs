@@ -1,0 +1,26 @@
+{
+    "root": {
+        "c": {
+            "a": {
+                "t": {
+                    "isWord": true
+                },
+                "r": {
+                    "isWord": true,
+                    "t": {
+                        "isWord": true
+                    }
+                }
+            }
+        },
+        "d": {
+            "o": {
+                "isWord": true,
+                "g": {
+                    "isWord": true
+                }
+            }
+        }
+    },
+    "note": "Common prefixes (c-a, d-o) are shared. This saves massive space for dictionaries."
+}

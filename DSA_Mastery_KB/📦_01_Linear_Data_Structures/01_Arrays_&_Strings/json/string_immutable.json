@@ -1,0 +1,12 @@
+{
+    "operation": "s += 'World'",
+    "before": {
+        "address": "0x100",
+        "value": "Hello"
+    },
+    "after": {
+        "address": "0x200",
+        "value": "Hello World"
+    },
+    "note": "0x100 is NOT modified. A NEW string is created at 0x200. 0x100 is now garbage."
+}

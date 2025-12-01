@@ -1,0 +1,14 @@
+{
+    "capacity": 5,
+    "items": [
+        null,
+        null,
+        "C",
+        "D",
+        "E"
+    ],
+    "head": 2,
+    "tail": 4,
+    "next_enqueue_index": 0,
+    "note": "Indices 0 and 1 are empty. Next item wraps around to index 0."
+}

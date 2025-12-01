@@ -1,0 +1,16 @@
+{
+    "state": "Resized",
+    "capacity": 8,
+    "size": 5,
+    "buffer": [
+        10,
+        20,
+        30,
+        40,
+        50,
+        0,
+        0,
+        0
+    ],
+    "note": "Indices 5-7 are allocated memory but 'empty' (garbage values or zeroed)"
+}

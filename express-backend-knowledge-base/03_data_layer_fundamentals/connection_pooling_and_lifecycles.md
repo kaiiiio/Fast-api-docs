@@ -433,3 +433,560 @@ Connection pooling is essential for production Express.js applications. It reuse
 - Study [Sequelize Deep Dive](../04_relational_databases_sql/sequelize_deep_dive.md) for ORM pooling
 - Master [Performance Optimization](../15_deployment_and_performance/) for tuning
 
+---
+
+## 🎯 Interview Questions: Connection Pooling & Database Lifecycle
+
+### Q1: Explain connection pooling in Express.js. Why is it critical for production applications?
+
+**Answer:**
+
+**Connection Pooling** = Reusing database connections instead of creating new ones for each request.
+
+**Without Connection Pooling:**
+
+```javascript
+// ❌ Problem: Creates new connection per request
+app.get('/users/:id', async (req, res) => {
+    const client = new Client({ /* config */ });
+    await client.connect(); // Slow: 50-100ms
+    const result = await client.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+    await client.end(); // Close connection
+    res.json(result.rows[0]);
+});
+
+// 1000 requests = 1000 connections created/destroyed
+// Time: 1000 * 100ms = 100 seconds
+```
+
+**With Connection Pooling:**
+
+```javascript
+// ✅ Solution: Reuse connections
+const { Pool } = require('pg');
+const pool = new Pool({
+    max: 20,              // Maximum connections
+    min: 2,               // Minimum connections
+    idleTimeoutMillis: 30000
+});
+
+app.get('/users/:id', async (req, res) => {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+    res.json(result.rows[0]);
+    // Connection returned to pool automatically
+});
+
+// 1000 requests = Reuse 20 connections
+// Time: ~10 seconds (50x faster)
+```
+
+**How It Works:**
+
+```
+Connection Pool:
+┌─────────────────────────────────┐
+│  Pool (20 connections)         │
+│  ┌─────┐ ┌─────┐ ┌─────┐       │
+│  │Conn1│ │Conn2│ │Conn3│ ...   │
+│  └─────┘ └─────┘ └─────┘       │
+└─────────────────────────────────┘
+    │
+    ├─ Request 1 → Gets Conn1 → Returns to pool
+    ├─ Request 2 → Gets Conn2 → Returns to pool
+    ├─ Request 3 → Gets Conn3 → Returns to pool
+    └─ Request 4 → Waits (if all busy) → Gets available connection
+```
+
+**Performance Impact:**
+
+```
+Without Pooling:
+├─ Connection creation: 50-100ms per request
+├─ 1000 requests: 50-100 seconds
+└─ Database overhead: High
+
+With Pooling:
+├─ Connection reuse: < 1ms per request
+├─ 1000 requests: ~10 seconds
+└─ Database overhead: Low
+```
+
+**Pool Configuration:**
+
+```javascript
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: 5432,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    
+    // Pool settings
+    max: 20,                    // Maximum connections
+    min: 2,                     // Minimum connections (kept alive)
+    idleTimeoutMillis: 30000,   // Close idle connections after 30s
+    connectionTimeoutMillis: 2000, // Timeout waiting for connection
+    
+    // Connection settings
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000
+});
+```
+
+**Sizing Guidelines:**
+
+```
+Pool Size:
+├─ Small app (< 100 req/min): 5-10 connections
+├─ Medium app (100-1000 req/min): 10-20 connections
+├─ Large app (1000+ req/min): 20-50 connections
+└─ Formula: (expected_concurrent_requests / avg_query_time_ms) * 2
+```
+
+---
+
+### Q2: How do you handle connection pool exhaustion? What are the symptoms and solutions?
+
+**Answer:**
+
+**Connection Pool Exhaustion** = All connections in pool are busy, new requests wait or timeout.
+
+**Symptoms:**
+
+```javascript
+// Error: Connection timeout
+Error: Connection terminated unexpectedly
+Error: timeout expired waiting for connection from pool
+
+// Slow responses
+// Requests taking 2+ seconds (waiting for connection)
+```
+
+**Causes:**
+
+```javascript
+// 1. Pool too small
+const pool = new Pool({ max: 5 }); // Too small for 100 concurrent requests
+
+// 2. Long-running queries
+app.get('/slow-query', async (req, res) => {
+    // Query takes 10 seconds
+    await pool.query('SELECT * FROM large_table WHERE complex_condition...');
+    // Connection held for 10 seconds
+});
+
+// 3. Connection leaks (not releasing)
+app.get('/leak', async (req, res) => {
+    const client = await pool.connect();
+    // Forgot to release!
+    // client.release(); // Missing
+    res.json({});
+});
+
+// 4. Transaction not committed
+await pool.query('BEGIN');
+await pool.query('INSERT INTO ...');
+// Forgot COMMIT → Connection held indefinitely
+```
+
+**Solutions:**
+
+**1. Increase Pool Size:**
+
+```javascript
+// Calculate based on load
+const poolSize = Math.ceil(
+    (expectedConcurrentRequests * avgQueryTimeMs) / 1000
+);
+
+const pool = new Pool({
+    max: poolSize, // e.g., 50 for high load
+    min: 10
+});
+```
+
+**2. Query Timeout:**
+
+```javascript
+// Set query timeout
+const pool = new Pool({
+    max: 20,
+    statement_timeout: 5000 // 5 seconds max per query
+});
+
+// Or per query
+await pool.query({
+    text: 'SELECT * FROM ...',
+    rowMode: 'array'
+}, 5000); // 5 second timeout
+```
+
+**3. Connection Leak Detection:**
+
+```javascript
+// Monitor pool usage
+setInterval(() => {
+    const poolStats = {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+    };
+    
+    console.log('Pool stats:', poolStats);
+    
+    if (pool.waitingCount > 10) {
+        console.warn('Many requests waiting for connections!');
+    }
+    
+    if (pool.idleCount === 0 && pool.totalCount === pool.max) {
+        console.error('Pool exhausted! All connections busy');
+    }
+}, 5000);
+```
+
+**4. Always Release Connections:**
+
+```javascript
+// ✅ Always use try-finally
+app.get('/users/:id', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const result = await client.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+        res.json(result.rows[0]);
+    } finally {
+        client.release(); // Always release
+    }
+});
+
+// ✅ Or use pool.query() (automatic release)
+app.get('/users/:id', async (req, res) => {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+    res.json(result.rows[0]);
+    // Automatically released
+});
+```
+
+**5. Graceful Degradation:**
+
+```javascript
+// Handle pool exhaustion gracefully
+app.get('/users/:id', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+        res.json(result.rows[0]);
+    } catch (error) {
+        if (error.code === 'ETIMEDOUT') {
+            // Pool exhausted, return cached data or error
+            return res.status(503).json({ 
+                error: 'Service temporarily unavailable',
+                retryAfter: 5
+            });
+        }
+        throw error;
+    }
+});
+```
+
+---
+
+### Q3: Explain database connection lifecycle in Express.js. How do you manage connections from startup to shutdown?
+
+**Answer:**
+
+**Connection Lifecycle:**
+
+```
+Application Start
+    │
+    ▼
+Create Connection Pool
+    │
+    ▼
+Request Arrives
+    │
+    ▼
+Get Connection from Pool
+    │
+    ▼
+Execute Query
+    │
+    ▼
+Return Connection to Pool
+    │
+    ▼
+Next Request (reuses connection)
+    │
+    ▼
+Application Shutdown
+    │
+    ▼
+Close All Connections
+```
+
+**Implementation:**
+
+```javascript
+// app.js
+const { Pool } = require('pg');
+
+// 1. Create pool at startup
+const pool = new Pool({
+    max: 20,
+    min: 2,
+    idleTimeoutMillis: 30000
+});
+
+// 2. Handle pool errors
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    // Don't exit - pool will create new connections
+});
+
+// 3. Use in routes
+app.get('/users/:id', async (req, res) => {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+    res.json(result.rows[0]);
+});
+
+// 4. Graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, closing pool...');
+    await pool.end(); // Close all connections
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('SIGINT received, closing pool...');
+    await pool.end();
+    process.exit(0);
+});
+```
+
+**Health Checks:**
+
+```javascript
+// Periodic health check
+setInterval(async () => {
+    try {
+        const result = await pool.query('SELECT 1');
+        console.log('Database connection healthy');
+    } catch (error) {
+        console.error('Database connection unhealthy:', error);
+        // Alert monitoring system
+    }
+}, 30000); // Every 30 seconds
+```
+
+**Connection States:**
+
+```
+Connection States:
+├─ Idle: Available in pool
+├─ Active: Currently executing query
+├─ Waiting: Request waiting for connection
+└─ Closed: Connection closed/removed
+```
+
+**Monitoring:**
+
+```javascript
+// Pool metrics
+function getPoolMetrics() {
+    return {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        active: pool.totalCount - pool.idleCount,
+        waiting: pool.waitingCount,
+        max: pool.options.max
+    };
+}
+
+// Expose metrics endpoint
+app.get('/metrics/pool', (req, res) => {
+    res.json(getPoolMetrics());
+});
+```
+
+---
+
+### Q4: How do you implement connection pooling with multiple databases (read replicas) in Express.js?
+
+**Answer:**
+
+**Read Replicas** = Separate database servers for reads (scales read operations).
+
+**Architecture:**
+
+```
+┌─────────────────┐
+│  Primary DB     │
+│  (Writes)       │
+└────────┬─────────┘
+         │
+    ┌────┴────┐
+    │         │
+    ▼         ▼
+┌─────────┐ ┌─────────┐
+│Replica 1│ │Replica 2│
+│ (Reads) │ │ (Reads) │
+└─────────┘ └─────────┘
+```
+
+**Implementation:**
+
+```javascript
+// config/database.js
+const { Pool } = require('pg');
+
+// Primary pool (writes)
+const primaryPool = new Pool({
+    host: process.env.DB_PRIMARY_HOST,
+    database: process.env.DB_NAME,
+    max: 20
+});
+
+// Replica pools (reads)
+const replicaPools = [
+    new Pool({
+        host: process.env.DB_REPLICA1_HOST,
+        database: process.env.DB_NAME,
+        max: 10
+    }),
+    new Pool({
+        host: process.env.DB_REPLICA2_HOST,
+        database: process.env.DB_NAME,
+        max: 10
+    })
+];
+
+// Round-robin replica selection
+let replicaIndex = 0;
+function getReplicaPool() {
+    const pool = replicaPools[replicaIndex];
+    replicaIndex = (replicaIndex + 1) % replicaPools.length;
+    return pool;
+}
+
+module.exports = {
+    primary: primaryPool,
+    replica: getReplicaPool
+};
+```
+
+**Usage:**
+
+```javascript
+const { primary, replica } = require('./config/database');
+
+// Writes: Use primary
+app.post('/users', async (req, res) => {
+    const result = await primary.query(
+        'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+        [req.body.name, req.body.email]
+    );
+    res.json(result.rows[0]);
+});
+
+// Reads: Use replica
+app.get('/users/:id', async (req, res) => {
+    const replicaPool = replica(); // Get next replica
+    const result = await replicaPool.query(
+        'SELECT * FROM users WHERE id = $1',
+        [req.params.id]
+    );
+    res.json(result.rows[0]);
+});
+```
+
+**Read-Write Split Service:**
+
+```javascript
+class DatabaseService {
+    constructor(primaryPool, replicaPools) {
+        this.primary = primaryPool;
+        this.replicas = replicaPools;
+        this.replicaIndex = 0;
+    }
+    
+    // Write operations
+    async write(query, params) {
+        return await this.primary.query(query, params);
+    }
+    
+    // Read operations (load balanced)
+    async read(query, params) {
+        const replica = this.getReplica();
+        return await replica.query(query, params);
+    }
+    
+    getReplica() {
+        const replica = this.replicas[this.replicaIndex];
+        this.replicaIndex = (this.replicaIndex + 1) % this.replicas.length;
+        return replica;
+    }
+}
+
+// Usage
+const db = new DatabaseService(primaryPool, replicaPools);
+
+app.get('/users/:id', async (req, res) => {
+    const result = await db.read('SELECT * FROM users WHERE id = $1', [req.params.id]);
+    res.json(result.rows[0]);
+});
+
+app.post('/users', async (req, res) => {
+    const result = await db.write(
+        'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+        [req.body.name, req.body.email]
+    );
+    res.json(result.rows[0]);
+});
+```
+
+**Replication Lag Handling:**
+
+```javascript
+// Problem: Replica might be behind primary
+// Solution: Read-after-write consistency
+
+app.post('/users', async (req, res) => {
+    // Write to primary
+    const result = await primary.query(
+        'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+        [req.body.name, req.body.email]
+    );
+    
+    // For immediate reads, use primary
+    res.json(result.rows[0]);
+});
+
+app.get('/users/:id', async (req, res) => {
+    // Check if recently written
+    const recentlyWritten = await checkRecentlyWritten(req.params.id);
+    
+    if (recentlyWritten) {
+        // Read from primary (consistent)
+        const result = await primary.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+        res.json(result.rows[0]);
+    } else {
+        // Read from replica (eventually consistent is OK)
+        const replicaPool = replica();
+        const result = await replicaPool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+        res.json(result.rows[0]);
+    }
+});
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Connection pooling fundamentals and performance
+- ✅ Pool exhaustion symptoms and solutions
+- ✅ Connection lifecycle management
+- ✅ Read replica implementation and load balancing
+- ✅ Production best practices
+
+Master these for senior-level interviews focusing on database performance and scalability.
+

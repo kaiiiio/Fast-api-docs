@@ -489,3 +489,129 @@ Sequelize migrations manage database schema changes systematically. Each migrati
 - Study [Relationships](relationships_explained.md) for relationship migrations
 - Master [CRUD with Repository Pattern](crud_with_repository_pattern.md) for data access
 
+---
+
+## 🎯 Interview Questions: Database Migrations
+
+### Q1: Explain database migrations. Why are they critical for production applications?
+
+**Answer:**
+
+**Migrations** = Version-controlled database schema changes.
+
+**Without Migrations:**
+
+```javascript
+// ❌ Problem: Manual schema changes
+// Developer 1: Adds column manually
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+
+// Developer 2: Doesn't have the change
+// Production: Schema mismatch
+// Result: Application breaks
+```
+
+**With Migrations:**
+
+```javascript
+// ✅ Solution: Version-controlled changes
+// migrations/20240101000000-add-phone-to-users.js
+module.exports = {
+    up: async (queryInterface, Sequelize) => {
+        await queryInterface.addColumn('users', 'phone', {
+            type: Sequelize.STRING(20),
+            allowNull: true
+        });
+    },
+    down: async (queryInterface, Sequelize) => {
+        await queryInterface.removeColumn('users', 'phone');
+    }
+};
+
+// Apply: npx sequelize-cli db:migrate
+// Rollback: npx sequelize-cli db:migrate:undo
+```
+
+**Benefits:**
+
+```
+Migrations:
+├─ Version Control: Track all schema changes
+├─ Reproducibility: Same schema everywhere
+├─ Rollback: Undo changes if needed
+├─ Team Sync: Everyone has same schema
+└─ Production Safety: Tested, reversible changes
+```
+
+---
+
+### Q2: How do you handle data migrations vs schema migrations?
+
+**Answer:**
+
+**Schema Migration** = Structure changes (add column, create table)
+
+```javascript
+// Schema migration
+module.exports = {
+    up: async (queryInterface, Sequelize) => {
+        await queryInterface.addColumn('users', 'status', {
+            type: Sequelize.ENUM('active', 'inactive'),
+            defaultValue: 'active'
+        });
+    },
+    down: async (queryInterface, Sequelize) => {
+        await queryInterface.removeColumn('users', 'status');
+    }
+};
+```
+
+**Data Migration** = Data transformation
+
+```javascript
+// Data migration
+module.exports = {
+    up: async (queryInterface, Sequelize) => {
+        // Transform existing data
+        await queryInterface.sequelize.query(`
+            UPDATE users 
+            SET status = 'active' 
+            WHERE deleted_at IS NULL
+        `);
+        
+        await queryInterface.sequelize.query(`
+            UPDATE users 
+            SET status = 'inactive' 
+            WHERE deleted_at IS NOT NULL
+        `);
+    },
+    down: async (queryInterface, Sequelize) => {
+        // Revert data transformation
+        // Usually can't fully revert data changes
+    }
+};
+```
+
+**Best Practices:**
+
+```
+Migrations:
+├─ Small: One logical change per migration
+├─ Reversible: Always implement down()
+├─ Tested: Test on staging first
+├─ Idempotent: Safe to run multiple times
+└─ Never Edit: Don't modify applied migrations
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Migration importance and benefits
+- ✅ Schema vs data migrations
+- ✅ Best practices and rollback strategies
+- ✅ Production migration safety
+
+Master these for senior-level interviews focusing on database management.
+

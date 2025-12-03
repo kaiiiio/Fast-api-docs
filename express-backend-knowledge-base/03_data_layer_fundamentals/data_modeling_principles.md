@@ -322,3 +322,307 @@ Effective data modeling balances normalization (consistency) with denormalizatio
 - Study [MongoDB Setup](../06_nosql_mongodb/) for NoSQL modeling
 - Master [Relationships](../04_relational_databases_sql/relationships_explained.md) for relational design
 
+---
+
+## 🎯 Interview Questions: Data Modeling & Schema Design
+
+### Q1: Explain normalization vs denormalization. When would you denormalize a database schema?
+
+**Answer:**
+
+**Normalization** = Organizing data to reduce redundancy  
+**Denormalization** = Adding redundancy for performance
+
+**Normalized Schema:**
+
+```sql
+-- Users table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255)
+);
+
+-- Orders table
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    total DECIMAL
+);
+
+-- Order items table
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id),
+    product_id INTEGER REFERENCES products(id),
+    quantity INTEGER,
+    price DECIMAL
+);
+```
+
+**Benefits:**
+- ✅ No data redundancy
+- ✅ Easy to update (change user name in one place)
+- ✅ Consistent data
+
+**Denormalized Schema:**
+
+```sql
+-- Denormalized: Store user name in orders
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    user_name VARCHAR(255),  -- Denormalized: Redundant but fast
+    total DECIMAL
+);
+```
+
+**Benefits:**
+- ✅ Faster reads (no JOIN needed)
+- ✅ Better for read-heavy workloads
+- ⚠️ Data redundancy (user name stored multiple times)
+
+**When to Denormalize:**
+
+```javascript
+// Scenario 1: Read-heavy, write-light
+// E-commerce: Product catalog (rarely changes, frequently read)
+
+// Normalized:
+SELECT p.name, p.price, c.name as category_name
+FROM products p
+JOIN categories c ON p.category_id = c.id;
+
+// Denormalized (faster):
+SELECT name, price, category_name  -- category_name stored in products table
+FROM products;
+
+// Scenario 2: Analytics/Reporting
+// Store aggregated data for fast reporting
+
+CREATE TABLE user_stats (
+    user_id INTEGER PRIMARY KEY,
+    total_orders INTEGER,      -- Denormalized: Calculated from orders
+    total_spent DECIMAL,       -- Denormalized: Sum of order totals
+    last_order_date DATE       -- Denormalized: Max of order dates
+);
+```
+
+**Trade-offs:**
+
+```
+Normalization:
+├─ Pros: Consistency, no redundancy, easy updates
+├─ Cons: Slower reads (JOINs), complex queries
+└─ Use: Write-heavy, data integrity critical
+
+Denormalization:
+├─ Pros: Faster reads, simpler queries
+├─ Cons: Redundancy, update complexity, inconsistency risk
+└─ Use: Read-heavy, performance critical
+```
+
+---
+
+### Q2: How would you design a database schema for a social media application (users, posts, comments, likes)?
+
+**Answer:**
+
+**Schema Design:**
+
+```sql
+-- Core tables
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE posts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE likes (
+    id SERIAL PRIMARY KEY,
+    post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(post_id, user_id)  -- Prevent duplicate likes
+);
+
+-- Indexes for performance
+CREATE INDEX idx_posts_user_id ON posts(user_id);
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+CREATE INDEX idx_comments_post_id ON comments(post_id);
+CREATE INDEX idx_likes_post_id ON likes(post_id);
+```
+
+**Denormalization for Performance:**
+
+```sql
+-- Denormalize: Store like count in posts table
+ALTER TABLE posts ADD COLUMN like_count INTEGER DEFAULT 0;
+
+-- Update on like/unlike
+CREATE OR REPLACE FUNCTION update_like_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE posts SET like_count = like_count + 1 WHERE id = NEW.post_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE posts SET like_count = like_count - 1 WHERE id = OLD.post_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER like_count_trigger
+AFTER INSERT OR DELETE ON likes
+FOR EACH ROW EXECUTE FUNCTION update_like_count();
+```
+
+**Express.js Implementation:**
+
+```javascript
+// Get feed with denormalized data
+app.get('/feed', async (req, res) => {
+    const posts = await db.query(`
+        SELECT 
+            p.id,
+            p.content,
+            p.like_count,  -- Denormalized: Fast, no COUNT query
+            u.username,
+            u.id as user_id
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        ORDER BY p.created_at DESC
+        LIMIT 20
+    `);
+    
+    res.json(posts.rows);
+});
+
+// Like a post
+app.post('/posts/:id/like', async (req, res) => {
+    await db.query('BEGIN');
+    try {
+        // Insert like (trigger updates like_count automatically)
+        await db.query(
+            'INSERT INTO likes (post_id, user_id) VALUES ($1, $2)',
+            [req.params.id, req.user.id]
+        );
+        await db.query('COMMIT');
+        res.json({ success: true });
+    } catch (error) {
+        await db.query('ROLLBACK');
+        if (error.code === '23505') { // Unique violation
+            res.status(400).json({ error: 'Already liked' });
+        } else {
+            throw error;
+        }
+    }
+});
+```
+
+---
+
+### Q3: Explain the trade-offs between relational (SQL) and document (NoSQL) data modeling approaches.
+
+**Answer:**
+
+**Relational (SQL) Modeling:**
+
+```sql
+-- Normalized, related tables
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255)
+);
+
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id)
+);
+
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id),
+    product_id INTEGER REFERENCES products(id),
+    quantity INTEGER
+);
+```
+
+**Document (NoSQL) Modeling:**
+
+```javascript
+// Embedded documents
+{
+    _id: ObjectId("..."),
+    name: "John",
+    orders: [
+        {
+            orderId: 1,
+            items: [
+                { productId: 1, quantity: 2 },
+                { productId: 2, quantity: 1 }
+            ]
+        }
+    ]
+}
+```
+
+**Comparison:**
+
+| Aspect | Relational (SQL) | Document (NoSQL) |
+|--------|-----------------|------------------|
+| **Structure** | Fixed schema | Flexible schema |
+| **Relationships** | Foreign keys, JOINs | Embedded or references |
+| **Queries** | Complex JOINs | Simple document queries |
+| **Consistency** | Strong (ACID) | Eventually consistent |
+| **Scaling** | Vertical | Horizontal |
+| **Use Case** | Structured data | Flexible, evolving data |
+
+**When to Use Each:**
+
+```
+Relational (SQL):
+├─ Structured data with relationships
+├─ Complex queries with JOINs
+├─ ACID transactions required
+├─ Data integrity critical
+└─ Example: E-commerce, banking
+
+Document (NoSQL):
+├─ Flexible, evolving schema
+├─ Simple queries, no JOINs
+├─ High write throughput
+├─ Horizontal scaling needed
+└─ Example: User profiles, content management
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Normalization vs denormalization strategies
+- ✅ Real-world schema design (social media example)
+- ✅ Relational vs document modeling trade-offs
+- ✅ Performance optimization techniques
+- ✅ Indexing and query optimization
+
+Master these for senior-level interviews focusing on database design and performance.
+

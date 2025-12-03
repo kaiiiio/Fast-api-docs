@@ -370,3 +370,130 @@ Soft deletes preserve data by marking records as deleted instead of removing the
 - Study [CRUD with Repository Pattern](crud_with_repository_pattern.md) for data access
 - Master [Data Modeling](../03_data_layer_fundamentals/data_modeling_principles.md) for schema design
 
+---
+
+## 🎯 Interview Questions: Soft Delete Patterns
+
+### Q1: Explain soft delete vs hard delete. When would you use each approach?
+
+**Answer:**
+
+**Hard Delete (Physical):**
+
+```javascript
+// ❌ Permanently removes data
+await User.destroy({ where: { id: userId } });
+// DELETE FROM users WHERE id = $1
+// Data is gone forever
+```
+
+**Soft Delete (Logical):**
+
+```javascript
+// ✅ Marks as deleted, preserves data
+await User.update(
+    { deleted_at: new Date() },
+    { where: { id: userId } }
+);
+// UPDATE users SET deleted_at = NOW() WHERE id = $1
+// Data still exists, just marked as deleted
+```
+
+**When to Use Each:**
+
+```
+Hard Delete:
+├─ Temporary data (sessions, cache)
+├─ Sensitive data (GDPR right to be forgotten)
+├─ Storage constraints
+└─ No recovery needed
+
+Soft Delete:
+├─ User accounts (recovery possible)
+├─ Orders (audit trail)
+├─ Financial records (compliance)
+└─ Data recovery needed
+```
+
+**Implementation:**
+
+```javascript
+// Model with soft delete
+const User = sequelize.define('User', {
+    id: { type: DataTypes.INTEGER, primaryKey: true },
+    email: DataTypes.STRING,
+    deleted_at: DataTypes.DATE  // Soft delete field
+}, {
+    defaultScope: {
+        where: { deleted_at: null }  // Exclude deleted by default
+    },
+    scopes: {
+        withDeleted: {
+            where: {}  // Include deleted
+        },
+        onlyDeleted: {
+            where: { deleted_at: { [Op.ne]: null } }  // Only deleted
+        }
+    }
+});
+
+// Usage
+const activeUsers = await User.findAll();  // Excludes deleted
+const allUsers = await User.scope('withDeleted').findAll();  // Includes deleted
+const deletedUsers = await User.scope('onlyDeleted').findAll();  // Only deleted
+```
+
+---
+
+### Q2: How do you implement soft delete with Sequelize paranoid mode?
+
+**Answer:**
+
+**Sequelize Paranoid:**
+
+```javascript
+const User = sequelize.define('User', {
+    email: DataTypes.STRING,
+    name: DataTypes.STRING
+}, {
+    paranoid: true  // Enables soft delete
+});
+
+// Automatically adds deletedAt column
+// Automatically excludes deleted records
+```
+
+**Operations:**
+
+```javascript
+// Delete (soft)
+await user.destroy();  // Sets deletedAt, doesn't actually delete
+
+// Restore
+await user.restore();  // Sets deletedAt to null
+
+// Hard delete
+await user.destroy({ force: true });  // Actually deletes
+
+// Querying
+const users = await User.findAll();  // Excludes deleted
+const allUsers = await User.findAll({ paranoid: false });  // Includes deleted
+```
+
+**Benefits:**
+- ✅ Automatic exclusion of deleted records
+- ✅ Easy restore functionality
+- ✅ Audit trail preserved
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Soft delete vs hard delete decisions
+- ✅ Sequelize paranoid mode
+- ✅ Implementation patterns
+- ✅ Use cases and trade-offs
+
+Master these for senior-level interviews focusing on data management patterns.
+

@@ -461,3 +461,342 @@ Transactions ensure data consistency by grouping multiple database operations in
 - Study [Sequelize Deep Dive](../04_relational_databases_sql/sequelize_deep_dive.md) for ORM transactions
 - Master [Data Validation](../03_data_layer_fundamentals/data_validation_vs_business_validation.md) for validation
 
+---
+
+## 🎯 Interview Questions: Transactions & Data Consistency
+
+### Q1: Explain database transactions in Express.js. How do you ensure atomicity in async operations?
+
+**Answer:**
+
+**Transactions** group multiple database operations into a **single atomic unit** - all succeed or all fail.
+
+**Basic Transaction:**
+
+```javascript
+const { Pool } = require('pg');
+const pool = new Pool();
+
+app.post('/orders', async (req, res) => {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // Operation 1: Create order
+        const orderResult = await client.query(
+            'INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING *',
+            [req.body.userId, req.body.total]
+        );
+        
+        // Operation 2: Update inventory
+        await client.query(
+            'UPDATE inventory SET quantity = quantity - $1 WHERE product_id = $2',
+            [req.body.quantity, req.body.productId]
+        );
+        
+        // Operation 3: Create payment
+        await client.query(
+            'INSERT INTO payments (order_id, amount) VALUES ($1, $2)',
+            [orderResult.rows[0].id, req.body.total]
+        );
+        
+        await client.query('COMMIT');
+        res.json(orderResult.rows[0]);
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: error.message });
+    } finally {
+        client.release(); // Always release connection
+    }
+});
+```
+
+**Transaction Flow:**
+
+```
+BEGIN Transaction
+    │
+    ├─ Operation 1: Create Order
+    ├─ Operation 2: Update Inventory
+    └─ Operation 3: Create Payment
+    │
+    ├─ All succeed → COMMIT ✅
+    └─ Any fails → ROLLBACK ❌
+```
+
+**Why Atomicity Matters:**
+
+```javascript
+// ❌ Problem: Without transaction
+app.post('/transfer', async (req, res) => {
+    // Step 1: Deduct from account A
+    await db.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [100, 'A']);
+    
+    // Server crashes here → Account A lost $100, Account B didn't receive
+    
+    // Step 2: Add to account B
+    await db.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [100, 'B']);
+});
+
+// ✅ Solution: With transaction
+app.post('/transfer', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [100, 'A']);
+        await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [100, 'B']);
+        
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (error) {
+        await client.query('ROLLBACK'); // Both operations rolled back
+        throw error;
+    } finally {
+        client.release();
+    }
+});
+```
+
+---
+
+### Q2: How do you handle distributed transactions across multiple services in a microservices architecture?
+
+**Answer:**
+
+**Distributed Transactions** = Transactions spanning multiple services (hard to implement with ACID).
+
+**Challenge:**
+
+```
+Service A (Orders)     Service B (Inventory)     Service C (Payments)
+    │                        │                        │
+    ├─ Create Order          │                        │
+    │                        ├─ Reserve Inventory     │
+    │                        │                        ├─ Charge Payment
+    │                        │                        │
+    └─ If any fails, all must rollback (hard across services)
+```
+
+**Solution 1: Saga Pattern (Recommended):**
+
+```javascript
+// Saga: Sequence of local transactions with compensation
+
+class OrderSaga {
+    async createOrder(orderData) {
+        const steps = [];
+        
+        try {
+            // Step 1: Create order
+            const order = await orderService.create(orderData);
+            steps.push({ type: 'order', id: order.id, compensate: () => orderService.cancel(order.id) });
+            
+            // Step 2: Reserve inventory
+            await inventoryService.reserve(orderData.productId, orderData.quantity);
+            steps.push({ type: 'inventory', compensate: () => inventoryService.release(orderData.productId, orderData.quantity) });
+            
+            // Step 3: Charge payment
+            await paymentService.charge(orderData.userId, orderData.amount);
+            steps.push({ type: 'payment', compensate: () => paymentService.refund(orderData.userId, orderData.amount) });
+            
+            return order;
+            
+        } catch (error) {
+            // Compensate in reverse order
+            for (let i = steps.length - 1; i >= 0; i--) {
+                await steps[i].compensate();
+            }
+            throw error;
+        }
+    }
+}
+```
+
+**Solution 2: Two-Phase Commit (Complex):**
+
+```javascript
+// Coordinator manages transaction across services
+class TransactionCoordinator {
+    async execute(services, operations) {
+        // Phase 1: Prepare (all services ready to commit)
+        const prepared = [];
+        for (const service of services) {
+            try {
+                await service.prepare(operations[service.name]);
+                prepared.push(service);
+            } catch (error) {
+                // Abort all
+                for (const s of prepared) {
+                    await s.abort();
+                }
+                throw error;
+            }
+        }
+        
+        // Phase 2: Commit (all services commit)
+        for (const service of prepared) {
+            await service.commit();
+        }
+    }
+}
+```
+
+**Solution 3: Event Sourcing + Outbox Pattern:**
+
+```javascript
+// Use events for eventual consistency
+
+// Service A: Create order, emit event
+await orderService.create(orderData);
+await eventBus.emit('order.created', { orderId: order.id, ...orderData });
+
+// Service B: Listen to event, reserve inventory
+eventBus.on('order.created', async (event) => {
+    await inventoryService.reserve(event.productId, event.quantity);
+    await eventBus.emit('inventory.reserved', { orderId: event.orderId });
+});
+
+// Service C: Listen to event, charge payment
+eventBus.on('inventory.reserved', async (event) => {
+    await paymentService.charge(event.userId, event.amount);
+});
+```
+
+**Comparison:**
+
+| Approach | Complexity | Consistency | Use Case |
+|----------|-----------|-------------|----------|
+| **Saga** | Medium | Eventually consistent | Most microservices |
+| **2PC** | High | Strong consistency | Critical systems |
+| **Events** | Medium | Eventually consistent | Event-driven systems |
+
+---
+
+### Q3: Explain transaction isolation levels. How do they affect concurrent operations in Express.js?
+
+**Answer:**
+
+**Isolation Levels** control how transactions see each other's changes.
+
+**Levels (from weakest to strongest):**
+
+**1. READ UNCOMMITTED (Lowest):**
+
+```javascript
+// Transaction 1
+await client.query('BEGIN');
+await client.query('UPDATE users SET balance = balance - 100 WHERE id = 1');
+// Not committed yet
+
+// Transaction 2 (READ UNCOMMITTED)
+await client2.query('BEGIN');
+const result = await client2.query('SELECT balance FROM users WHERE id = 1');
+// Sees uncommitted change: balance = 900 (dirty read)
+```
+
+**2. READ COMMITTED (PostgreSQL Default):**
+
+```javascript
+// Transaction 1
+await client.query('BEGIN');
+await client.query('UPDATE users SET balance = balance - 100 WHERE id = 1');
+// Not committed
+
+// Transaction 2 (READ COMMITTED)
+await client2.query('BEGIN');
+const result = await client2.query('SELECT balance FROM users WHERE id = 1');
+// Waits for Transaction 1 to commit
+// Sees committed value only
+```
+
+**3. REPEATABLE READ:**
+
+```javascript
+// Transaction 1
+await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+const user1 = await client.query('SELECT balance FROM users WHERE id = 1');
+// Reads: balance = 1000
+
+// Transaction 2 (concurrent)
+await client2.query('UPDATE users SET balance = 1500 WHERE id = 1');
+await client2.query('COMMIT');
+
+// Transaction 1 (same query again)
+const user2 = await client.query('SELECT balance FROM users WHERE id = 1');
+// Still reads: balance = 1000 (same as first read - repeatable)
+```
+
+**4. SERIALIZABLE (Highest):**
+
+```javascript
+// Prevents all anomalies (phantom reads, etc.)
+// Most restrictive, slowest performance
+
+await client.query('BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+// All transactions execute as if serial (one after another)
+```
+
+**Visual Comparison:**
+
+```
+READ UNCOMMITTED:
+├─ Dirty reads: ✅ Possible
+├─ Non-repeatable reads: ✅ Possible
+└─ Phantom reads: ✅ Possible
+
+READ COMMITTED:
+├─ Dirty reads: ❌ Prevented
+├─ Non-repeatable reads: ✅ Possible
+└─ Phantom reads: ✅ Possible
+
+REPEATABLE READ:
+├─ Dirty reads: ❌ Prevented
+├─ Non-repeatable reads: ❌ Prevented
+└─ Phantom reads: ✅ Possible
+
+SERIALIZABLE:
+├─ Dirty reads: ❌ Prevented
+├─ Non-repeatable reads: ❌ Prevented
+└─ Phantom reads: ❌ Prevented
+```
+
+**Express.js Usage:**
+
+```javascript
+// Set isolation level per transaction
+app.post('/transfer', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        // Use SERIALIZABLE for financial transactions
+        await client.query('BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+        
+        await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [100, 'A']);
+        await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [100, 'B']);
+        
+        await client.query('COMMIT');
+        res.json({ success: true });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+});
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Transaction fundamentals and atomicity
+- ✅ Distributed transactions in microservices
+- ✅ Transaction isolation levels
+- ✅ Saga pattern and compensation
+- ✅ Real-world transaction scenarios
+
+Master these for senior-level interviews focusing on data consistency and transaction management.
+

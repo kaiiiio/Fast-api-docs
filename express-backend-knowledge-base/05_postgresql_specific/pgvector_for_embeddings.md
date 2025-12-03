@@ -337,3 +337,168 @@ pgvector enables storing and searching vector embeddings directly in PostgreSQL.
 - Study [JSONB and Full-Text Search](jsonb_and_full_text_search.md) for text search
 - Master [Creating Vector Index](creating_vector_index.md) for performance
 
+---
+
+## 🎯 Interview Questions: Vector Embeddings & pgvector
+
+### Q1: Explain vector embeddings and similarity search. How would you implement semantic search in Express.js?
+
+**Answer:**
+
+**Vector Embeddings** = Numerical representations of text/data in high-dimensional space. Similar items have similar vectors.
+
+**How It Works:**
+
+```
+Text: "Machine learning is fascinating"
+    ↓
+Embedding Model (OpenAI, etc.)
+    ↓
+Vector: [0.123, -0.456, 0.789, ..., 0.234] (1536 dimensions)
+    ↓
+Store in PostgreSQL (pgvector)
+    ↓
+Similarity Search: Find vectors close to query vector
+```
+
+**Implementation:**
+
+```javascript
+// 1. Generate embedding
+const { OpenAI } = require('openai');
+const openai = new OpenAI();
+
+async function generateEmbedding(text) {
+    const response = await openai.embeddings.create({
+        model: 'text-embedding-ada-002',
+        input: text
+    });
+    return response.data[0].embedding;
+}
+
+// 2. Store in PostgreSQL
+const { Pool } = require('pg');
+const pool = new Pool();
+
+// Create table with vector column
+await pool.query(`
+    CREATE EXTENSION IF NOT EXISTS vector;
+    
+    CREATE TABLE documents (
+        id SERIAL PRIMARY KEY,
+        content TEXT,
+        embedding vector(1536)  -- OpenAI embedding dimension
+    );
+    
+    CREATE INDEX ON documents 
+    USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 100);
+`);
+
+// 3. Store document with embedding
+app.post('/documents', async (req, res) => {
+    const { content } = req.body;
+    const embedding = await generateEmbedding(content);
+    
+    await pool.query(
+        'INSERT INTO documents (content, embedding) VALUES ($1, $2)',
+        [content, JSON.stringify(embedding)]
+    );
+    
+    res.json({ success: true });
+});
+
+// 4. Semantic search
+app.get('/documents/search', async (req, res) => {
+    const query = req.query.q;
+    const queryEmbedding = await generateEmbedding(query);
+    
+    const results = await pool.query(`
+        SELECT 
+            id,
+            content,
+            1 - (embedding <=> $1::vector) AS similarity
+        FROM documents
+        WHERE 1 - (embedding <=> $1::vector) > 0.7  -- Similarity threshold
+        ORDER BY embedding <=> $1::vector
+        LIMIT 10
+    `, [JSON.stringify(queryEmbedding)]);
+    
+    res.json(results.rows);
+});
+```
+
+**Use Cases:**
+- ✅ Semantic search (find similar meaning, not exact match)
+- ✅ Recommendations (similar products, content)
+- ✅ Question answering (find relevant context)
+- ✅ Duplicate detection
+
+---
+
+### Q2: Compare IVFFlat vs HNSW indexes for vector search. When would you use each?
+
+**Answer:**
+
+**IVFFlat Index:**
+
+```sql
+CREATE INDEX ON documents 
+USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
+```
+
+**Pros:**
+- ✅ Fast to build
+- ✅ Lower memory usage
+- ✅ Good for large datasets
+
+**Cons:**
+- ⚠️ Lower recall (may miss some similar vectors)
+- ⚠️ Requires tuning (lists parameter)
+
+**HNSW Index:**
+
+```sql
+CREATE INDEX ON documents 
+USING hnsw (embedding vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+```
+
+**Pros:**
+- ✅ Higher recall (finds more similar vectors)
+- ✅ Better quality results
+- ✅ Good for accuracy-critical applications
+
+**Cons:**
+- ⚠️ Slower to build
+- ⚠️ Higher memory usage
+
+**When to Use:**
+
+```
+IVFFlat:
+├─ Large datasets (millions of vectors)
+├─ Fast indexing needed
+├─ Approximate results acceptable
+└─ Memory constrained
+
+HNSW:
+├─ Accuracy critical
+├─ Smaller datasets (< 10M vectors)
+├─ Quality over speed
+└─ Memory available
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Vector embeddings and semantic search
+- ✅ pgvector implementation
+- ✅ Index types (IVFFlat vs HNSW)
+- ✅ Real-world use cases
+
+Master these for senior-level interviews focusing on AI/ML integration and vector search.
+

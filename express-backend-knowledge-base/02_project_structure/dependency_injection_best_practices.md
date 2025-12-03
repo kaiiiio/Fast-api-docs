@@ -494,3 +494,434 @@ Dependency injection in Express.js is achieved through constructor injection, fa
 - Study [Config Management](config_management_with_dotenv.md) for configuration
 - Master [Testing](../13_testing/unit_testing_services.md) for testing with DI
 
+---
+
+## 🎯 Interview Questions: Dependency Injection
+
+### Q1: Explain Dependency Injection in Express.js. How does it improve code quality and testability?
+
+**Answer:**
+
+**Dependency Injection (DI)** means **passing dependencies** to functions/classes instead of creating them inside. This makes code **testable**, **flexible**, and **maintainable**.
+
+**Without DI (Tight Coupling):**
+
+```javascript
+// ❌ Problem: Hard to test, tight coupling
+const db = require('./db');
+
+class UserService {
+    async getUser(id) {
+        const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+        return result.rows[0];
+    }
+}
+
+// Testing requires real database
+```
+
+**With DI (Loose Coupling):**
+
+```javascript
+// ✅ Solution: Inject dependencies
+class UserService {
+    constructor(userRepository) {
+        this.userRepository = userRepository; // Injected
+    }
+    
+    async getUser(id) {
+        return await this.userRepository.findById(id);
+    }
+}
+
+// Usage
+const userRepository = require('./repositories/user.repository');
+const userService = new UserService(userRepository);
+
+// Testing: Inject mock
+const mockRepository = {
+    findById: jest.fn().mockResolvedValue({ id: 1, name: 'John' })
+};
+const userService = new UserService(mockRepository);
+```
+
+**Benefits:**
+
+```
+Dependency Injection:
+├─ Testability: Easy to mock dependencies
+├─ Flexibility: Swap implementations
+├─ Maintainability: Clear dependencies
+├─ Reusability: Services can be reused
+└─ Decoupling: Loose coupling between components
+```
+
+**Visual Comparison:**
+
+```
+Without DI:
+┌─────────────┐
+│ UserService │
+│      │      │
+│      ▼      │
+│     DB      │ ← Hard dependency
+└─────────────┘
+
+With DI:
+┌─────────────┐
+│ UserService │
+│      │      │
+│      ▼      │
+│ Repository  │ ← Injected (can be swapped)
+└─────────────┘
+```
+
+---
+
+### Q2: What are the different ways to implement Dependency Injection in Express.js? Compare them.
+
+**Answer:**
+
+**Three Main Approaches:**
+
+**1. Constructor Injection (Most Common):**
+
+```javascript
+class UserService {
+    constructor(userRepository, logger) {
+        this.userRepository = userRepository;
+        this.logger = logger;
+    }
+    
+    async getUser(id) {
+        this.logger.info('Fetching user', { id });
+        return await this.userRepository.findById(id);
+    }
+}
+
+// Usage
+const userRepository = require('./repositories/user.repository');
+const logger = require('./utils/logger');
+const userService = new UserService(userRepository, logger);
+```
+
+**Pros:**
+- ✅ Explicit dependencies
+- ✅ Easy to test
+- ✅ Clear at construction time
+
+**Cons:**
+- ⚠️ Can have many parameters
+
+**2. Factory Functions:**
+
+```javascript
+function createUserService(dependencies) {
+    const { userRepository, logger } = dependencies;
+    
+    return {
+        async getUser(id) {
+            logger.info('Fetching user', { id });
+            return await userRepository.findById(id);
+        }
+    };
+}
+
+// Usage
+const userService = createUserService({
+    userRepository: require('./repositories/user.repository'),
+    logger: require('./utils/logger')
+});
+```
+
+**Pros:**
+- ✅ Flexible dependency structure
+- ✅ Easy to create variations
+
+**Cons:**
+- ⚠️ Less explicit than constructor
+
+**3. Dependency Container:**
+
+```javascript
+class Container {
+    constructor() {
+        this.services = {};
+        this.factories = {};
+    }
+    
+    register(name, factory) {
+        this.factories[name] = factory;
+    }
+    
+    get(name) {
+        if (!this.services[name]) {
+            this.services[name] = this.factories[name](this);
+        }
+        return this.services[name];
+    }
+}
+
+// Setup
+const container = new Container();
+
+container.register('userRepository', () => require('./repositories/user.repository'));
+container.register('logger', () => require('./utils/logger'));
+
+container.register('userService', (c) => {
+    return new UserService(
+        c.get('userRepository'),
+        c.get('logger')
+    );
+});
+
+// Usage
+const userService = container.get('userService');
+```
+
+**Pros:**
+- ✅ Automatic dependency resolution
+- ✅ Singleton management
+- ✅ Good for large apps
+
+**Cons:**
+- ⚠️ More complex setup
+- ⚠️ Can hide dependencies
+
+**Comparison:**
+
+| Approach | Complexity | Testability | Use Case |
+|----------|-----------|-------------|----------|
+| Constructor | Low | High | Small to medium apps |
+| Factory | Medium | High | Flexible needs |
+| Container | High | High | Large apps |
+
+---
+
+### Q3: How do you test code that uses Dependency Injection? Provide examples.
+
+**Answer:**
+
+**DI makes testing easy** by allowing **mock dependencies**.
+
+**Example: UserService with DI**
+
+```javascript
+// services/user.service.js
+class UserService {
+    constructor(userRepository, emailService) {
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+    }
+    
+    async createUser(userData) {
+        const existing = await this.userRepository.findByEmail(userData.email);
+        if (existing) {
+            throw new Error('Email exists');
+        }
+        
+        const user = await this.userRepository.create(userData);
+        await this.emailService.sendWelcomeEmail(user.email);
+        return user;
+    }
+}
+```
+
+**Testing with Mocks:**
+
+```javascript
+// tests/user.service.test.js
+const UserService = require('../services/user.service');
+
+describe('UserService', () => {
+    let userService;
+    let mockRepository;
+    let mockEmailService;
+    
+    beforeEach(() => {
+        // Create mocks
+        mockRepository = {
+            findByEmail: jest.fn(),
+            create: jest.fn()
+        };
+        
+        mockEmailService = {
+            sendWelcomeEmail: jest.fn().mockResolvedValue(true)
+        };
+        
+        // Inject mocks
+        userService = new UserService(mockRepository, mockEmailService);
+    });
+    
+    test('should create user successfully', async () => {
+        // Arrange
+        const userData = { email: 'test@example.com', name: 'Test' };
+        mockRepository.findByEmail.mockResolvedValue(null);
+        mockRepository.create.mockResolvedValue({ id: 1, ...userData });
+        
+        // Act
+        const user = await userService.createUser(userData);
+        
+        // Assert
+        expect(user.id).toBe(1);
+        expect(mockRepository.findByEmail).toHaveBeenCalledWith(userData.email);
+        expect(mockRepository.create).toHaveBeenCalledWith(userData);
+        expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(userData.email);
+    });
+    
+    test('should throw error if email exists', async () => {
+        // Arrange
+        const userData = { email: 'test@example.com' };
+        mockRepository.findByEmail.mockResolvedValue({ id: 1, email: userData.email });
+        
+        // Act & Assert
+        await expect(userService.createUser(userData)).rejects.toThrow('Email exists');
+        expect(mockRepository.create).not.toHaveBeenCalled();
+    });
+});
+```
+
+**Benefits of DI for Testing:**
+
+```
+Testing with DI:
+├─ Isolated: Test service without real dependencies
+├─ Fast: No database/network calls
+├─ Predictable: Mock returns known values
+├─ Focused: Test only service logic
+└─ Easy: Simple mock setup
+```
+
+---
+
+### Q4: How would you implement a Dependency Injection container for a large Express.js application?
+
+**Answer:**
+
+**DI Container** automatically resolves and manages dependencies.
+
+**Implementation:**
+
+```javascript
+// container/Container.js
+class Container {
+    constructor() {
+        this.services = {};
+        this.factories = {};
+        this.singletons = new Set();
+    }
+    
+    // Register a factory function
+    register(name, factory, options = {}) {
+        this.factories[name] = {
+            factory,
+            singleton: options.singleton !== false // Default: singleton
+        };
+    }
+    
+    // Get service (resolve dependencies)
+    get(name) {
+        // Return if already created (singleton)
+        if (this.singletons.has(name)) {
+            return this.services[name];
+        }
+        
+        // Create service
+        const { factory, singleton } = this.factories[name];
+        if (!factory) {
+            throw new Error(`Service ${name} not registered`);
+        }
+        
+        const service = factory(this); // Pass container for dependency resolution
+        
+        // Store if singleton
+        if (singleton) {
+            this.services[name] = service;
+            this.singletons.add(name);
+        }
+        
+        return service;
+    }
+    
+    // Clear all services (useful for testing)
+    clear() {
+        this.services = {};
+        this.singletons.clear();
+    }
+}
+
+module.exports = Container;
+```
+
+**Usage:**
+
+```javascript
+// container/setup.js
+const Container = require('./Container');
+const container = new Container();
+
+// Register dependencies
+container.register('db', () => {
+    const { Pool } = require('pg');
+    return new Pool({ /* config */ });
+});
+
+container.register('logger', () => {
+    return require('./utils/logger');
+});
+
+container.register('userRepository', (c) => {
+    const db = c.get('db');
+    return require('./repositories/user.repository')(db);
+});
+
+container.register('userService', (c) => {
+    const userRepository = c.get('userRepository');
+    const logger = c.get('logger');
+    return require('./services/user.service')(userRepository, logger);
+});
+
+// In routes
+const container = require('./container/setup');
+
+app.get('/users/:id', async (req, res) => {
+    const userService = container.get('userService');
+    const user = await userService.getUser(req.params.id);
+    res.json(user);
+});
+```
+
+**Advanced: Auto-wiring**
+
+```javascript
+// Auto-wire based on parameter names
+class Container {
+    // ... previous code ...
+    
+    autoWire(Class) {
+        return (...args) => {
+            // Analyze constructor parameters
+            const paramNames = this.getParamNames(Class);
+            const dependencies = paramNames.map(name => this.get(name));
+            return new Class(...dependencies);
+        };
+    }
+}
+
+// Usage
+container.register('userService', container.autoWire(UserService));
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Dependency Injection concepts and benefits
+- ✅ Different DI implementation approaches
+- ✅ Testing with DI and mocks
+- ✅ DI container implementation
+- ✅ Best practices for large applications
+
+Master these for senior-level interviews focusing on design patterns and testability.
+

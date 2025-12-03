@@ -388,3 +388,156 @@ Database relationships model how data entities relate to each other. Use one-to-
 - Study [CRUD with Repository Pattern](crud_with_repository_pattern.md) for data access
 - Master [Data Modeling](../03_data_layer_fundamentals/data_modeling_principles.md) for schema design
 
+---
+
+## 🎯 Interview Questions: Database Relationships
+
+### Q1: Explain one-to-one, one-to-many, and many-to-many relationships. When would you use each?
+
+**Answer:**
+
+**1. One-to-One:**
+
+```javascript
+// User has one Profile
+User.hasOne(Profile, { foreignKey: 'user_id' });
+Profile.belongsTo(User, { foreignKey: 'user_id' });
+
+// Schema
+CREATE TABLE users (id SERIAL PRIMARY KEY, email VARCHAR);
+CREATE TABLE profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE REFERENCES users(id),  -- UNIQUE = one-to-one
+    bio TEXT
+);
+```
+
+**Use Cases:**
+- User → Profile (one user, one profile)
+- Order → Invoice (one order, one invoice)
+
+**2. One-to-Many:**
+
+```javascript
+// User has many Orders
+User.hasMany(Order, { foreignKey: 'user_id' });
+Order.belongsTo(User, { foreignKey: 'user_id' });
+
+// Schema
+CREATE TABLE users (id SERIAL PRIMARY KEY);
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),  -- No UNIQUE = one-to-many
+    total DECIMAL
+);
+```
+
+**Use Cases:**
+- User → Orders (one user, many orders)
+- Post → Comments (one post, many comments)
+
+**3. Many-to-Many:**
+
+```javascript
+// Users have many Roles, Roles have many Users
+User.belongsToMany(Role, { through: 'user_roles' });
+Role.belongsToMany(User, { through: 'user_roles' });
+
+// Schema
+CREATE TABLE users (id SERIAL PRIMARY KEY);
+CREATE TABLE roles (id SERIAL PRIMARY KEY);
+CREATE TABLE user_roles (  -- Junction table
+    user_id INTEGER REFERENCES users(id),
+    role_id INTEGER REFERENCES roles(id),
+    PRIMARY KEY (user_id, role_id)
+);
+```
+
+**Use Cases:**
+- Users ↔ Roles (many users, many roles)
+- Posts ↔ Tags (many posts, many tags)
+
+**Visual Comparison:**
+
+```
+One-to-One:
+User ──┐
+       └── Profile
+
+One-to-Many:
+User ──┬── Order 1
+       ├── Order 2
+       └── Order 3
+
+Many-to-Many:
+User 1 ──┬── Role 1
+User 2 ──┼── Role 2
+User 3 ──┘── Role 3
+```
+
+---
+
+### Q2: How do you avoid N+1 query problems when loading relationships?
+
+**Answer:**
+
+**N+1 Problem:**
+
+```javascript
+// ❌ Problem: N+1 queries
+const users = await User.findAll(); // 1 query
+for (const user of users) {
+    const orders = await Order.findAll({ where: { user_id: user.id } }); // N queries
+}
+// Total: 1 + N queries (e.g., 1 + 100 = 101 queries)
+```
+
+**Solution: Eager Loading:**
+
+```javascript
+// ✅ Solution: Single query with JOIN
+const users = await User.findAll({
+    include: [{
+        model: Order,
+        as: 'orders'
+    }]
+});
+// Total: 1 query (with JOIN)
+```
+
+**Advanced Eager Loading:**
+
+```javascript
+// Nested relationships
+const users = await User.findAll({
+    include: [{
+        model: Order,
+        include: [{
+            model: OrderItem,
+            include: [Product]
+        }]
+    }]
+});
+
+// Filtering included data
+const users = await User.findAll({
+    include: [{
+        model: Order,
+        where: { status: 'completed' },  // Filter orders
+        required: false  // LEFT JOIN (include users without orders)
+    }]
+});
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Relationship types and use cases
+- ✅ N+1 query problem and solutions
+- ✅ Eager loading strategies
+- ✅ Schema design for relationships
+
+Master these for senior-level interviews focusing on database relationships.
+

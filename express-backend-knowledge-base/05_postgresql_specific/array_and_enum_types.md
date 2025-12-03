@@ -302,3 +302,138 @@ PostgreSQL arrays and enums provide flexible data types. Use arrays for simple l
 - Study [Connection URI and SSL](connection_uri_and_ssl_config.md) for production
 - Master [Sequelize Deep Dive](../04_relational_databases_sql/sequelize_deep_dive.md) for ORM usage
 
+---
+
+## 🎯 Interview Questions: PostgreSQL Arrays & Enums
+
+### Q1: When would you use PostgreSQL arrays vs normalized tables? What are the trade-offs?
+
+**Answer:**
+
+**Arrays (Denormalized):**
+
+```sql
+-- Store tags as array
+CREATE TABLE posts (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255),
+    tags TEXT[]  -- Array of tags
+);
+
+-- Insert
+INSERT INTO posts (title, tags) 
+VALUES ('Post 1', ARRAY['javascript', 'nodejs', 'express']);
+```
+
+**Normalized Tables:**
+
+```sql
+-- Store tags in separate table
+CREATE TABLE posts (id SERIAL PRIMARY KEY, title VARCHAR(255));
+CREATE TABLE tags (id SERIAL PRIMARY KEY, name VARCHAR(50));
+CREATE TABLE post_tags (
+    post_id INTEGER REFERENCES posts(id),
+    tag_id INTEGER REFERENCES tags(id),
+    PRIMARY KEY (post_id, tag_id)
+);
+```
+
+**Comparison:**
+
+| Aspect | Arrays | Normalized |
+|--------|--------|------------|
+| **Query Speed** | Fast (single table) | Slower (JOINs) |
+| **Flexibility** | Limited | High (metadata per tag) |
+| **Updates** | Replace entire array | Update individual rows |
+| **Use Case** | Simple lists, tags | Complex relationships |
+
+**When to Use Arrays:**
+
+```javascript
+// ✅ Good: Simple tags, no metadata
+const post = await Post.create({
+    title: 'Express.js Guide',
+    tags: ['javascript', 'nodejs', 'express']
+});
+
+// ✅ Good: Categories (fixed, simple)
+const product = await Product.create({
+    name: 'Laptop',
+    categories: ['electronics', 'computers']
+});
+```
+
+**When to Use Normalized:**
+
+```javascript
+// ✅ Good: Tags with metadata (count, description)
+// Need: Tag popularity, tag descriptions, tag relationships
+// Use: Separate tags table with relationships
+```
+
+---
+
+### Q2: Explain PostgreSQL enums. How do you handle enum changes in production?
+
+**Answer:**
+
+**Enum Definition:**
+
+```sql
+-- Create enum type
+CREATE TYPE order_status AS ENUM ('pending', 'processing', 'completed', 'cancelled');
+
+-- Use in table
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    status order_status DEFAULT 'pending'
+);
+```
+
+**Handling Enum Changes:**
+
+```sql
+-- Add new value
+ALTER TYPE order_status ADD VALUE 'refunded' AFTER 'cancelled';
+
+-- ⚠️ Cannot remove enum values directly
+-- Solution: Create new enum, migrate data
+CREATE TYPE order_status_new AS ENUM ('pending', 'processing', 'completed', 'cancelled');
+
+ALTER TABLE orders 
+ALTER COLUMN status TYPE order_status_new 
+USING status::text::order_status_new;
+
+DROP TYPE order_status;
+ALTER TYPE order_status_new RENAME TO order_status;
+```
+
+**Express.js Usage:**
+
+```javascript
+// Sequelize enum
+const Order = sequelize.define('Order', {
+    status: {
+        type: DataTypes.ENUM('pending', 'processing', 'completed', 'cancelled'),
+        defaultValue: 'pending'
+    }
+});
+
+// Validation
+if (!['pending', 'processing', 'completed', 'cancelled'].includes(status)) {
+    throw new Error('Invalid status');
+}
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Arrays vs normalized tables trade-offs
+- ✅ Enum types and handling changes
+- ✅ When to use PostgreSQL-specific types
+- ✅ Migration strategies
+
+Master these for senior-level interviews focusing on PostgreSQL advanced features.
+

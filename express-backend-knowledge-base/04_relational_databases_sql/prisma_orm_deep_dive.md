@@ -558,3 +558,158 @@ Prisma is a modern ORM that provides type-safe database access with excellent de
 - Study [Sequelize Deep Dive](sequelize_deep_dive.md) for traditional ORM
 - Master [Migrations](sequelize_migrations.md) for schema management
 
+---
+
+## 🎯 Interview Questions: Prisma ORM
+
+### Q1: What are the key advantages of Prisma over Sequelize? When would you choose Prisma?
+
+**Answer:**
+
+**Prisma Advantages:**
+
+**1. Type Safety:**
+
+```typescript
+// Prisma: Full type safety
+const user = await prisma.user.findUnique({
+    where: { id: 1 }
+});
+// user is typed: { id: number, email: string, name: string | null }
+
+// Sequelize: Limited type safety
+const user = await User.findByPk(1);
+// user type is any or User | null (less specific)
+```
+
+**2. Developer Experience:**
+
+```typescript
+// Prisma: Auto-completion, type checking
+const users = await prisma.user.findMany({
+    where: {
+        email: { contains: '@gmail.com' }  // TypeScript knows available filters
+    },
+    select: {
+        id: true,
+        email: true  // Only selected fields returned
+    }
+});
+
+// Prisma Studio: Visual database browser
+// npx prisma studio
+```
+
+**3. Declarative Schema:**
+
+```prisma
+// schema.prisma
+model User {
+    id    Int    @id @default(autoincrement())
+    email String @unique
+    name  String?
+    posts Post[]
+}
+
+model Post {
+    id     Int    @id @default(autoincrement())
+    title  String
+    userId Int
+    user   User   @relation(fields: [userId], references: [id])
+}
+```
+
+**4. Migration System:**
+
+```bash
+# Prisma: Declarative migrations
+npx prisma migrate dev --name add_user_table
+# Automatically generates SQL from schema.prisma
+```
+
+**Comparison:**
+
+| Feature | Prisma | Sequelize |
+|---------|--------|-----------|
+| **Type Safety** | ✅ Excellent | ⚠️ Limited |
+| **DX** | ✅ Great | ⚠️ Good |
+| **Schema** | ✅ Declarative | ⚠️ Code-based |
+| **Maturity** | ⚠️ Newer | ✅ Mature |
+| **Community** | ⚠️ Growing | ✅ Large |
+
+**When to Choose Prisma:**
+
+```
+Prisma:
+├─ TypeScript projects
+├─ Type safety critical
+├─ Modern stack
+└─ Developer experience priority
+
+Sequelize:
+├─ JavaScript projects
+├─ Established codebase
+├─ Complex queries needed
+└─ Mature ecosystem required
+```
+
+---
+
+### Q2: How does Prisma handle connection pooling and transactions?
+
+**Answer:**
+
+**Connection Pooling:**
+
+```typescript
+// Prisma Client automatically handles pooling
+const prisma = new PrismaClient({
+    datasources: {
+        db: {
+            url: process.env.DATABASE_URL
+        }
+    },
+    // Connection pool settings in DATABASE_URL
+    // postgresql://user:pass@host:5432/db?connection_limit=10&pool_timeout=20
+});
+
+// Prisma manages pool internally
+// No manual pool configuration needed
+```
+
+**Transactions:**
+
+```typescript
+// Interactive transaction
+const result = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+        data: { email: 'user@example.com', name: 'John' }
+    });
+    
+    const profile = await tx.profile.create({
+        data: { userId: user.id, bio: 'Developer' }
+    });
+    
+    return { user, profile };
+});
+
+// Batch transaction
+await prisma.$transaction([
+    prisma.user.create({ data: { email: 'user1@example.com' } }),
+    prisma.user.create({ data: { email: 'user2@example.com' } }),
+    prisma.user.create({ data: { email: 'user3@example.com' } })
+]);
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Prisma vs Sequelize comparison
+- ✅ Type safety and developer experience
+- ✅ Connection pooling and transactions
+- ✅ When to choose Prisma
+
+Master these for senior-level interviews focusing on modern ORM selection.
+

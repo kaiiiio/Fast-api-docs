@@ -374,3 +374,453 @@ Monorepo is better for small teams with shared code and rapid development needs.
 - Study [Dependency Injection](dependency_injection_best_practices.md) for service design
 - Master [Deployment](../15_deployment_and_performance/) for production setup
 
+---
+
+## 🎯 Interview Questions: Monorepo vs Microservices
+
+### Q1: When would you choose a monorepo over microservices architecture? What are the trade-offs?
+
+**Answer:**
+
+**Monorepo** = Single repository containing multiple projects/modules  
+**Microservices** = Separate repositories/services that communicate over network
+
+**Choose Monorepo When:**
+
+```
+Monorepo Best For:
+├─ Small to medium teams (< 50 developers)
+├─ Shared code and libraries
+├─ Rapid development and iteration
+├─ Simple deployment (single deploy)
+└─ Tightly coupled features
+```
+
+**Choose Microservices When:**
+
+```
+Microservices Best For:
+├─ Large teams (50+ developers)
+├─ Independent scaling needs
+├─ Different technology stacks
+├─ Independent deployment cycles
+└─ Loosely coupled domains
+```
+
+**Visual Comparison:**
+
+```
+Monorepo:
+┌─────────────────────────────────┐
+│      Single Repository          │
+│  ┌─────────┐  ┌─────────┐      │
+│  │ Module 1│  │ Module 2│      │
+│  └─────────┘  └─────────┘      │
+│  ┌─────────┐  ┌─────────┐      │
+│  │ Module 3│  │ Module 4│      │
+│  └─────────┘  └─────────┘      │
+│  └── Shared Code ──────────────┘
+└─────────────────────────────────┘
+
+Microservices:
+┌─────────┐  ┌─────────┐  ┌─────────┐
+│Service 1│  │Service 2│  │Service 3│
+│  Repo 1 │  │  Repo 2 │  │  Repo 3 │
+└────┬────┘  └────┬────┘  └────┬────┘
+     │            │            │
+     └────────────┴────────────┘
+            API Gateway
+```
+
+**Trade-offs:**
+
+| Aspect | Monorepo | Microservices |
+|--------|----------|---------------|
+| **Complexity** | Low | High |
+| **Deployment** | Single | Multiple |
+| **Scaling** | Vertical | Horizontal (per service) |
+| **Team Coordination** | Required | Independent |
+| **Code Sharing** | Easy | Hard (need packages) |
+| **Testing** | Simple | Complex (integration) |
+| **Debugging** | Easy | Hard (distributed) |
+
+**Real-world Example:**
+
+```
+Startup (Monorepo):
+├─ 5 developers
+├─ Fast iteration needed
+├─ Shared authentication
+└─ Single deployment → Monorepo ✅
+
+Enterprise (Microservices):
+├─ 100+ developers
+├─ Different teams
+├─ Payment service needs high security
+├─ Analytics service needs different stack
+└─ Independent scaling → Microservices ✅
+```
+
+---
+
+### Q2: How would you structure a monorepo for an Express.js application with multiple services?
+
+**Answer:**
+
+**Monorepo Structure:**
+
+```
+monorepo/
+├── packages/
+│   ├── api-gateway/          # Express API Gateway
+│   │   ├── src/
+│   │   ├── package.json
+│   │   └── Dockerfile
+│   ├── user-service/         # User microservice
+│   │   ├── src/
+│   │   ├── package.json
+│   │   └── Dockerfile
+│   ├── order-service/        # Order microservice
+│   │   └── ...
+│   └── shared/               # Shared packages
+│       ├── utils/
+│       │   ├── src/
+│       │   └── package.json
+│       ├── types/
+│       │   └── package.json
+│       └── logger/
+│           └── package.json
+├── package.json              # Root package.json
+├── lerna.json               # Monorepo tool config
+└── docker-compose.yml       # Local development
+```
+
+**Root package.json:**
+
+```json
+{
+  "name": "monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "lerna run dev --parallel",
+    "build": "lerna run build",
+    "test": "lerna run test"
+  }
+}
+```
+
+**Shared Package:**
+
+```json
+// packages/shared/utils/package.json
+{
+  "name": "@myapp/utils",
+  "version": "1.0.0",
+  "main": "src/index.js"
+}
+```
+
+**Using Shared Package:**
+
+```javascript
+// packages/user-service/src/index.js
+const { logger } = require('@myapp/utils');
+const { validateEmail } = require('@myapp/utils');
+
+logger.info('User service started');
+```
+
+**Benefits:**
+
+```
+Monorepo Structure:
+├─ Code Sharing: Easy import of shared code
+├─ Versioning: Single version for shared packages
+├─ Refactoring: Change shared code, all services benefit
+├─ Testing: Test shared code once
+└─ Development: Single command to run all services
+```
+
+---
+
+### Q3: Explain the challenges of microservices architecture. How do you handle them in Express.js?
+
+**Answer:**
+
+**Key Challenges:**
+
+**1. Service Communication:**
+
+```javascript
+// Challenge: Services need to communicate
+// Solution: HTTP/REST, gRPC, Message Queue
+
+// HTTP Communication
+const axios = require('axios');
+
+class OrderService {
+    async createOrder(orderData) {
+        // Call user service
+        const user = await axios.get(`http://user-service:3001/users/${orderData.userId}`);
+        
+        // Call inventory service
+        const available = await axios.post('http://inventory-service:3002/check', {
+            productId: orderData.productId
+        });
+        
+        // Create order
+        return await this.orderRepository.create(orderData);
+    }
+}
+```
+
+**2. Distributed Transactions:**
+
+```javascript
+// Challenge: Multiple services, single transaction
+// Solution: Saga Pattern
+
+class OrderSaga {
+    async createOrder(orderData) {
+        try {
+            // Step 1: Reserve inventory
+            await inventoryService.reserve(orderData.productId);
+            
+            // Step 2: Create order
+            const order = await orderService.create(orderData);
+            
+            // Step 3: Charge payment
+            await paymentService.charge(orderData.userId, orderData.amount);
+            
+            return order;
+        } catch (error) {
+            // Compensate: Rollback steps
+            await this.compensate(orderData);
+            throw error;
+        }
+    }
+    
+    async compensate(orderData) {
+        // Rollback in reverse order
+        await paymentService.refund(orderData.userId, orderData.amount);
+        await orderService.cancel(orderData.orderId);
+        await inventoryService.release(orderData.productId);
+    }
+}
+```
+
+**3. Service Discovery:**
+
+```javascript
+// Challenge: Services need to find each other
+// Solution: Service registry (Consul, Eureka)
+
+const consul = require('consul')();
+
+class ServiceDiscovery {
+    async getServiceUrl(serviceName) {
+        const services = await consul.health.service({
+            service: serviceName,
+            passing: true
+        });
+        
+        // Load balance
+        const service = services[0];
+        return `http://${service.Service.Address}:${service.Service.Port}`;
+    }
+}
+
+// Usage
+const discovery = new ServiceDiscovery();
+const userServiceUrl = await discovery.getServiceUrl('user-service');
+const user = await axios.get(`${userServiceUrl}/users/1`);
+```
+
+**4. Distributed Logging:**
+
+```javascript
+// Challenge: Logs scattered across services
+// Solution: Correlation IDs, centralized logging
+
+// Add correlation ID middleware
+app.use((req, res, next) => {
+    req.correlationId = req.headers['x-correlation-id'] || uuidv4();
+    res.setHeader('X-Correlation-ID', req.correlationId);
+    next();
+});
+
+// Log with correlation ID
+logger.info('Processing request', {
+    correlationId: req.correlationId,
+    service: 'user-service',
+    endpoint: req.path
+});
+
+// Forward correlation ID
+await axios.get('http://order-service/orders', {
+    headers: {
+        'X-Correlation-ID': req.correlationId
+    }
+});
+```
+
+**5. Error Handling:**
+
+```javascript
+// Challenge: Errors across services
+// Solution: Circuit breaker pattern
+
+const CircuitBreaker = require('opossum');
+
+const options = {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+};
+
+const breaker = new CircuitBreaker(axios.get, options);
+
+breaker.on('open', () => {
+    console.log('Circuit breaker opened - service unavailable');
+});
+
+// Usage
+try {
+    const user = await breaker.fire('http://user-service/users/1');
+} catch (error) {
+    // Handle circuit breaker error
+    if (breaker.opened) {
+        // Service is down, use fallback
+        return getCachedUser(1);
+    }
+}
+```
+
+---
+
+### Q4: How would you implement a hybrid approach: monorepo containing microservices?
+
+**Answer:**
+
+**Hybrid Approach** = Monorepo structure with microservices architecture.
+
+**Structure:**
+
+```
+monorepo/
+├── services/                 # Microservices
+│   ├── api-gateway/
+│   │   ├── src/
+│   │   │   ├── routes/
+│   │   │   └── index.js
+│   │   └── package.json
+│   ├── user-service/
+│   │   ├── src/
+│   │   │   ├── controllers/
+│   │   │   ├── services/
+│   │   │   └── index.js
+│   │   └── package.json
+│   └── order-service/
+│       └── ...
+├── packages/                 # Shared packages
+│   ├── shared-utils/
+│   ├── shared-types/
+│   └── shared-logger/
+├── docker-compose.yml       # Local orchestration
+└── package.json
+```
+
+**Docker Compose for Local:**
+
+```yaml
+version: '3.8'
+services:
+  api-gateway:
+    build: ./services/api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - USER_SERVICE_URL=http://user-service:3001
+      - ORDER_SERVICE_URL=http://order-service:3002
+  
+  user-service:
+    build: ./services/user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/users
+  
+  order-service:
+    build: ./services/order-service
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/orders
+  
+  db:
+    image: postgres:14
+    environment:
+      - POSTGRES_PASSWORD=password
+```
+
+**API Gateway:**
+
+```javascript
+// services/api-gateway/src/index.js
+const express = require('express');
+const axios = require('axios');
+const app = express();
+
+const USER_SERVICE = process.env.USER_SERVICE_URL;
+const ORDER_SERVICE = process.env.ORDER_SERVICE_URL;
+
+// Proxy to user service
+app.get('/api/users/:id', async (req, res) => {
+    try {
+        const response = await axios.get(`${USER_SERVICE}/users/${req.params.id}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(error.response?.status || 500).json({ error: error.message });
+    }
+});
+
+// Proxy to order service
+app.get('/api/orders/:id', async (req, res) => {
+    try {
+        const response = await axios.get(`${ORDER_SERVICE}/orders/${req.params.id}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(error.response?.status || 500).json({ error: error.message });
+    }
+});
+
+app.listen(3000);
+```
+
+**Benefits:**
+
+```
+Hybrid Approach:
+├─ Code Sharing: Easy (monorepo)
+├─ Independent Deployment: Possible (microservices)
+├─ Team Independence: Teams work on different services
+├─ Technology Flexibility: Different stacks per service
+└─ Best of Both: Monorepo + Microservices benefits
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Monorepo vs microservices decision criteria
+- ✅ Monorepo structure for Express.js
+- ✅ Microservices challenges and solutions
+- ✅ Hybrid approach implementation
+- ✅ Real-world trade-offs and use cases
+
+Master these for senior-level interviews focusing on architecture decisions and scalability.
+

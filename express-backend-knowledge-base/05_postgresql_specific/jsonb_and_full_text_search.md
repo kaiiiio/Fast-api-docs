@@ -333,3 +333,175 @@ JSONB provides flexible JSON storage with efficient querying and indexing. Use J
 - Study [pgvector for Embeddings](pgvector_for_embeddings.md) for vector search
 - Master [Connection URI and SSL](connection_uri_and_ssl_config.md) for production
 
+---
+
+## 🎯 Interview Questions: JSONB & Full-Text Search
+
+### Q1: Explain JSONB vs JSON in PostgreSQL. When would you use JSONB in an Express.js application?
+
+**Answer:**
+
+**JSON vs JSONB:**
+
+```sql
+-- JSON: Stored as text
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    metadata JSON  -- Stored as text, parsed on every query
+);
+
+-- JSONB: Stored in binary format
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    metadata JSONB  -- Stored in binary, indexed, fast queries
+);
+```
+
+**Key Differences:**
+
+| Aspect | JSON | JSONB |
+|--------|------|-------|
+| **Storage** | Text | Binary |
+| **Indexing** | ❌ No | ✅ GIN index |
+| **Query Speed** | Slow (parses each time) | Fast (pre-parsed) |
+| **Size** | Smaller | Slightly larger |
+| **Order** | Preserves key order | Doesn't preserve order |
+
+**JSONB Use Cases:**
+
+```javascript
+// 1. Flexible metadata
+const product = await Product.create({
+    name: 'Laptop',
+    metadata: {
+        specs: { ram: '16GB', storage: '512GB' },
+        reviews: [{ rating: 5, comment: 'Great!' }],
+        // Structure can vary per product
+    }
+});
+
+// 2. User preferences
+const user = await User.create({
+    email: 'user@example.com',
+    preferences: {
+        theme: 'dark',
+        notifications: { email: true, sms: false },
+        language: 'en'
+    }
+});
+
+// 3. Configuration data
+const config = await Config.create({
+    key: 'app_settings',
+    value: {
+        features: { new_ui: true, beta_features: false },
+        limits: { max_upload: 100, max_users: 1000 }
+    }
+});
+```
+
+**Querying JSONB:**
+
+```sql
+-- Query nested fields
+SELECT * FROM products 
+WHERE metadata->>'brand' = 'Apple';
+
+-- Query arrays
+SELECT * FROM products 
+WHERE metadata->'tags' @> '["electronics"]'::jsonb;
+
+-- Full-text search on JSONB
+SELECT * FROM products 
+WHERE to_tsvector('english', metadata::text) @@ to_tsquery('laptop');
+```
+
+---
+
+### Q2: How do you implement full-text search in PostgreSQL for an Express.js application?
+
+**Answer:**
+
+**Full-Text Search Setup:**
+
+```sql
+-- Create table with text search
+CREATE TABLE articles (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255),
+    content TEXT,
+    search_vector tsvector  -- Generated column for search
+);
+
+-- Create index
+CREATE INDEX idx_articles_search ON articles USING GIN(search_vector);
+
+-- Generate search vector
+CREATE TRIGGER articles_search_vector_update 
+BEFORE INSERT OR UPDATE ON articles
+FOR EACH ROW EXECUTE FUNCTION 
+tsvector_update_trigger(search_vector, 'pg_catalog.english', title, content);
+```
+
+**Express.js Implementation:**
+
+```javascript
+// Search endpoint
+app.get('/articles/search', async (req, res) => {
+    const query = req.query.q;
+    
+    const articles = await db.query(`
+        SELECT 
+            id,
+            title,
+            content,
+            ts_rank(search_vector, query) AS rank
+        FROM articles, to_tsquery('english', $1) AS query
+        WHERE search_vector @@ query
+        ORDER BY rank DESC
+        LIMIT 20
+    `, [query]);
+    
+    res.json(articles.rows);
+});
+
+// Advanced: Phrase search, ranking
+app.get('/articles/search', async (req, res) => {
+    const query = req.query.q;
+    const searchQuery = query.split(' ').join(' & ');  // AND search
+    
+    const articles = await db.query(`
+        SELECT 
+            id,
+            title,
+            content,
+            ts_rank_cd(search_vector, to_tsquery('english', $1)) AS rank,
+            ts_headline('english', content, to_tsquery('english', $1)) AS snippet
+        FROM articles
+        WHERE search_vector @@ to_tsquery('english', $1)
+        ORDER BY rank DESC
+        LIMIT 20
+    `, [searchQuery]);
+    
+    res.json(articles.rows);
+});
+```
+
+**Benefits:**
+- ✅ Fast text search (indexed)
+- ✅ Ranking by relevance
+- ✅ Highlighting matches
+- ✅ Language-aware (stemming, stop words)
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ JSONB vs JSON differences and use cases
+- ✅ Full-text search implementation
+- ✅ Querying JSONB data
+- ✅ Performance optimization
+
+Master these for senior-level interviews focusing on PostgreSQL advanced features.
+

@@ -445,3 +445,241 @@ async function createUserWithProfile(userData, profileData) {
 
 Repository pattern in Express.js requires: Creating base repository for common CRUD operations, extending base repository for entity-specific methods, using repositories in services for business logic, and keeping controllers thin (just HTTP handling). This pattern provides clean separation of concerns, easy testing, and database independence.
 
+---
+
+## 🎯 Interview Questions: Repository Pattern & CRUD Operations
+
+### Q1: Explain the Repository Pattern. Why is it beneficial in Express.js applications?
+
+**Answer:**
+
+**Repository Pattern** = Abstraction layer between business logic and data access. It hides database implementation details.
+
+**Without Repository:**
+
+```javascript
+// ❌ Problem: Database logic in controllers
+app.get('/users/:id', async (req, res) => {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+    res.json(result.rows[0]);
+});
+
+// Hard to test, hard to swap database
+```
+
+**With Repository:**
+
+```javascript
+// ✅ Solution: Repository abstracts data access
+class UserRepository {
+    async findById(id) {
+        return await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    }
+}
+
+app.get('/users/:id', async (req, res) => {
+    const user = await userRepository.findById(req.params.id);
+    res.json(user);
+});
+```
+
+**Benefits:**
+
+```
+Repository Pattern:
+├─ Abstraction: Hide database details
+├─ Testability: Mock repository for tests
+├─ Flexibility: Swap PostgreSQL → MongoDB easily
+├─ Reusability: Use in multiple services
+└─ Maintainability: Database changes in one place
+```
+
+**Base Repository:**
+
+```javascript
+class BaseRepository {
+    constructor(model) {
+        this.model = model;
+    }
+    
+    async findAll(options = {}) {
+        return await this.model.findAll(options);
+    }
+    
+    async findById(id) {
+        return await this.model.findByPk(id);
+    }
+    
+    async create(data) {
+        return await this.model.create(data);
+    }
+    
+    async update(id, data) {
+        const record = await this.findById(id);
+        if (!record) throw new Error('Not found');
+        return await record.update(data);
+    }
+    
+    async delete(id) {
+        const record = await this.findById(id);
+        if (!record) throw new Error('Not found');
+        return await record.destroy();
+    }
+}
+
+// Extend for specific entities
+class UserRepository extends BaseRepository {
+    constructor() {
+        super(User);
+    }
+    
+    async findByEmail(email) {
+        return await this.model.findOne({ where: { email } });
+    }
+}
+```
+
+---
+
+### Q2: How do you implement pagination with the Repository Pattern? Compare offset vs cursor-based pagination.
+
+**Answer:**
+
+**Offset-Based Pagination:**
+
+```javascript
+class UserRepository extends BaseRepository {
+    async findAllPaginated(page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+        
+        const { count, rows } = await this.model.findAndCountAll({
+            limit,
+            offset,
+            order: [['created_at', 'DESC']]
+        });
+        
+        return {
+            data: rows,
+            pagination: {
+                page,
+                limit,
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
+        };
+    }
+}
+
+// Usage
+app.get('/users', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const result = await userRepository.findAllPaginated(page, limit);
+    res.json(result);
+});
+```
+
+**Cursor-Based Pagination:**
+
+```javascript
+class UserRepository extends BaseRepository {
+    async findAllCursor(cursor, limit = 10) {
+        const where = cursor ? { id: { [Op.gt]: cursor } } : {};
+        
+        const users = await this.model.findAll({
+            where,
+            limit: limit + 1, // Fetch one extra to check if more exists
+            order: [['id', 'ASC']]
+        });
+        
+        const hasMore = users.length > limit;
+        const data = hasMore ? users.slice(0, limit) : users;
+        const nextCursor = hasMore ? data[data.length - 1].id : null;
+        
+        return {
+            data,
+            cursor: nextCursor,
+            hasMore
+        };
+    }
+}
+
+// Usage
+app.get('/users', async (req, res) => {
+    const cursor = req.query.cursor;
+    const limit = parseInt(req.query.limit) || 10;
+    const result = await userRepository.findAllCursor(cursor, limit);
+    res.json(result);
+});
+```
+
+**Comparison:**
+
+| Aspect | Offset | Cursor |
+|--------|--------|--------|
+| **Performance** | Degrades with large offset | Consistent |
+| **Consistency** | Can skip/duplicate items | Stable |
+| **Complexity** | Simple | More complex |
+| **Use Case** | Small datasets | Large datasets |
+
+---
+
+### Q3: How do you handle transactions with the Repository Pattern?
+
+**Answer:**
+
+**Transaction Support:**
+
+```javascript
+class BaseRepository {
+    async create(data, options = {}) {
+        return await this.model.create(data, options);
+    }
+    
+    async update(id, data, options = {}) {
+        const record = await this.findById(id, options);
+        if (!record) throw new Error('Not found');
+        return await record.update(data, options);
+    }
+}
+
+// Service uses transaction
+class UserService {
+    constructor(userRepository, profileRepository) {
+        this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
+    }
+    
+    async createUserWithProfile(userData, profileData) {
+        const transaction = await sequelize.transaction();
+        
+        try {
+            const user = await this.userRepository.create(userData, { transaction });
+            const profile = await this.profileRepository.create(
+                { ...profileData, user_id: user.id },
+                { transaction }
+            );
+            
+            await transaction.commit();
+            return { user, profile };
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    }
+}
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Repository Pattern benefits and implementation
+- ✅ Pagination strategies (offset vs cursor)
+- ✅ Transaction handling with repositories
+- ✅ Base repository design
+- ✅ Testing with repositories
+
+Master these for senior-level interviews focusing on data access patterns.
+

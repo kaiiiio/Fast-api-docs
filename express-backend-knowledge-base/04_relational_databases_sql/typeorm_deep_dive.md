@@ -473,3 +473,148 @@ TypeORM is a powerful ORM that supports both TypeScript and JavaScript. It uses 
 - Study [Sequelize Deep Dive](sequelize_deep_dive.md) for traditional ORM
 - Master [Relationships](relationships_explained.md) for relation patterns
 
+---
+
+## 🎯 Interview Questions: TypeORM
+
+### Q1: Explain TypeORM's Repository vs Active Record patterns. When would you use each?
+
+**Answer:**
+
+**Active Record Pattern:**
+
+```typescript
+// Entity extends BaseEntity
+@Entity()
+export class User extends BaseEntity {
+    @PrimaryGeneratedColumn()
+    id: number;
+    
+    @Column()
+    email: string;
+    
+    // Methods on entity
+    async findOrders() {
+        return await Order.find({ where: { userId: this.id } });
+    }
+}
+
+// Usage
+const user = await User.findOne({ where: { id: 1 } });
+const orders = await user.findOrders();  // Method on entity
+```
+
+**Repository Pattern:**
+
+```typescript
+// Entity doesn't extend BaseEntity
+@Entity()
+export class User {
+    @PrimaryGeneratedColumn()
+    id: number;
+    
+    @Column()
+    email: string;
+}
+
+// Repository for data access
+const userRepository = dataSource.getRepository(User);
+
+// Usage
+const user = await userRepository.findOne({ where: { id: 1 } });
+const orders = await orderRepository.find({ where: { userId: user.id } });
+```
+
+**Comparison:**
+
+| Aspect | Active Record | Repository |
+|--------|---------------|------------|
+| **Complexity** | Simple | More structured |
+| **Testability** | Harder | Easier (mock repository) |
+| **Separation** | Business logic in entity | Business logic in service |
+| **Use Case** | Small apps | Large, complex apps |
+
+**When to Use:**
+
+```
+Active Record:
+├─ Small applications
+├─ Simple CRUD operations
+└─ Rapid prototyping
+
+Repository:
+├─ Large applications
+├─ Complex business logic
+├─ Testability important
+└─ Clean architecture
+```
+
+---
+
+### Q2: How does TypeORM handle migrations and schema synchronization?
+
+**Answer:**
+
+**Migrations:**
+
+```typescript
+// Generate migration
+npm run typeorm migration:generate -- -n AddUserTable
+
+// Migration file
+export class AddUserTable1234567890 implements MigrationInterface {
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.createTable(
+            new Table({
+                name: 'users',
+                columns: [
+                    {
+                        name: 'id',
+                        type: 'int',
+                        isPrimary: true,
+                        isGenerated: true
+                    },
+                    {
+                        name: 'email',
+                        type: 'varchar',
+                        isUnique: true
+                    }
+                ]
+            }),
+            true
+        );
+    }
+    
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.dropTable('users');
+    }
+}
+
+// Run migrations
+npm run typeorm migration:run
+npm run typeorm migration:revert
+```
+
+**Schema Synchronization:**
+
+```typescript
+// ❌ Never use in production
+await dataSource.synchronize();  // Auto-creates/updates schema
+
+// ✅ Use migrations instead
+// Generate from entities
+npm run typeorm migration:generate -- -n MigrationName
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Repository vs Active Record patterns
+- ✅ TypeORM migrations and schema management
+- ✅ When to use TypeORM
+- ✅ Best practices
+
+Master these for senior-level interviews focusing on TypeORM and ORM patterns.
+

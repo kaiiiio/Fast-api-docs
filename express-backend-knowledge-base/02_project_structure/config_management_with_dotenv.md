@@ -254,6 +254,14 @@ function createToken(userId) {
 .env.*.local
 ```
 
+**Create `.gitignore` file (CLI command):**
+```bash
+echo "# Ignore env files" > .gitignore
+echo ".env" >> .gitignore
+echo ".env.local" >> .gitignore
+echo ".env.*.local" >> .gitignore
+```
+
 ### 2. **Provide .env.example**
 
 ```bash
@@ -305,4 +313,296 @@ export default config;
 ## Summary
 
 Effective configuration management in Express.js requires: Using dotenv for environment variables, validating required variables on startup, organizing config into logical groups, providing .env.example for documentation, and never committing .env files to git.
+
+---
+
+## 🎯 Interview Questions: Configuration Management
+
+### Q1: How do you manage environment variables in a production Express.js application? What are the security best practices?
+
+**Answer:**
+
+**Environment Variables** store **sensitive configuration** outside code. Never commit secrets to git.
+
+**Basic Setup:**
+
+```javascript
+// .env (not committed)
+DATABASE_URL=postgresql://user:password@localhost:5432/mydb
+JWT_SECRET=super-secret-key-min-32-chars
+API_KEY=abc123xyz
+
+// config/env.js
+require('dotenv').config();
+
+module.exports = {
+    port: process.env.PORT || 3000,
+    db: {
+        url: process.env.DATABASE_URL
+    },
+    jwt: {
+        secret: process.env.JWT_SECRET
+    }
+};
+```
+
+**Security Best Practices:**
+
+```javascript
+// ✅ 1. Validate on startup
+function validateConfig() {
+    const required = ['DATABASE_URL', 'JWT_SECRET'];
+    const missing = required.filter(key => !process.env[key]);
+    if (missing.length > 0) {
+        throw new Error(`Missing: ${missing.join(', ')}`);
+    }
+}
+
+// ✅ 2. Use strong secrets
+// JWT_SECRET should be 32+ characters, random
+// Generate: openssl rand -base64 32
+
+// ✅ 3. Never log secrets
+console.log(process.env.JWT_SECRET); // ❌ Never do this
+
+// ✅ 4. Use different values per environment
+// Development: .env.development
+// Production: .env.production (or secrets manager)
+```
+
+**Production Secrets Management:**
+
+```javascript
+// Option 1: AWS Secrets Manager
+const { SecretsManager } = require('@aws-sdk/client-secrets-manager');
+const client = new SecretsManager({ region: 'us-east-1' });
+
+async function getSecret(name) {
+    const response = await client.getSecretValue({ SecretId: name });
+    return JSON.parse(response.SecretString);
+}
+
+// Option 2: HashiCorp Vault
+const vault = require('node-vault')();
+const secret = await vault.read('secret/data/myapp');
+
+// Option 3: Environment variables (Kubernetes, Docker)
+// Set in deployment config, not in code
+```
+
+**Common Mistakes:**
+
+```javascript
+// ❌ Mistake 1: Hardcoded secrets
+const secret = 'my-secret-key'; // Never!
+
+// ❌ Mistake 2: Committing .env
+// Add to .gitignore
+.env
+.env.local
+.env.*.local
+
+// ❌ Mistake 3: Weak secrets
+JWT_SECRET=12345 // Too short, predictable
+
+// ✅ Correct
+JWT_SECRET=$(openssl rand -base64 32) // Strong, random
+```
+
+---
+
+### Q2: How would you design a configuration system that supports multiple environments (dev, staging, production)?
+
+**Answer:**
+
+Design a **hierarchical configuration system** with environment-specific overrides.
+
+**Structure:**
+
+```
+config/
+├── default.js      # Base configuration
+├── development.js  # Development overrides
+├── staging.js      # Staging overrides
+├── production.js   # Production overrides
+└── index.js        # Loader
+```
+
+**Implementation:**
+
+```javascript
+// config/default.js
+module.exports = {
+    app: {
+        name: 'MyApp',
+        port: 3000
+    },
+    db: {
+        pool: {
+            min: 2,
+            max: 10
+        }
+    },
+    logging: {
+        level: 'info'
+    }
+};
+
+// config/development.js
+module.exports = {
+    db: {
+        host: 'localhost',
+        port: 5432
+    },
+    logging: {
+        level: 'debug' // More verbose in dev
+    }
+};
+
+// config/production.js
+module.exports = {
+    db: {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        ssl: true // SSL in production
+    },
+    logging: {
+        level: 'error' // Less verbose in prod
+    }
+};
+
+// config/index.js
+const _ = require('lodash');
+const env = process.env.NODE_ENV || 'development';
+
+const defaultConfig = require('./default');
+const envConfig = require(`./${env}`);
+
+// Merge: env config overrides default
+const config = _.merge({}, defaultConfig, envConfig);
+
+module.exports = config;
+```
+
+**Usage:**
+
+```javascript
+// app.js
+const config = require('./config');
+
+app.listen(config.app.port, () => {
+    console.log(`Server running on port ${config.app.port}`);
+});
+```
+
+**Environment Detection:**
+
+```javascript
+// Automatic environment detection
+const env = process.env.NODE_ENV || 'development';
+
+// Or explicit
+const env = process.env.APP_ENV || 'development';
+
+// Validate environment
+const validEnvs = ['development', 'staging', 'production'];
+if (!validEnvs.includes(env)) {
+    throw new Error(`Invalid environment: ${env}`);
+}
+```
+
+---
+
+### Q3: Explain the difference between configuration and secrets. How do you handle each?
+
+**Answer:**
+
+**Configuration** = Non-sensitive settings (ports, timeouts, feature flags)  
+**Secrets** = Sensitive data (passwords, API keys, tokens)
+
+**Configuration (Can be in code/config files):**
+
+```javascript
+// config/app.js
+module.exports = {
+    port: 3000,
+    timeout: 5000,
+    maxRetries: 3,
+    features: {
+        enableCache: true,
+        enableMetrics: false
+    }
+};
+```
+
+**Secrets (Must be in environment/secrets manager):**
+
+```javascript
+// ❌ Never in code
+const secret = 'my-password';
+
+// ✅ In environment
+const secret = process.env.DB_PASSWORD;
+
+// ✅ In secrets manager (production)
+const secret = await getSecretFromVault('db-password');
+```
+
+**Handling Strategy:**
+
+```
+Configuration:
+├─ Store in: config files, code
+├─ Version control: ✅ Yes
+├─ Examples: ports, timeouts, feature flags
+└─ Security: Low risk
+
+Secrets:
+├─ Store in: environment variables, secrets manager
+├─ Version control: ❌ Never
+├─ Examples: passwords, API keys, tokens
+└─ Security: High risk
+```
+
+**Best Practice:**
+
+```javascript
+// config/index.js
+module.exports = {
+    // Configuration (safe to commit)
+    app: {
+        port: process.env.PORT || 3000,
+        env: process.env.NODE_ENV || 'development'
+    },
+    
+    // Secrets (from environment only)
+    secrets: {
+        dbPassword: process.env.DB_PASSWORD, // Required
+        jwtSecret: process.env.JWT_SECRET,     // Required
+        apiKey: process.env.API_KEY            // Required
+    }
+};
+
+// Validate secrets on startup
+function validateSecrets() {
+    const required = ['DB_PASSWORD', 'JWT_SECRET'];
+    const missing = required.filter(key => !process.env[key]);
+    if (missing.length > 0) {
+        throw new Error(`Missing secrets: ${missing.join(', ')}`);
+    }
+}
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Environment variable management and security
+- ✅ Multi-environment configuration systems
+- ✅ Configuration vs secrets handling
+- ✅ Production secrets management
+- ✅ Best practices and common mistakes
+
+Master these for mid-level and senior interviews focusing on configuration management and security.
 

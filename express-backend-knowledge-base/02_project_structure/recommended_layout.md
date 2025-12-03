@@ -504,3 +504,504 @@ packages/
 
 Effective Express.js project structure requires: Separation of concerns (routes, controllers, services, repositories), dependency injection for testability, API versioning for evolution, centralized error handling, and thin routes (business logic in services).
 
+---
+
+## 🎯 Interview Questions: Project Structure & Architecture
+
+### Q1: How would you structure a large Express.js application for a team of 20+ developers? What principles guide your structure?
+
+**Answer:**
+
+Structure should support **team collaboration**, **scalability**, and **maintainability**.
+
+**Recommended Structure:**
+
+```
+project/
+├── src/
+│   ├── modules/              # Feature-based modules
+│   │   ├── users/
+│   │   │   ├── controllers/
+│   │   │   ├── services/
+│   │   │   ├── repositories/
+│   │   │   ├── routes/
+│   │   │   ├── models/
+│   │   │   └── index.js
+│   │   ├── orders/
+│   │   └── products/
+│   ├── shared/               # Shared code
+│   │   ├── middleware/
+│   │   ├── utils/
+│   │   ├── validators/
+│   │   └── errors/
+│   ├── config/              # Configuration
+│   └── app.js               # Application entry
+├── tests/
+└── package.json
+```
+
+**Principles:**
+
+```
+1. Feature-Based Modules
+   ├─ Each feature is self-contained
+   ├─ Teams can work independently
+   └─ Easy to locate code
+
+2. Separation of Concerns
+   ├─ Routes: HTTP handling
+   ├─ Controllers: Request/response
+   ├─ Services: Business logic
+   └─ Repositories: Data access
+
+3. Shared Code
+   ├─ Common utilities
+   ├─ Shared middleware
+   └─ Error handlers
+
+4. Clear Boundaries
+   ├─ Modules don't depend on each other
+   ├─ Communication via events/services
+   └─ Easy to test
+```
+
+**Implementation:**
+
+```javascript
+// modules/users/index.js
+const userRoutes = require('./routes/user.routes');
+const userService = require('./services/user.service');
+
+module.exports = {
+    routes: userRoutes,
+    service: userService
+};
+
+// app.js
+const userModule = require('./modules/users');
+const orderModule = require('./modules/orders');
+
+app.use('/api/users', userModule.routes);
+app.use('/api/orders', orderModule.routes);
+```
+
+**Team Collaboration:**
+
+```
+Team Structure:
+├─ Team 1: Users Module (5 developers)
+├─ Team 2: Orders Module (5 developers)
+├─ Team 3: Products Module (4 developers)
+├─ Team 4: Payments Module (3 developers)
+└─ Team 5: Infrastructure (3 developers)
+
+Benefits:
+├─ Parallel Development: Teams work independently
+├─ Clear Ownership: Each module has owners
+├─ Reduced Conflicts: Less code overlap
+└─ Faster Onboarding: Clear structure
+```
+
+---
+
+### Q2: Explain the difference between feature-based and layer-based project structure. When would you use each?
+
+**Answer:**
+
+**Feature-Based Structure** (Recommended for large teams):
+
+```
+modules/
+├── users/
+│   ├── controllers/
+│   ├── services/
+│   ├── repositories/
+│   └── routes/
+├── orders/
+│   └── [same structure]
+└── products/
+    └── [same structure]
+```
+
+**Benefits:**
+- ✅ Teams work on complete features
+- ✅ Easy to locate related code
+- ✅ Independent deployment possible
+- ✅ Clear ownership
+
+**Layer-Based Structure** (Traditional):
+
+```
+src/
+├── controllers/
+│   ├── user.controller.js
+│   ├── order.controller.js
+│   └── product.controller.js
+├── services/
+│   ├── user.service.js
+│   ├── order.service.js
+│   └── product.service.js
+└── repositories/
+    ├── user.repository.js
+    ├── order.repository.js
+    └── product.repository.js
+```
+
+**Benefits:**
+- ✅ Clear separation by layer
+- ✅ Easy to understand architecture
+- ✅ Good for small teams
+
+**Comparison:**
+
+| Aspect | Feature-Based | Layer-Based |
+|--------|---------------|-------------|
+| **Team Size** | Large (10+) | Small (< 10) |
+| **Code Location** | Easy (all in module) | Harder (scattered) |
+| **Parallel Work** | Easy (different modules) | Harder (same files) |
+| **Testing** | Module-level | Layer-level |
+| **Scalability** | High | Medium |
+
+**When to Use:**
+
+```
+Feature-Based:
+├─ Large teams (10+ developers)
+├─ Multiple features
+├─ Independent deployment needed
+└─ Microservices architecture
+
+Layer-Based:
+├─ Small teams (< 10 developers)
+├─ Simple applications
+├─ Learning/teaching
+└─ Monolithic architecture
+```
+
+---
+
+### Q3: How do you handle API versioning in Express.js? What are the different strategies?
+
+**Answer:**
+
+**API Versioning** allows **backward compatibility** while evolving APIs.
+
+**Strategy 1: URL Path Versioning**
+
+```javascript
+// v1
+app.use('/api/v1/users', userRoutesV1);
+
+// v2
+app.use('/api/v2/users', userRoutesV2);
+
+// Usage:
+// GET /api/v1/users/1
+// GET /api/v2/users/1
+```
+
+**Strategy 2: Header Versioning**
+
+```javascript
+app.use('/api/users', (req, res, next) => {
+    const version = req.headers['api-version'] || 'v1';
+    req.apiVersion = version;
+    next();
+});
+
+app.get('/api/users/:id', (req, res) => {
+    if (req.apiVersion === 'v2') {
+        // New response format
+        res.json({ user: user, metadata: {...} });
+    } else {
+        // Old response format
+        res.json(user);
+    }
+});
+```
+
+**Strategy 3: Query Parameter**
+
+```javascript
+app.get('/api/users/:id', (req, res) => {
+    const version = req.query.version || 'v1';
+    // Handle based on version
+});
+```
+
+**Recommended: URL Path Versioning**
+
+```javascript
+// routes/v1/user.routes.js
+const express = require('express');
+const router = express.Router();
+
+router.get('/:id', async (req, res) => {
+    const user = await userService.getUser(req.params.id);
+    res.json({ id: user.id, name: user.name }); // v1 format
+});
+
+// routes/v2/user.routes.js
+router.get('/:id', async (req, res) => {
+    const user = await userService.getUser(req.params.id);
+    res.json({
+        id: user.id,
+        name: user.name,
+        email: user.email,        // v2 additions
+        metadata: {...}           // v2 additions
+    });
+});
+
+// app.js
+app.use('/api/v1/users', require('./routes/v1/user.routes'));
+app.use('/api/v2/users', require('./routes/v2/user.routes'));
+```
+
+**Versioning Best Practices:**
+
+```
+API Versioning:
+├─ Always version breaking changes
+├─ Keep old versions for 6-12 months
+├─ Document deprecation timeline
+├─ Use semantic versioning (v1, v2, v3)
+└─ Communicate changes to clients
+```
+
+---
+
+### Q4: How would you organize routes, controllers, and services in a scalable Express.js application?
+
+**Answer:**
+
+**Three-Layer Architecture:**
+
+```
+Routes → Controllers → Services → Repositories → Database
+```
+
+**1. Routes (Thin Layer):**
+
+```javascript
+// routes/user.routes.js
+const express = require('express');
+const router = express.Router();
+const userController = require('../controllers/user.controller');
+
+router.get('/:id', userController.getUser);
+router.post('/', userController.createUser);
+router.put('/:id', userController.updateUser);
+router.delete('/:id', userController.deleteUser);
+
+module.exports = router;
+```
+
+**2. Controllers (Request/Response Handling):**
+
+```javascript
+// controllers/user.controller.js
+const userService = require('../services/user.service');
+
+exports.getUser = async (req, res, next) => {
+    try {
+        const user = await userService.getUserById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ error: 'Not found' });
+        }
+        res.json(user);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.createUser = async (req, res, next) => {
+    try {
+        const user = await userService.createUser(req.body);
+        res.status(201).json(user);
+    } catch (error) {
+        next(error);
+    }
+};
+```
+
+**3. Services (Business Logic):**
+
+```javascript
+// services/user.service.js
+const userRepository = require('../repositories/user.repository');
+
+exports.getUserById = async (userId) => {
+    // Business logic
+    if (!userId) {
+        throw new Error('User ID required');
+    }
+    
+    const user = await userRepository.findById(userId);
+    
+    // Transform data
+    return {
+        id: user.id,
+        name: user.name,
+        email: user.email
+        // Don't expose password
+    };
+};
+
+exports.createUser = async (userData) => {
+    // Validation
+    if (!userData.email || !userData.password) {
+        throw new Error('Email and password required');
+    }
+    
+    // Business rules
+    const existing = await userRepository.findByEmail(userData.email);
+    if (existing) {
+        throw new Error('Email already exists');
+    }
+    
+    // Create user
+    return await userRepository.create(userData);
+};
+```
+
+**Responsibilities:**
+
+```
+Routes:
+├─ Define endpoints
+├─ Map to controllers
+└─ Handle HTTP methods
+
+Controllers:
+├─ Extract request data
+├─ Call services
+├─ Format responses
+└─ Handle errors
+
+Services:
+├─ Business logic
+├─ Data transformation
+├─ Orchestration
+└─ Validation
+```
+
+---
+
+### Q5: How do you handle shared code and utilities across multiple modules?
+
+**Answer:**
+
+Create a **shared directory** for common code used across modules.
+
+**Structure:**
+
+```
+src/
+├── shared/
+│   ├── middleware/
+│   │   ├── auth.middleware.js
+│   │   ├── validation.middleware.js
+│   │   └── error.middleware.js
+│   ├── utils/
+│   │   ├── logger.js
+│   │   ├── date.utils.js
+│   │   └── string.utils.js
+│   ├── validators/
+│   │   ├── user.validator.js
+│   │   └── common.validator.js
+│   └── errors/
+│       ├── AppError.js
+│       └── errorHandler.js
+```
+
+**Shared Middleware:**
+
+```javascript
+// shared/middleware/auth.middleware.js
+const jwt = require('jsonwebtoken');
+
+exports.authenticate = async (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    try {
+        const user = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = user;
+        next();
+    } catch (error) {
+        res.status(401).json({ error: 'Invalid token' });
+    }
+};
+
+// Usage in any module
+const { authenticate } = require('../../shared/middleware/auth.middleware');
+router.get('/profile', authenticate, userController.getProfile);
+```
+
+**Shared Utilities:**
+
+```javascript
+// shared/utils/logger.js
+const winston = require('winston');
+
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'combined.log' })
+    ]
+});
+
+module.exports = logger;
+
+// Usage
+const logger = require('../../shared/utils/logger');
+logger.info('User created', { userId: 1 });
+```
+
+**Shared Errors:**
+
+```javascript
+// shared/errors/AppError.js
+class AppError extends Error {
+    constructor(message, statusCode) {
+        super(message);
+        this.statusCode = statusCode;
+        this.isOperational = true;
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
+module.exports = AppError;
+
+// Usage
+const AppError = require('../../shared/errors/AppError');
+throw new AppError('User not found', 404);
+```
+
+**Best Practices:**
+
+```
+Shared Code:
+├─ Keep it generic (no business logic)
+├─ Document usage
+├─ Version carefully (breaking changes affect all)
+└─ Test thoroughly
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Large-scale project structure for teams
+- ✅ Feature-based vs layer-based architecture
+- ✅ API versioning strategies
+- ✅ Routes, controllers, services organization
+- ✅ Shared code management
+
+Master these for senior-level interviews focusing on architecture and scalability.
+

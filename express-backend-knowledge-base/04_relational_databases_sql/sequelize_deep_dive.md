@@ -402,3 +402,151 @@ async function syncDatabase() {
 
 Sequelize deep dive covers: Setting up Sequelize connection, defining models with DataTypes, creating relationships (hasMany, belongsTo), CRUD operations (create, read, update, delete), including related data, and database synchronization. Sequelize provides a powerful ORM for Express.js applications working with relational databases.
 
+---
+
+## 🎯 Interview Questions: Sequelize ORM
+
+### Q1: Explain the benefits and drawbacks of using Sequelize ORM vs raw SQL queries in Express.js.
+
+**Answer:**
+
+**Sequelize Benefits:**
+
+```javascript
+// ✅ Type-safe queries
+const user = await User.findOne({ where: { email: 'user@example.com' } });
+// Auto-completion, type checking
+
+// ✅ Relationships handled automatically
+const user = await User.findByPk(1, {
+    include: [Order, Profile]  // Automatic JOINs
+});
+
+// ✅ Migrations for schema management
+// ✅ Model validation
+// ✅ Protection against SQL injection
+```
+
+**Raw SQL Benefits:**
+
+```javascript
+// ✅ Full control over queries
+const result = await db.query(`
+    SELECT 
+        u.id,
+        u.name,
+        COUNT(o.id) as order_count,
+        SUM(o.total) as total_spent
+    FROM users u
+    LEFT JOIN orders o ON u.id = o.user_id
+    WHERE u.created_at > $1
+    GROUP BY u.id
+    HAVING COUNT(o.id) > 5
+    ORDER BY total_spent DESC
+`, [date]);
+
+// ✅ Complex queries easier
+// ✅ Better performance (no ORM overhead)
+// ✅ Database-specific features
+```
+
+**Comparison:**
+
+| Aspect | Sequelize | Raw SQL |
+|--------|-----------|---------|
+| **Learning Curve** | Steeper | Easier |
+| **Type Safety** | ✅ Yes | ❌ No |
+| **Complex Queries** | ⚠️ Limited | ✅ Full control |
+| **Performance** | ⚠️ Overhead | ✅ Optimal |
+| **Maintainability** | ✅ High | ⚠️ Lower |
+| **SQL Injection** | ✅ Protected | ⚠️ Manual |
+
+**When to Use Each:**
+
+```
+Sequelize:
+├─ Standard CRUD operations
+├─ Type safety needed
+├─ Team prefers ORM
+└─ Rapid development
+
+Raw SQL:
+├─ Complex queries (aggregations, window functions)
+├─ Performance critical
+├─ Database-specific features
+└─ Reporting/analytics
+```
+
+---
+
+### Q2: How do you optimize Sequelize queries for performance? Explain N+1 queries and eager loading.
+
+**Answer:**
+
+**N+1 Query Problem:**
+
+```javascript
+// ❌ Problem: N+1 queries
+const users = await User.findAll(); // 1 query
+for (const user of users) {
+    const orders = await user.getOrders(); // N queries (one per user)
+}
+// Total: 1 + N queries
+```
+
+**Solution: Eager Loading:**
+
+```javascript
+// ✅ Solution: Single query with JOIN
+const users = await User.findAll({
+    include: [{
+        model: Order,
+        as: 'orders'
+    }]
+});
+// Total: 1 query (with JOIN)
+```
+
+**Advanced Optimizations:**
+
+```javascript
+// 1. Select specific fields
+const users = await User.findAll({
+    attributes: ['id', 'name', 'email'],  // Only fetch needed fields
+    include: [{
+        model: Order,
+        attributes: ['id', 'total']  // Only fetch needed fields
+    }]
+});
+
+// 2. Use raw queries for complex operations
+const result = await sequelize.query(`
+    SELECT u.*, COUNT(o.id) as order_count
+    FROM users u
+    LEFT JOIN orders o ON u.id = o.user_id
+    GROUP BY u.id
+`, { type: QueryTypes.SELECT });
+
+// 3. Use findAndCountAll for pagination
+const { count, rows } = await User.findAndCountAll({
+    limit: 10,
+    offset: 0
+});
+
+// 4. Batch operations
+await User.bulkCreate(users, { validate: true });
+await User.bulkUpdate(updates, { where: { active: true } });
+```
+
+---
+
+## Summary
+
+These interview questions cover:
+- ✅ Sequelize vs raw SQL trade-offs
+- ✅ Query optimization techniques
+- ✅ N+1 query prevention
+- ✅ Performance best practices
+
+Master these for senior-level interviews focusing on ORM usage and performance.
+

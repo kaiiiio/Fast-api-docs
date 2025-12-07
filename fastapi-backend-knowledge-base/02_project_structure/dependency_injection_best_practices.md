@@ -627,3 +627,237 @@ def get_connection():
 
 **Avoid:** Creating dependencies manually in routes, mixing dependency resolution with business logic, and ignoring resource cleanup.
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain FastAPI's dependency injection system, including how it works, dependency composition, resource management, testing with overrides, and best practices. Provide detailed examples showing advanced dependency patterns.
+
+**Answer:**
+
+**Dependency Injection Overview:**
+
+FastAPI's dependency injection system allows you to declare dependencies that are automatically resolved and injected into route handlers. It promotes clean separation of concerns, testability, and reusable components.
+
+**Why Dependency Injection:**
+
+**Without DI (Manual Creation):**
+```python
+# ❌ Bad: Manual dependency creation
+@app.get("/users/{user_id}")
+async def get_user(user_id: int):
+    db = create_db_session()  # Manual creation
+    user = await db.get(User, user_id)
+    db.close()  # Manual cleanup
+    return user
+# Problems: Hard to test, resource leaks, code duplication
+```
+
+**With DI (Automatic Resolution):**
+```python
+# ✅ Good: Automatic dependency injection
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_db)  # Automatic injection
+):
+    user = await db.get(User, user_id)
+    return user
+# Benefits: Testable, automatic cleanup, reusable
+```
+
+**Basic Dependency:**
+```python
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_db() -> AsyncSession:
+    """Dependency to get database session."""
+    async with async_session_maker() as session:
+        try:
+            yield session  # Provide session
+            await session.commit()  # Commit on success
+        except Exception:
+            await session.rollback()  # Rollback on error
+            raise
+        finally:
+            await session.close()  # Always cleanup
+
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_db)  # Injected automatically
+):
+    return await db.get(User, user_id)
+```
+
+**Dependency Composition:**
+```python
+# Dependencies can depend on other dependencies
+# FastAPI resolves the entire dependency graph
+
+# Service depends on repository
+def get_user_service(
+    repo: UserRepository = Depends(get_user_repository)
+) -> UserService:
+    return UserService(repo)
+
+# Repository depends on database
+def get_user_repository(
+    db: AsyncSession = Depends(get_db)
+) -> UserRepository:
+    return UserRepository(db)
+
+# Endpoint depends on service
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    service: UserService = Depends(get_user_service)
+):
+    return await service.get_user(user_id)
+
+# FastAPI resolves: get_db → get_user_repository → get_user_service → endpoint
+```
+
+**Resource Management:**
+```python
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def get_resource():
+    """Context manager for resource lifecycle."""
+    resource = await create_resource()  # Setup
+    try:
+        yield resource  # Resource available during request
+    finally:
+        await cleanup_resource(resource)  # Cleanup after response
+
+@app.get("/items/")
+async def read_items(resource = Depends(get_resource)):
+    # Resource is available here
+    # Cleanup happens automatically after response
+    return {"items": []}
+```
+
+**Dependency Overrides for Testing:**
+```python
+# Override dependencies in tests
+from fastapi.testclient import TestClient
+
+# Test version of dependency
+async def override_get_db():
+    async with test_session_maker() as session:
+        yield session
+
+# Override in tests
+app.dependency_overrides[get_db] = override_get_db
+
+client = TestClient(app)
+# Now all routes use test database
+```
+
+**Conditional Dependencies:**
+```python
+from fastapi import Depends, Header, HTTPException
+
+def verify_api_key(x_api_key: str = Header(...)):
+    """Dependency that raises exception if validation fails."""
+    if x_api_key != "secret-key":
+        raise HTTPException(status_code=403)  # Aborts request
+    return x_api_key
+
+@app.get("/protected/")
+def protected_route(key: str = Depends(verify_api_key)):
+    return {"status": "ok"}
+```
+
+**Caching Dependencies:**
+```python
+# Dependencies are cached within a single request by default
+def get_config():
+    return load_config_from_file()  # Expensive operation
+
+@app.get("/items/")
+def read_items(
+    config1 = Depends(get_config, use_cache=True),  # Cached
+    config2 = Depends(get_config, use_cache=True)   # Uses cached result
+):
+    # get_config() called only once
+    return config1.items
+```
+
+**System Design Consideration**: Dependency injection provides:
+1. **Testability**: Easy to mock dependencies
+2. **Maintainability**: Centralized dependency logic
+3. **Reusability**: Share dependencies across routes
+4. **Resource Management**: Automatic cleanup
+5. **Type Safety**: Type hints for dependencies
+
+FastAPI's dependency injection system is powerful and essential for building maintainable applications. Understanding dependency composition, resource management, testing with overrides, and best practices is crucial for building scalable, testable APIs.
+
+---
+
+### Q2: Explain dependency composition, sub-dependencies, dependency overrides for testing, and advanced patterns like conditional dependencies and dependency caching. Discuss when to use each pattern and best practices.
+
+**Answer:**
+
+**Dependency Composition:**
+
+**Multiple Dependencies:**
+```python
+@app.get("/items/")
+async def read_items(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    config: Config = Depends(get_config)
+):
+    # All dependencies resolved in parallel
+    # Shared sub-dependencies created only once
+    return await db.query(Item).filter_by(user_id=current_user.id).all()
+```
+
+**Sub-dependencies (Bundling):**
+```python
+# Group common dependencies
+def get_query_params(q: Optional[str] = None, skip: int = 0, limit: int = 100):
+    return {"q": q, "skip": skip, "limit": limit}
+
+def get_database_and_params(
+    params: dict = Depends(get_query_params),
+    db: AsyncSession = Depends(get_db)
+):
+    return {"db": db, **params}
+
+@app.get("/items/")
+async def read_items(deps: dict = Depends(get_database_and_params)):
+    db = deps["db"]
+    q = deps["q"]
+    # Clean signature with bundled dependencies
+```
+
+**Testing with Overrides:**
+```python
+# Override dependencies for testing
+@pytest.fixture
+def override_get_db():
+    async def _get_db():
+        async with test_session_maker() as session:
+            yield session
+    return _get_db
+
+@pytest.fixture
+def client(override_get_db):
+    app.dependency_overrides[get_db] = override_get_db
+    yield TestClient(app)
+    app.dependency_overrides.clear()  # Clean up
+```
+
+**System Design Consideration**: Advanced dependency patterns provide:
+1. **Flexibility**: Conditional and cached dependencies
+2. **Testability**: Easy overrides for testing
+3. **Performance**: Dependency caching
+4. **Clean Code**: Bundled dependencies
+
+Understanding dependency composition, sub-dependencies, overrides, and advanced patterns is essential for building maintainable, testable applications. Always use dependency overrides for testing, cache expensive dependencies, and bundle common dependencies for cleaner code.
+
+

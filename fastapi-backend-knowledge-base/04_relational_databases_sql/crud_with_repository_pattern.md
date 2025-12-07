@@ -949,3 +949,208 @@ You've learned:
 6. ✅ Dependency injection in FastAPI
 
 Repositories provide clean separation: business logic in services, data access in repositories!
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain the Repository pattern in FastAPI, including its benefits, how to implement it with async SQLAlchemy, and how it integrates with dependency injection. Provide examples showing a complete repository implementation with CRUD operations.
+
+**Answer:**
+
+**Repository Pattern Overview:**
+
+The Repository pattern is a design pattern that abstracts data access logic, providing a clean interface for data operations. It separates business logic from data access, making code more testable, maintainable, and flexible.
+
+**Why Repository Pattern:**
+
+**Without Repository (Direct Database Access):**
+```python
+# ❌ Bad: Business logic mixed with data access
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    # Data access logic in route handler
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
+    # Business logic mixed in
+    if not user:
+        raise HTTPException(status_code=404)
+    
+    # More data access
+    orders_stmt = select(Order).where(Order.user_id == user_id)
+    orders_result = await db.execute(orders_stmt)
+    orders = orders_result.scalars().all()
+    
+    return {"user": user, "orders": orders}
+
+# Problems:
+# - Business logic in route handlers
+# - Hard to test
+# - Code duplication
+# - Difficult to change data source
+```
+
+**With Repository Pattern:**
+```python
+# ✅ Good: Clean separation
+class UserRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+    
+    async def get_by_id(self, user_id: int) -> Optional[User]:
+        return await self.session.get(User, user_id)
+    
+    async def get_with_orders(self, user_id: int) -> Optional[User]:
+        stmt = select(User).options(
+            selectinload(User.orders)
+        ).where(User.id == user_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    repo: UserRepository = Depends(get_user_repository)
+):
+    user = await repo.get_with_orders(user_id)
+    if not user:
+        raise HTTPException(status_code=404)
+    return {"user": user, "orders": user.orders}
+
+# Benefits:
+# - Clean separation of concerns
+# - Easy to test (mock repository)
+# - Reusable data access logic
+# - Easy to change implementation
+```
+
+**Repository Implementation:**
+
+**Basic User Repository:**
+```python
+from typing import Optional, List
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+class UserRepository:
+    """Repository for User data access operations."""
+    
+    def __init__(self, session: AsyncSession):
+        self.session = session
+    
+    # CREATE
+    async def create(self, email: str, name: str) -> User:
+        """Create a new user."""
+        user = User(email=email, full_name=name)
+        self.session.add(user)
+        await self.session.flush()
+        await self.session.refresh(user)
+        return user
+    
+    # READ
+    async def get_by_id(self, user_id: int) -> Optional[User]:
+        """Get user by ID."""
+        return await self.session.get(User, user_id)
+    
+    async def get_by_email(self, email: str) -> Optional[User]:
+        """Find user by email."""
+        stmt = select(User).where(User.email == email)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+    
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[User]:
+        """Get all users with pagination."""
+        stmt = select(User).offset(skip).limit(limit)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+    
+    # UPDATE
+    async def update(self, user_id: int, updates: dict) -> Optional[User]:
+        """Update user fields."""
+        user = await self.get_by_id(user_id)
+        if not user:
+            return None
+        
+        for key, value in updates.items():
+            if hasattr(user, key):
+                setattr(user, key, value)
+        
+        await self.session.flush()
+        await self.session.refresh(user)
+        return user
+    
+    # DELETE
+    async def delete(self, user_id: int) -> bool:
+        """Delete user by ID."""
+        user = await self.get_by_id(user_id)
+        if not user:
+            return False
+        
+        await self.session.delete(user)
+        await self.session.flush()
+        return True
+```
+
+**Dependency Injection Setup:**
+```python
+from fastapi import Depends
+
+# Dependency to get repository
+def get_user_repository(
+    session: AsyncSession = Depends(get_db)
+) -> UserRepository:
+    return UserRepository(session)
+
+# Use in routes
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    repo: UserRepository = Depends(get_user_repository)
+):
+    user = await repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404)
+    return user
+```
+
+**Benefits of Repository Pattern:**
+
+**1. Testability:**
+```python
+# Easy to mock in tests
+class MockUserRepository:
+    async def get_by_id(self, user_id: int):
+        return User(id=user_id, email="test@example.com")
+
+# Override in tests
+app.dependency_overrides[get_user_repository] = lambda: MockUserRepository()
+```
+
+**2. Reusability:**
+```python
+# Same repository used in multiple places
+# Services, routes, background tasks
+```
+
+**3. Maintainability:**
+```python
+# Change data access logic in one place
+# All code using repository benefits
+```
+
+**4. Flexibility:**
+```python
+# Easy to change data source
+# Switch from database to cache, API, etc.
+```
+
+**System Design Consideration**: Repository pattern provides:
+1. **Separation of Concerns**: Business logic vs data access
+2. **Testability**: Easy to mock and test
+3. **Maintainability**: Centralized data access
+4. **Flexibility**: Easy to change implementation
+
+The Repository pattern provides clean separation between business logic and data access. It makes code more testable, maintainable, and flexible. Implementing repositories with async SQLAlchemy and FastAPI's dependency injection creates a robust, scalable architecture.
+

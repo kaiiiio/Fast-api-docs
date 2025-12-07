@@ -571,3 +571,843 @@ CTEs make complex queries readable and maintainable. They're perfect for breakin
 - Study [Window Functions](../05_aggregations_grouping/window_functions.md) with CTEs
 - Master [Performance Optimization](../10_performance_optimization/) for CTE tuning
 
+---
+
+## 🎯 Interview Questions: SQL
+
+### Q1: Explain what Common Table Expressions (CTEs) are and how they differ from subqueries and temporary tables. Provide examples showing when CTEs improve query readability and maintainability, and discuss the performance characteristics of CTEs in different database systems.
+
+**Answer:**
+
+**CTE Definition:**
+
+A Common Table Expression (CTE) is a named temporary result set that exists only for the duration of a single SQL statement. CTEs are defined using the `WITH` clause and can be referenced multiple times within the same query. They provide a way to break down complex queries into simpler, more readable parts.
+
+**CTE Syntax:**
+
+```sql
+WITH cte_name AS (
+    SELECT ...
+)
+SELECT ...
+FROM cte_name;
+```
+
+**How CTEs Differ from Subqueries:**
+
+**1. Readability:**
+
+**Subquery (Nested, Hard to Read):**
+```sql
+-- Complex nested subqueries
+SELECT 
+    u.name,
+    stats.order_count,
+    stats.total_spent
+FROM users u
+JOIN (
+    SELECT 
+        user_id,
+        COUNT(*) AS order_count,
+        SUM(total) AS total_spent
+    FROM orders
+    GROUP BY user_id
+) stats ON u.id = stats.user_id
+WHERE stats.order_count > (
+    SELECT AVG(order_count)
+    FROM (
+        SELECT COUNT(*) AS order_count
+        FROM orders
+        GROUP BY user_id
+    ) user_orders
+);
+-- Hard to read: nested subqueries, unclear structure
+```
+
+**CTE (Clear, Readable):**
+```sql
+-- Same query with CTEs
+WITH user_order_stats AS (
+    SELECT 
+        user_id,
+        COUNT(*) AS order_count,
+        SUM(total) AS total_spent
+    FROM orders
+    GROUP BY user_id
+),
+average_order_count AS (
+    SELECT AVG(order_count) AS avg_count
+    FROM user_order_stats
+)
+SELECT 
+    u.name,
+    stats.order_count,
+    stats.total_spent
+FROM users u
+JOIN user_order_stats stats ON u.id = stats.user_id
+CROSS JOIN average_order_count avg
+WHERE stats.order_count > avg.avg_count;
+-- Clear structure: step-by-step, easy to understand
+```
+
+**2. Reusability:**
+
+**Subquery (Repeated):**
+```sql
+-- Must repeat subquery
+SELECT 
+    u.name,
+    (SELECT COUNT(*) FROM orders WHERE user_id = u.id) AS order_count,
+    (SELECT SUM(total) FROM orders WHERE user_id = u.id) AS total_spent,
+    (SELECT AVG(total) FROM orders WHERE user_id = u.id) AS avg_order
+FROM users u;
+-- Subquery repeated 3 times, executed 3 times per user
+```
+
+**CTE (Reusable):**
+```sql
+-- Define once, use multiple times
+WITH user_stats AS (
+    SELECT 
+        user_id,
+        COUNT(*) AS order_count,
+        SUM(total) AS total_spent,
+        AVG(total) AS avg_order
+    FROM orders
+    GROUP BY user_id
+)
+SELECT 
+    u.name,
+    stats.order_count,
+    stats.total_spent,
+    stats.avg_order
+FROM users u
+JOIN user_stats stats ON u.id = stats.user_id;
+-- CTE defined once, used once
+-- More efficient
+```
+
+**3. Multiple References:**
+
+**Subquery (Cannot Reference Multiple Times):**
+```sql
+-- Cannot easily reference same calculation twice
+SELECT 
+    month,
+    revenue,
+    revenue - (SELECT AVG(revenue) FROM monthly_revenue) AS diff_from_avg,
+    revenue / (SELECT AVG(revenue) FROM monthly_revenue) AS ratio_to_avg
+FROM monthly_revenue;
+-- Subquery executed twice (inefficient)
+```
+
+**CTE (Can Reference Multiple Times):**
+```sql
+-- Define once, reference multiple times
+WITH monthly_revenue AS (
+    SELECT 
+        DATE_TRUNC('month', created_at) AS month,
+        SUM(total) AS revenue
+    FROM orders
+    GROUP BY DATE_TRUNC('month', created_at)
+),
+avg_revenue AS (
+    SELECT AVG(revenue) AS avg_rev
+    FROM monthly_revenue
+)
+SELECT 
+    mr.month,
+    mr.revenue,
+    mr.revenue - avg.avg_rev AS diff_from_avg,
+    mr.revenue / avg.avg_rev AS ratio_to_avg
+FROM monthly_revenue mr
+CROSS JOIN avg_revenue avg;
+-- CTE executed once, used multiple times
+```
+
+**How CTEs Differ from Temporary Tables:**
+
+**1. Scope:**
+
+**CTE:**
+- Exists only for the duration of the query
+- Cannot be referenced in other queries
+- Automatically cleaned up
+
+**Temporary Table:**
+- Exists for the session or transaction
+- Can be referenced in multiple queries
+- Must be explicitly dropped
+
+**2. Performance:**
+
+**CTE:**
+- May be materialized (PostgreSQL) or inlined (MySQL)
+- Optimizer may merge CTE into main query
+- No explicit storage
+
+**Temporary Table:**
+- Always materialized (stored on disk/memory)
+- Explicit storage overhead
+- Can be indexed for performance
+
+**3. Use Cases:**
+
+**CTE:**
+- Single query complexity
+- Query readability
+- Step-by-step transformations
+
+**Temporary Table:**
+- Multiple queries need same data
+- Complex processing across queries
+- Need to index intermediate results
+
+**Example: CTE vs Temporary Table**
+
+**Using CTE:**
+```sql
+-- CTE: Single query use
+WITH user_stats AS (
+    SELECT user_id, COUNT(*) AS order_count
+    FROM orders
+    GROUP BY user_id
+)
+SELECT * FROM user_stats WHERE order_count > 10;
+-- CTE only exists for this query
+```
+
+**Using Temporary Table:**
+```sql
+-- Temporary table: Multiple query use
+CREATE TEMPORARY TABLE user_stats AS
+SELECT user_id, COUNT(*) AS order_count
+FROM orders
+GROUP BY user_id;
+
+CREATE INDEX idx_order_count ON user_stats(order_count);
+
+-- Use in multiple queries
+SELECT * FROM user_stats WHERE order_count > 10;
+SELECT * FROM user_stats WHERE order_count < 5;
+SELECT AVG(order_count) FROM user_stats;
+
+DROP TABLE user_stats;
+```
+
+**Performance Characteristics:**
+
+**PostgreSQL CTE Behavior:**
+
+**Materialization:**
+- CTEs are **materialized** (executed and stored)
+- CTE is computed once, stored, then used
+- Good for CTEs used multiple times
+- Can be slower if CTE is large but only used once
+
+**Example:**
+```sql
+WITH large_cte AS (
+    SELECT * FROM huge_table WHERE condition
+)
+SELECT * FROM large_cte WHERE col1 = 'value';
+SELECT * FROM large_cte WHERE col2 = 'value';
+-- CTE executed once, stored, used twice
+-- Efficient for multiple uses
+```
+
+**MySQL CTE Behavior:**
+
+**Inlining:**
+- CTEs are often **inlined** (merged into main query)
+- Optimizer may rewrite CTE as subquery
+- May be re-executed if referenced multiple times
+- Can be less efficient for multiple references
+
+**Example:**
+```sql
+WITH stats AS (
+    SELECT user_id, COUNT(*) AS cnt FROM orders GROUP BY user_id
+)
+SELECT * FROM stats WHERE cnt > 10;
+-- May be rewritten as:
+-- SELECT * FROM (SELECT user_id, COUNT(*) AS cnt FROM orders GROUP BY user_id) stats
+-- WHERE cnt > 10;
+```
+
+**Performance Optimization:**
+
+**1. Filter Early in CTE:**
+```sql
+-- ❌ Bad: Large CTE
+WITH all_orders AS (
+    SELECT * FROM orders  -- 10 million rows
+)
+SELECT * FROM all_orders WHERE user_id = 123;
+
+-- ✅ Good: Filter early
+WITH user_orders AS (
+    SELECT * FROM orders WHERE user_id = 123  -- Filtered to 100 rows
+)
+SELECT * FROM user_orders;
+```
+
+**2. Index Source Tables:**
+```sql
+-- Ensure source tables are indexed
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+
+WITH user_stats AS (
+    SELECT user_id, COUNT(*) AS cnt
+    FROM orders  -- Uses index
+    GROUP BY user_id
+)
+SELECT * FROM user_stats;
+```
+
+**3. Use Temporary Tables for Complex CTEs:**
+```sql
+-- For very complex CTEs used multiple times
+CREATE TEMPORARY TABLE complex_stats AS
+SELECT ...  -- Complex calculation
+FROM ...;
+
+CREATE INDEX ... ON complex_stats(...);
+
+-- Use multiple times efficiently
+SELECT * FROM complex_stats WHERE ...;
+```
+
+**Real-World Example: Data Pipeline**
+
+**Scenario:** E-commerce analytics - calculate user lifetime value with multiple steps
+
+**Without CTEs (Hard to Read):**
+```sql
+SELECT 
+    u.id,
+    u.name,
+    order_stats.order_count,
+    order_stats.total_spent,
+    order_stats.avg_order_value,
+    CASE
+        WHEN order_stats.total_spent > 5000 THEN 'VIP'
+        WHEN order_stats.total_spent > 1000 THEN 'Gold'
+        ELSE 'Regular'
+    END AS tier,
+    order_stats.total_spent / NULLIF(order_stats.order_count, 0) AS lifetime_value
+FROM users u
+LEFT JOIN (
+    SELECT 
+        user_id,
+        COUNT(*) AS order_count,
+        SUM(total) AS total_spent,
+        AVG(total) AS avg_order_value
+    FROM orders
+    GROUP BY user_id
+) order_stats ON u.id = order_stats.user_id
+WHERE order_stats.total_spent > (
+    SELECT AVG(total_spent)
+    FROM (
+        SELECT SUM(total) AS total_spent
+        FROM orders
+        GROUP BY user_id
+    ) user_totals
+)
+ORDER BY order_stats.total_spent DESC;
+-- Very hard to read and maintain
+```
+
+**With CTEs (Clear and Maintainable):**
+```sql
+WITH user_order_stats AS (
+    SELECT 
+        user_id,
+        COUNT(*) AS order_count,
+        SUM(total) AS total_spent,
+        AVG(total) AS avg_order_value
+    FROM orders
+    GROUP BY user_id
+),
+average_user_spending AS (
+    SELECT AVG(total_spent) AS avg_spent
+    FROM user_order_stats
+),
+user_tiers AS (
+    SELECT 
+        u.id,
+        u.name,
+        COALESCE(stats.order_count, 0) AS order_count,
+        COALESCE(stats.total_spent, 0) AS total_spent,
+        COALESCE(stats.avg_order_value, 0) AS avg_order_value,
+        CASE
+            WHEN COALESCE(stats.total_spent, 0) > 5000 THEN 'VIP'
+            WHEN COALESCE(stats.total_spent, 0) > 1000 THEN 'Gold'
+            ELSE 'Regular'
+        END AS tier,
+        COALESCE(stats.total_spent, 0) / 
+            NULLIF(COALESCE(stats.order_count, 0), 0) AS lifetime_value
+    FROM users u
+    LEFT JOIN user_order_stats stats ON u.id = stats.user_id
+)
+SELECT *
+FROM user_tiers
+CROSS JOIN average_user_spending avg
+WHERE total_spent > avg.avg_spent
+ORDER BY total_spent DESC;
+-- Clear, step-by-step, easy to understand and maintain
+```
+
+**Benefits:**
+- **Readability**: Each step is clear
+- **Maintainability**: Easy to modify individual steps
+- **Testability**: Can test each CTE separately
+- **Documentation**: CTE names document intent
+
+**System Design Consideration**: CTEs are valuable for:
+1. **Code Quality**: Improving query readability and maintainability
+2. **Complex Queries**: Breaking down complex logic into understandable steps
+3. **Development**: Easier to write, test, and debug
+4. **Team Collaboration**: More understandable for team members
+
+CTEs are a powerful tool for writing maintainable SQL. They improve readability significantly compared to nested subqueries, enable code reuse within queries, and make complex queries easier to understand and maintain. While performance characteristics vary by database, CTEs are generally a good choice for complex queries where readability and maintainability are important.
+
+---
+
+### Q2: Explain recursive CTEs and how they work. Provide a detailed example traversing a hierarchical structure (like an employee hierarchy or category tree), and explain the execution mechanism, termination conditions, and performance considerations for recursive CTEs.
+
+**Answer:**
+
+**Recursive CTE Definition:**
+
+A recursive CTE is a CTE that references itself, enabling queries that traverse hierarchical or tree-structured data. Recursive CTEs consist of two parts: a base case (anchor) that provides the starting point, and a recursive case that references the CTE itself to build upon previous results.
+
+**Recursive CTE Structure:**
+
+```sql
+WITH RECURSIVE cte_name AS (
+    -- Base case (anchor): Initial rows
+    SELECT ...  -- Starting point
+    
+    UNION ALL  -- Must use UNION ALL (not UNION)
+    
+    -- Recursive case: References cte_name
+    SELECT ...
+    FROM cte_name  -- References itself!
+    WHERE condition  -- Termination condition
+)
+SELECT * FROM cte_name;
+```
+
+**How Recursive CTEs Work:**
+
+**Execution Mechanism:**
+
+**1. Initialization:**
+- Execute base case query
+- Store results in working table
+- This becomes iteration 0
+
+**2. Recursion Loop:**
+- Execute recursive case using current working table
+- Append new results to working table
+- Repeat until recursive case returns no rows (termination)
+
+**3. Termination:**
+- When recursive case returns 0 rows, recursion stops
+- Return accumulated results
+
+**Visual Execution Flow:**
+
+```
+Iteration 0 (Base Case):
+┌─────────────────┐
+│ Working Table   │
+│ ┌─────────────┐ │
+│ │ id │ name   │ │
+│ ├─────────────┤ │
+│ │ 1  │ CEO    │ │ ← Base case result
+│ └─────────────┘ │
+└─────────────────┘
+         │
+         ▼
+Iteration 1 (Recursive):
+┌─────────────────┐
+│ Working Table   │
+│ ┌─────────────┐ │
+│ │ id │ name   │ │
+│ ├─────────────┤ │
+│ │ 1  │ CEO    │ │ (from previous)
+│ │ 2  │ VP Eng │ │ ← New from recursive case
+│ │ 3  │ VP Sales│ │ ← New from recursive case
+│ └─────────────┘ │
+└─────────────────┘
+         │
+         ▼
+Iteration 2 (Recursive):
+┌─────────────────┐
+│ Working Table   │
+│ ┌─────────────┐ │
+│ │ id │ name   │ │
+│ ├─────────────┤ │
+│ │ 1  │ CEO    │ │ (from previous)
+│ │ 2  │ VP Eng │ │ (from previous)
+│ │ 3  │ VP Sales│ │ (from previous)
+│ │ 4  │ Sr Eng │ │ ← New from recursive case
+│ │ 5  │ Jr Eng │ │ ← New from recursive case
+│ └─────────────┘ │
+└─────────────────┘
+         │
+         ▼
+Iteration 3 (Recursive):
+┌─────────────────┐
+│ Working Table   │
+│ ┌─────────────┐ │
+│ │ ... (all previous) │
+│ │ (no new rows) │ │ ← Recursive case returns 0 rows
+│ └─────────────┘ │
+└─────────────────┘
+         │
+         ▼
+Termination: Return all accumulated rows
+```
+
+**Detailed Example: Employee Hierarchy**
+
+**Schema:**
+```sql
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    manager_id INT,
+    title VARCHAR(100),
+    FOREIGN KEY (manager_id) REFERENCES employees(id)
+);
+
+-- Sample Data:
+INSERT INTO employees VALUES
+(1, 'CEO', NULL, 'Chief Executive Officer'),
+(2, 'VP Engineering', 1, 'Vice President'),
+(3, 'VP Sales', 1, 'Vice President'),
+(4, 'Senior Engineer', 2, 'Senior'),
+(5, 'Junior Engineer', 2, 'Junior'),
+(6, 'Sales Manager', 3, 'Manager'),
+(7, 'Sales Rep', 6, 'Representative');
+```
+
+**Hierarchy Structure:**
+```
+                    CEO (1)
+                   /      \
+          VP Engineering (2)  VP Sales (3)
+                 /              \
+        Senior Eng (4)    Sales Manager (6)
+        Junior Eng (5)         |
+                          Sales Rep (7)
+```
+
+**Recursive CTE to Traverse Hierarchy:**
+
+```sql
+WITH RECURSIVE employee_hierarchy AS (
+    -- Base case: Start with CEO (no manager)
+    SELECT 
+        id,
+        name,
+        manager_id,
+        title,
+        0 AS level,                    -- Depth level
+        ARRAY[id] AS path,             -- Path from root
+        name AS hierarchy_path         -- Human-readable path
+    FROM employees
+    WHERE manager_id IS NULL  -- Root of hierarchy
+    
+    UNION ALL
+    
+    -- Recursive case: Find direct reports
+    SELECT 
+        e.id,
+        e.name,
+        e.manager_id,
+        e.title,
+        eh.level + 1,                  -- Increment level
+        eh.path || e.id,               -- Add to path
+        eh.hierarchy_path || ' > ' || e.name  -- Build path string
+    FROM employees e
+    JOIN employee_hierarchy eh ON e.manager_id = eh.id
+    WHERE NOT (e.id = ANY(eh.path))    -- Prevent cycles
+)
+SELECT 
+    id,
+    name,
+    title,
+    level,
+    hierarchy_path
+FROM employee_hierarchy
+ORDER BY path;  -- Order by hierarchy path
+```
+
+**Execution Step-by-Step:**
+
+**Iteration 0 (Base Case):**
+```sql
+SELECT id, name, manager_id, title, 0 AS level, ARRAY[id] AS path, name AS hierarchy_path
+FROM employees
+WHERE manager_id IS NULL;
+-- Returns: CEO (id=1)
+```
+
+**Result:**
+```
+┌────┬─────┬─────────────┬───────┬──────┬──────────┐
+│ id │name │ manager_id  │ level │ path │hierarchy │
+├────┼─────┼─────────────┼───────┼──────┼──────────┤
+│ 1  │ CEO │ NULL        │ 0     │ {1}  │ CEO      │
+└────┴─────┴─────────────┴───────┴──────┴──────────┘
+```
+
+**Iteration 1 (Recursive):**
+```sql
+SELECT e.id, e.name, e.manager_id, e.title, eh.level + 1, ...
+FROM employees e
+JOIN employee_hierarchy eh ON e.manager_id = eh.id
+WHERE NOT (e.id = ANY(eh.path));
+-- Uses iteration 0 result (CEO)
+-- Finds: VP Engineering (manager_id=1), VP Sales (manager_id=1)
+```
+
+**Result:**
+```
+┌────┬──────────────┬─────────────┬───────┬──────┬──────────────────┐
+│ id │ name         │ manager_id  │ level │ path │ hierarchy        │
+├────┼──────────────┼─────────────┼───────┼──────┼──────────────────┤
+│ 1  │ CEO          │ NULL        │ 0     │ {1}  │ CEO              │
+│ 2  │ VP Engineering│ 1         │ 1     │ {1,2}│ CEO > VP Eng     │
+│ 3  │ VP Sales     │ 1           │ 1     │ {1,3}│ CEO > VP Sales   │
+└────┴──────────────┴─────────────┴───────┴──────┴──────────────────┘
+```
+
+**Iteration 2 (Recursive):**
+```sql
+-- Uses iteration 1 results
+-- Finds: Senior Engineer (manager_id=2), Junior Engineer (manager_id=2), Sales Manager (manager_id=3)
+```
+
+**Result:**
+```
+┌────┬──────────────┬─────────────┬───────┬────────┬──────────────────────────┐
+│ id │ name         │ manager_id  │ level │ path   │ hierarchy                │
+├────┼──────────────┼─────────────┼───────┼────────┼──────────────────────────┤
+│ 1  │ CEO          │ NULL        │ 0     │ {1}    │ CEO                      │
+│ 2  │ VP Engineering│ 1           │ 1     │ {1,2}  │ CEO > VP Engineering     │
+│ 3  │ VP Sales     │ 1           │ 1     │ {1,3}  │ CEO > VP Sales           │
+│ 4  │ Senior Eng   │ 2           │ 2     │ {1,2,4}│ CEO > VP Eng > Sr Eng    │
+│ 5  │ Junior Eng   │ 2           │ 2     │ {1,2,5}│ CEO > VP Eng > Jr Eng    │
+│ 6  │ Sales Manager│ 3           │ 2     │ {1,3,6}│ CEO > VP Sales > Mgr     │
+└────┴──────────────┴─────────────┴───────┴────────┴──────────────────────────┘
+```
+
+**Iteration 3 (Recursive):**
+```sql
+-- Finds: Sales Rep (manager_id=6)
+```
+
+**Final Result:**
+```
+┌────┬──────────────┬───────┬────────┬─────────────────────────────────┐
+│ id │ name         │ level │ path   │ hierarchy                        │
+├────┼──────────────┼───────┼────────┼─────────────────────────────────┤
+│ 1  │ CEO          │ 0     │ {1}    │ CEO                              │
+│ 2  │ VP Engineering│ 1     │ {1,2}  │ CEO > VP Engineering             │
+│ 3  │ VP Sales     │ 1     │ {1,3}  │ CEO > VP Sales                   │
+│ 4  │ Senior Eng   │ 2     │ {1,2,4}│ CEO > VP Engineering > Sr Eng    │
+│ 5  │ Junior Eng   │ 2     │ {1,2,5}│ CEO > VP Engineering > Jr Eng    │
+│ 6  │ Sales Manager│ 2     │ {1,3,6}│ CEO > VP Sales > Sales Manager   │
+│ 7  │ Sales Rep    │ 3     │ {1,3,6,7}│ CEO > VP Sales > Mgr > Rep   │
+└────┴──────────────┴───────┴────────┴─────────────────────────────────┘
+```
+
+**Termination Conditions:**
+
+**1. Natural Termination:**
+
+Recursion stops when the recursive case returns no rows:
+
+```sql
+WITH RECURSIVE hierarchy AS (
+    SELECT id, manager_id FROM employees WHERE id = 1
+    UNION ALL
+    SELECT e.id, e.manager_id
+    FROM employees e
+    JOIN hierarchy h ON e.manager_id = h.id
+    -- Stops when no employees have manager_id matching any h.id
+    -- i.e., when we reach leaf nodes (employees with no reports)
+)
+SELECT * FROM hierarchy;
+```
+
+**2. Explicit Depth Limit:**
+
+Prevent infinite recursion with depth check:
+
+```sql
+WITH RECURSIVE hierarchy AS (
+    SELECT id, name, manager_id, 0 AS depth
+    FROM employees WHERE id = 1
+    UNION ALL
+    SELECT e.id, e.name, e.manager_id, h.depth + 1
+    FROM employees e
+    JOIN hierarchy h ON e.manager_id = h.id
+    WHERE h.depth < 10  -- Maximum depth limit
+)
+SELECT * FROM hierarchy;
+```
+
+**3. Cycle Prevention:**
+
+Prevent infinite loops in cyclic data:
+
+```sql
+WITH RECURSIVE hierarchy AS (
+    SELECT id, name, manager_id, ARRAY[id] AS path
+    FROM employees WHERE id = 1
+    UNION ALL
+    SELECT e.id, e.name, e.manager_id, h.path || e.id
+    FROM employees e
+    JOIN hierarchy h ON e.manager_id = h.id
+    WHERE NOT (e.id = ANY(h.path))  -- Prevent cycles
+)
+SELECT * FROM hierarchy;
+```
+
+**Performance Considerations:**
+
+**1. Depth of Recursion:**
+
+**Shallow Hierarchy (Good Performance):**
+```
+CEO
+├─ VP
+   ├─ Manager
+      └─ Employee
+-- 4 levels, ~10 iterations, fast
+```
+
+**Deep Hierarchy (Slower):**
+```
+Level 1
+└─ Level 2
+   └─ Level 3
+      └─ ... (100 levels)
+-- 100 iterations, slower
+```
+
+**2. Breadth of Tree:**
+
+**Narrow Tree (Good Performance):**
+```
+Root
+└─ Child 1
+   └─ Child 2
+      └─ Child 3
+-- Linear, one path, fast
+```
+
+**Wide Tree (Slower):**
+```
+Root
+├─ Child 1
+│  ├─ Grandchild 1
+│  └─ Grandchild 2
+├─ Child 2
+│  ├─ Grandchild 3
+│  └─ Grandchild 4
+└─ Child 3
+   └─ ... (1000 children)
+-- Many paths, more iterations, slower
+```
+
+**3. Index Usage:**
+
+**With Index (Fast):**
+```sql
+CREATE INDEX idx_employees_manager_id ON employees(manager_id);
+
+WITH RECURSIVE hierarchy AS (
+    ...
+    JOIN hierarchy h ON e.manager_id = h.id
+    -- Uses index on manager_id: O(log n) per lookup
+)
+```
+
+**Without Index (Slow):**
+```sql
+-- No index on manager_id
+-- Sequential scan for each iteration: O(n) per lookup
+-- Very slow for large tables
+```
+
+**4. Materialization:**
+
+Some databases materialize recursive CTEs, which can be memory-intensive:
+
+```sql
+-- PostgreSQL: May materialize entire result set
+WITH RECURSIVE large_tree AS (
+    ...
+)
+SELECT * FROM large_tree;
+-- Entire tree stored in memory
+-- Can be large for wide/deep trees
+```
+
+**Optimization Tips:**
+
+**1. Filter Early:**
+```sql
+-- ❌ Bad: Process entire tree
+WITH RECURSIVE all_descendants AS (
+    SELECT id FROM employees WHERE id = 1
+    UNION ALL
+    SELECT e.id FROM employees e
+    JOIN all_descendants ad ON e.manager_id = ad.id
+)
+SELECT * FROM all_descendants WHERE department = 'Engineering';
+
+-- ✅ Good: Filter in recursive case
+WITH RECURSIVE engineering_descendants AS (
+    SELECT id FROM employees 
+    WHERE id = 1 AND department = 'Engineering'
+    UNION ALL
+    SELECT e.id FROM employees e
+    JOIN engineering_descendants ed ON e.manager_id = ed.id
+    WHERE e.department = 'Engineering'  -- Filter early
+)
+SELECT * FROM engineering_descendants;
+```
+
+**2. Use Appropriate Indexes:**
+```sql
+-- Index on foreign key used in join
+CREATE INDEX idx_employees_manager_id ON employees(manager_id);
+
+-- Makes recursive joins fast
+```
+
+**3. Limit Depth When Possible:**
+```sql
+-- If you only need first 3 levels
+WITH RECURSIVE hierarchy AS (
+    ...
+    WHERE depth < 3  -- Stop early
+)
+```
+
+**System Design Consideration**: Recursive CTEs are powerful for:
+1. **Hierarchical Data**: Employee org charts, category trees, folder structures
+2. **Graph Traversal**: Finding paths, connections
+3. **Data Processing**: Step-by-step transformations
+4. **Maintainability**: Cleaner than multiple queries or application-level recursion
+
+Recursive CTEs are an elegant solution for hierarchical data traversal. They eliminate the need for application-level recursion and multiple database round trips. However, they can be performance-intensive for very deep or wide hierarchies, so proper indexing and depth limits are important. Understanding the execution mechanism and termination conditions helps write efficient recursive CTEs.
+

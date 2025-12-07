@@ -878,3 +878,514 @@ You've learned:
 9. ✅ Transactions and error handling
 
 Practice with these examples, and you'll master async SQLAlchemy!
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain async SQLAlchemy in FastAPI, including how it differs from sync SQLAlchemy, session management, relationships, eager loading, and best practices. Provide detailed examples showing CRUD operations, transactions, and complex queries.
+
+**Answer:**
+
+**Async SQLAlchemy Overview:**
+
+Async SQLAlchemy is the asynchronous version of SQLAlchemy that works seamlessly with FastAPI's async/await pattern. It allows non-blocking database operations, enabling high concurrency and better performance for I/O-bound database operations.
+
+**Why Async SQLAlchemy:**
+
+**Sync SQLAlchemy (Blocking):**
+```python
+# ❌ Blocks thread during database operations
+def get_user(user_id: int):
+    session = session_maker()
+    user = session.query(User).filter(User.id == user_id).first()
+    session.close()
+    return user
+# Thread waits for database response
+```
+
+**Async SQLAlchemy (Non-Blocking):**
+```python
+# ✅ Yields control during database operations
+async def get_user(user_id: int):
+    async with async_session_maker() as session:
+        result = await session.execute(
+            select(User).where(User.id == user_id)
+        )
+        return result.scalar_one_or_none()
+# Event loop handles other requests while waiting
+```
+
+**Setting Up Async SQLAlchemy:**
+
+**Engine and Session Configuration:**
+```python
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+
+# Create async engine
+engine = create_async_engine(
+    "postgresql+asyncpg://user:pass@localhost/db",
+    pool_size=20,
+    max_overflow=10,
+    pool_pre_ping=True,
+    pool_recycle=3600,
+    echo=False
+)
+
+# Create async session factory
+async_session_maker = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+```
+
+**Session Management:**
+
+**Dependency Injection Pattern:**
+```python
+async def get_db():
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
+    return result.scalar_one_or_none()
+```
+
+**CRUD Operations:**
+
+**Create:**
+```python
+async def create_user(email: str, name: str):
+    async with async_session_maker() as session:
+        user = User(email=email, name=name)
+        session.add(user)
+        await session.flush()  # Gets ID
+        await session.commit()
+        await session.refresh(user)
+        return user
+```
+
+**Read:**
+```python
+# Get by ID
+async def get_user_by_id(user_id: int):
+    async with async_session_maker() as session:
+        return await session.get(User, user_id)
+
+# Query with conditions
+async def get_user_by_email(email: str):
+    async with async_session_maker() as session:
+        stmt = select(User).where(User.email == email)
+        result = await session.execute(stmt)
+        return result.scalar_one_or_none()
+
+# Multiple records
+async def get_all_users(skip: int = 0, limit: int = 100):
+    async with async_session_maker() as session:
+        stmt = select(User).offset(skip).limit(limit)
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+```
+
+**Update:**
+```python
+async def update_user(user_id: int, updates: dict):
+    async with async_session_maker() as session:
+        user = await session.get(User, user_id)
+        if not user:
+            return None
+        
+        for key, value in updates.items():
+            setattr(user, key, value)
+        
+        await session.commit()
+        await session.refresh(user)
+        return user
+```
+
+**Delete:**
+```python
+async def delete_user(user_id: int):
+    async with async_session_maker() as session:
+        user = await session.get(User, user_id)
+        if not user:
+            return False
+        
+        await session.delete(user)
+        await session.commit()
+        return True
+```
+
+**Relationships and Eager Loading:**
+
+**Lazy Loading Problem:**
+```python
+# ❌ Problem: Lazy loading requires session
+async def get_category_with_products(category_id: int):
+    async with async_session_maker() as session:
+        category = await session.get(Category, category_id)
+    # Session closed!
+    print(category.products)  # Error: session closed
+```
+
+**Eager Loading Solution:**
+```python
+from sqlalchemy.orm import selectinload
+
+async def get_category_with_products(category_id: int):
+    async with async_session_maker() as session:
+        stmt = select(Category).options(
+            selectinload(Category.products)  # Eager load
+        ).where(Category.id == category_id)
+        
+        result = await session.execute(stmt)
+        category = result.scalar_one_or_none()
+        
+        # Products already loaded!
+        if category:
+            for product in category.products:
+                print(product.name)
+        
+        return category
+```
+
+**Complex Queries:**
+
+**Joins:**
+```python
+async def get_orders_with_items(user_id: int):
+    async with async_session_maker() as session:
+        stmt = select(Order).where(
+            Order.user_id == user_id
+        ).options(
+            selectinload(Order.items).selectinload(OrderItem.product)
+        )
+        
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+```
+
+**Aggregations:**
+```python
+from sqlalchemy import func
+
+async def get_category_stats():
+    async with async_session_maker() as session:
+        stmt = select(
+            Category.name,
+            func.count(Product.id).label("product_count"),
+            func.sum(Product.price * Product.stock_quantity).label("total_value")
+        ).join(
+            Product, Category.id == Product.category_id
+        ).group_by(Category.id, Category.name)
+        
+        result = await session.execute(stmt)
+        return result.all()
+```
+
+**Transactions:**
+
+**Explicit Transaction Management:**
+```python
+async def create_order_with_items(user_id: int, items: list):
+    async with async_session_maker() as session:
+        try:
+            # All operations in one transaction
+            order = Order(user_id=user_id, total_amount=0)
+            session.add(order)
+            await session.flush()
+            
+            total = 0
+            for item_data in items:
+                product = await session.get(Product, item_data["product_id"])
+                order_item = OrderItem(
+                    order_id=order.id,
+                    product_id=product.id,
+                    quantity=item_data["quantity"],
+                    unit_price=product.price
+                )
+                session.add(order_item)
+                total += float(product.price) * item_data["quantity"]
+            
+            order.total_amount = total
+            await session.commit()
+            return order
+            
+        except Exception as e:
+            await session.rollback()
+            raise
+```
+
+**Best Practices:**
+
+**1. Always Use Dependency Injection:**
+```python
+# ✅ Good: Automatic session management
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    return await db.get(User, user_id)
+
+# ❌ Bad: Manual session management
+@app.get("/users/{user_id}")
+async def get_user(user_id: int):
+    session = async_session_maker()
+    try:
+        return await session.get(User, user_id)
+    finally:
+        await session.close()
+```
+
+**2. Use Eager Loading for Relationships:**
+```python
+# ✅ Good: Eager load relationships
+stmt = select(Order).options(
+    selectinload(Order.items)
+)
+
+# ❌ Bad: Lazy loading (N+1 problem)
+order = await session.get(Order, order_id)
+items = order.items  # Separate query!
+```
+
+**3. Handle Transactions Properly:**
+```python
+# ✅ Good: Commit or rollback
+try:
+    await session.commit()
+except Exception:
+    await session.rollback()
+    raise
+```
+
+**System Design Consideration**: Async SQLAlchemy is essential for:
+1. **Performance**: Non-blocking database operations
+2. **Concurrency**: Handling many simultaneous requests
+3. **Scalability**: Efficient resource utilization
+4. **Maintainability**: Clean session management
+
+Async SQLAlchemy enables high-performance database operations in FastAPI. Understanding session management, relationships, eager loading, and transaction handling is crucial for building scalable applications. Always use dependency injection for session management and eager loading to avoid N+1 query problems.
+
+---
+
+### Q2: Explain SQLAlchemy relationships (one-to-many, many-to-many) in async context, including how to define them, eager loading strategies, and common pitfalls. Provide examples showing how to work with relationships efficiently.
+
+**Answer:**
+
+**SQLAlchemy Relationships in Async Context:**
+
+Relationships in SQLAlchemy allow you to navigate between related objects. In async SQLAlchemy, relationships work similarly but require careful handling of eager loading to avoid N+1 query problems and session closure issues.
+
+**One-to-Many Relationships:**
+
+**Definition:**
+```python
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+
+class Category(Base):
+    __tablename__ = "categories"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    
+    # One-to-many: One category has many products
+    products = relationship("Product", back_populates="category")
+
+class Product(Base):
+    __tablename__ = "products"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    
+    # Many-to-one: Many products belong to one category
+    category = relationship("Category", back_populates="products")
+```
+
+**Using Relationships:**
+
+**Lazy Loading (Default):**
+```python
+# ❌ Problem: Lazy loading requires active session
+async def get_category_products(category_id: int):
+    async with async_session_maker() as session:
+        category = await session.get(Category, category_id)
+    # Session closed!
+    for product in category.products:  # Error: session closed
+        print(product.name)
+```
+
+**Eager Loading (Solution):**
+```python
+from sqlalchemy.orm import selectinload
+
+# ✅ Good: Eager load relationships
+async def get_category_products(category_id: int):
+    async with async_session_maker() as session:
+        stmt = select(Category).options(
+            selectinload(Category.products)  # Load products immediately
+        ).where(Category.id == category_id)
+        
+        result = await session.execute(stmt)
+        category = result.scalar_one_or_none()
+        
+        # Products already loaded!
+        if category:
+            for product in category.products:
+                print(product.name)
+        
+        return category
+```
+
+**Many-to-Many Relationships:**
+
+**Definition:**
+```python
+# Association table
+order_items = Table(
+    'order_items',
+    Base.metadata,
+    Column('order_id', Integer, ForeignKey('orders.id'), primary_key=True),
+    Column('product_id', Integer, ForeignKey('products.id'), primary_key=True),
+    Column('quantity', Integer, nullable=False),
+    Column('unit_price', Numeric(10, 2), nullable=False)
+)
+
+class Order(Base):
+    __tablename__ = "orders"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    total_amount = Column(Numeric(10, 2), nullable=False)
+    
+    # Many-to-many: Order has many products through order_items
+    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+    
+    order_id = Column(Integer, ForeignKey('orders.id'), primary_key=True)
+    product_id = Column(Integer, ForeignKey('products.id'), primary_key=True)
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Numeric(10, 2), nullable=False)
+    
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product", back_populates="order_items")
+```
+
+**Eager Loading Strategies:**
+
+**selectinload (Recommended for One-to-Many):**
+```python
+# Loads related objects using separate SELECT IN query
+stmt = select(Order).options(
+    selectinload(Order.items)  # Efficient for one-to-many
+)
+```
+
+**joinedload (For Single Object):**
+```python
+# Uses JOIN to load in same query
+stmt = select(Order).options(
+    joinedload(Order.user)  # Good for many-to-one
+)
+```
+
+**Nested Eager Loading:**
+```python
+# Load nested relationships
+stmt = select(Order).options(
+    selectinload(Order.items).selectinload(OrderItem.product)
+)
+# Loads: Order → OrderItems → Products
+```
+
+**Common Pitfalls:**
+
+**1. N+1 Query Problem:**
+```python
+# ❌ Bad: N+1 queries
+async def get_all_orders():
+    async with async_session_maker() as session:
+        orders = await session.execute(select(Order))
+        orders = orders.scalars().all()
+        
+        for order in orders:
+            # Separate query for each order's items!
+            items = await session.execute(
+                select(OrderItem).where(OrderItem.order_id == order.id)
+            )
+            # N+1 problem: 1 query for orders + N queries for items
+
+# ✅ Good: Eager load
+async def get_all_orders():
+    async with async_session_maker() as session:
+        stmt = select(Order).options(
+            selectinload(Order.items)  # Load all items in one query
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+```
+
+**2. Session Closure:**
+```python
+# ❌ Bad: Accessing relationship after session closed
+async def get_category():
+    async with async_session_maker() as session:
+        category = await session.get(Category, 1)
+    # Session closed!
+    return category.products  # Error!
+
+# ✅ Good: Eager load before session closes
+async def get_category():
+    async with async_session_maker() as session:
+        stmt = select(Category).options(
+            selectinload(Category.products)
+        ).where(Category.id == 1)
+        result = await session.execute(stmt)
+        category = result.scalar_one()
+        # Products loaded, can access after session closes
+        return category
+```
+
+**3. Cascade Operations:**
+```python
+# Define cascade in relationship
+class Order(Base):
+    items = relationship(
+        "OrderItem",
+        back_populates="order",
+        cascade="all, delete-orphan"  # Delete items when order deleted
+    )
+
+# Now deleting order automatically deletes items
+async def delete_order(order_id: int):
+    async with async_session_maker() as session:
+        order = await session.get(Order, order_id)
+        await session.delete(order)  # Items deleted automatically
+        await session.commit()
+```
+
+**System Design Consideration**: Relationships are crucial for:
+1. **Data Modeling**: Representing real-world relationships
+2. **Query Efficiency**: Eager loading prevents N+1 problems
+3. **Code Clarity**: Navigating relationships naturally
+4. **Data Integrity**: Cascade operations maintain consistency
+
+Understanding SQLAlchemy relationships in async context requires careful handling of eager loading to avoid N+1 queries and session closure issues. Use selectinload for one-to-many relationships, joinedload for many-to-one, and always eager load relationships that will be accessed after the session closes.
+

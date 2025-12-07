@@ -563,3 +563,159 @@ async def complete_relationship_example():
 
 Now you understand relationships from A to Z!
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain SQLAlchemy relationships in FastAPI, including one-to-many, many-to-many, one-to-one relationships, how to define them, eager vs lazy loading, and best practices. Provide detailed examples showing all relationship types.
+
+**Answer:**
+
+**SQLAlchemy Relationships Overview:**
+
+Relationships allow you to navigate between related database records using Python attributes. They represent how tables are connected through foreign keys.
+
+**Relationship Types:**
+
+**1. One-to-Many:**
+```python
+# User has many Orders
+class User(Base):
+    id = Column(Integer, primary_key=True)
+    orders = relationship("Order", back_populates="user")
+
+class Order(Base):
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User", back_populates="orders")
+```
+
+**2. Many-to-Many:**
+```python
+# Orders have many Products, Products in many Orders
+# Requires join table
+class OrderItem(Base):
+    order_id = Column(Integer, ForeignKey("orders.id"), primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
+    quantity = Column(Integer)
+    
+    order = relationship("Order", back_populates="items")
+    product = relationship("Product", back_populates="order_items")
+
+class Order(Base):
+    items = relationship("OrderItem", back_populates="order")
+
+class Product(Base):
+    order_items = relationship("OrderItem", back_populates="product")
+```
+
+**3. One-to-One:**
+```python
+# User has one Profile
+class User(Base):
+    profile = relationship("UserProfile", back_populates="user", uselist=False)
+
+class UserProfile(Base):
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    user = relationship("User", back_populates="profile")
+```
+
+**Eager vs Lazy Loading:**
+
+**Lazy Loading (Default):**
+```python
+# ❌ Problem: Separate query when accessed
+user = await session.get(User, 1)
+# Session closed!
+for order in user.orders:  # Error: session closed
+    print(order.id)
+```
+
+**Eager Loading (Recommended):**
+```python
+# ✅ Good: Load relationships immediately
+from sqlalchemy.orm import selectinload
+
+stmt = select(User).options(
+    selectinload(User.orders)  # Eager load
+)
+user = await session.execute(stmt).scalar_one()
+# Orders already loaded!
+for order in user.orders:
+    print(order.id)
+```
+
+**Cascade Operations:**
+```python
+# Cascade delete
+items = relationship("OrderItem", cascade="all, delete-orphan")
+# When order deleted, items deleted automatically
+```
+
+**Best Practices:**
+
+**1. Use Eager Loading:**
+```python
+# Prevent N+1 queries
+# Load relationships upfront
+# Better performance
+```
+
+**2. Index Foreign Keys:**
+```python
+# Faster relationship queries
+# Better join performance
+```
+
+**3. Use Cascade Appropriately:**
+```python
+# Control what happens on delete
+# Prevent orphaned records
+```
+
+**System Design Consideration**: Relationships provide:
+1. **Navigation**: Easy data access
+2. **Data Integrity**: Foreign key constraints
+3. **Performance**: Eager loading prevents N+1
+4. **Maintainability**: Clean code
+
+SQLAlchemy relationships are essential for working with related data. Understanding relationship types, eager vs lazy loading, and best practices is crucial for building efficient applications.
+
+---
+
+### Q2: Explain many-to-many relationships in detail, including join tables, cascade operations, and when to use them. Discuss performance implications and optimization strategies.
+
+**Answer:**
+
+**Many-to-Many Relationships:**
+
+**Join Table:**
+```python
+# Orders ↔ Products via OrderItems
+# Join table stores relationship data
+# Can have additional fields (quantity, price)
+```
+
+**Cascade Operations:**
+```python
+# Control deletion behavior
+# Prevent orphaned records
+# Maintain data integrity
+```
+
+**Performance:**
+```python
+# Index join table foreign keys
+# Use eager loading
+# Optimize queries
+```
+
+**System Design Consideration**: Many-to-many relationships require:
+1. **Join Table**: Store relationship data
+2. **Indexing**: Foreign keys indexed
+3. **Cascade**: Proper deletion handling
+4. **Eager Loading**: Prevent N+1 queries
+
+Understanding many-to-many relationships, join tables, and optimization is essential for building efficient data models.
+
+

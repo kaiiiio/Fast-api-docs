@@ -529,3 +529,415 @@ Use full-text search for:
 
 Combine them for powerful, flexible data storage and retrieval!
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain JSONB and full-text search in PostgreSQL with FastAPI, including when to use JSONB, how to query JSONB data, indexing strategies, full-text search setup, and performance optimization. Provide detailed examples showing practical use cases.
+
+**Answer:**
+
+**JSONB Overview:**
+
+JSONB (JSON Binary) is PostgreSQL's binary JSON storage format that allows storing and querying semi-structured data efficiently. It's ideal for flexible schemas, metadata, and varying attributes.
+
+**Why JSONB:**
+
+**Without JSONB (Rigid Schema):**
+```python
+# ❌ Bad: Fixed columns for all product types
+class Product(Base):
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200))
+    price = Column(Numeric(10, 2))
+    # Electronics
+    warranty = Column(Integer)
+    brand = Column(String(100))
+    # Clothing
+    size = Column(String(10))
+    color = Column(String(50))
+    # Books
+    author = Column(String(200))
+    pages = Column(Integer)
+# Problem: Many NULL columns, schema changes required
+```
+
+**With JSONB (Flexible Schema):**
+```python
+# ✅ Good: Flexible attributes in JSONB
+class Product(Base):
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200))
+    price = Column(Numeric(10, 2))
+    attributes = Column(JSONB, default={})
+    
+    # Electronics: {"warranty": 2, "brand": "TechCorp"}
+    # Clothing: {"size": "L", "color": "red"}
+    # Books: {"author": "John Doe", "pages": 300}
+# Benefit: Flexible, no NULL columns, easy to extend
+```
+
+**JSONB Operations:**
+
+**1. Storing JSONB:**
+```python
+async def create_product(name: str, price: float, attributes: dict):
+    """Create product with JSONB attributes."""
+    async with async_session_maker() as session:
+        product = Product(
+            name=name,
+            price=price,
+            attributes=attributes  # Store as JSONB
+        )
+        session.add(product)
+        await session.commit()
+        return product
+
+# Usage
+await create_product(
+    "Laptop",
+    999.99,
+    {"warranty": 2, "brand": "TechCorp", "model": "XL-500"}
+)
+```
+
+**2. Querying JSONB:**
+```python
+from sqlalchemy import select, text
+
+# Query by JSONB field
+async def get_products_by_brand(brand: str):
+    """Find products by brand in JSONB."""
+    async with async_session_maker() as session:
+        stmt = select(Product).where(
+            Product.attributes['brand'].astext == brand
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+
+# Query nested JSONB
+async def get_products_with_warranty(min_warranty: int):
+    """Find products with warranty >= min_warranty."""
+    async with async_session_maker() as session:
+        stmt = select(Product).where(
+            (Product.attributes['warranty'].astext.cast(Integer)) >= min_warranty
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+
+# Check if key exists
+async def get_products_with_key(key: str):
+    """Find products that have specific key in attributes."""
+    async with async_session_maker() as session:
+        stmt = select(Product).where(
+            Product.attributes.has_key(key)
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+```
+
+**3. Updating JSONB:**
+```python
+async def update_product_attributes(product_id: int, updates: dict):
+    """Update JSONB attributes without replacing entire object."""
+    async with async_session_maker() as session:
+        product = await session.get(Product, product_id)
+        
+        # Merge updates into existing attributes
+        if product.attributes:
+            product.attributes.update(updates)
+        else:
+            product.attributes = updates
+        
+        await session.commit()
+        return product
+
+# Usage: Add new field without losing existing data
+await update_product_attributes(1, {"color": "black"})
+```
+
+**JSONB Indexing:**
+
+**GIN Index (General Inverted Index):**
+```python
+# In Alembic migration
+def upgrade():
+    # GIN index on entire JSONB column
+    op.create_index(
+        'idx_products_attributes_gin',
+        'products',
+        ['attributes'],
+        postgresql_using='gin'
+    )
+    
+    # Index specific JSONB paths
+    op.execute("""
+        CREATE INDEX idx_products_attributes_brand
+        ON products USING gin ((attributes -> 'brand'))
+    """)
+```
+
+**Full-Text Search:**
+
+**1. Setting Up Full-Text Search:**
+```python
+from sqlalchemy.dialects.postgresql import TSVECTOR
+
+class Product(Base):
+    __tablename__ = "products"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    
+    # TSVECTOR column for search
+    search_vector = Column(TSVECTOR, nullable=True)
+```
+
+**2. Creating Search Vector:**
+```python
+# In Alembic migration
+def upgrade():
+    # Create TSVECTOR column
+    op.add_column('products', Column('search_vector', TSVECTOR))
+    
+    # Create function to update search vector
+    op.execute("""
+        CREATE OR REPLACE FUNCTION update_product_search_vector()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.search_vector :=
+                setweight(to_tsvector('english', COALESCE(NEW.name, '')), 'A') ||
+                setweight(to_tsvector('english', COALESCE(NEW.description, '')), 'B');
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+    """)
+    
+    # Create trigger
+    op.execute("""
+        CREATE TRIGGER product_search_vector_update
+        BEFORE INSERT OR UPDATE ON products
+        FOR EACH ROW
+        EXECUTE FUNCTION update_product_search_vector();
+    """)
+    
+    # Create GIN index
+    op.execute("""
+        CREATE INDEX idx_products_search_vector
+        ON products USING gin (search_vector);
+    """)
+```
+
+**3. Performing Full-Text Search:**
+```python
+from sqlalchemy import func, text
+
+async def search_products(search_query: str):
+    """Search products using full-text search."""
+    async with async_session_maker() as session:
+        # Convert search query to tsquery
+        tsquery = func.plainto_tsquery('english', search_query)
+        
+        # Search and rank by relevance
+        stmt = select(
+            Product,
+            func.ts_rank(Product.search_vector, tsquery).label('rank')
+        ).where(
+            Product.search_vector.match(search_query)
+        ).order_by(
+            func.ts_rank(Product.search_vector, tsquery).desc()
+        ).limit(20)
+        
+        result = await session.execute(stmt)
+        products_with_rank = result.all()
+        
+        return [
+            {"product": product, "relevance": rank}
+            for product, rank in products_with_rank
+        ]
+```
+
+**Performance Optimization:**
+
+**1. Indexing Strategy:**
+```python
+# Index commonly queried JSONB paths
+op.execute("""
+    CREATE INDEX idx_products_attributes_brand
+    ON products USING btree ((attributes->>'brand'));
+""")
+
+# Index for array containment
+op.execute("""
+    CREATE INDEX idx_products_attributes_features
+    ON products USING gin ((attributes->'features'));
+""")
+
+# Composite index
+op.execute("""
+    CREATE INDEX idx_products_category_attributes
+    ON products (category_id, (attributes->>'brand'));
+""")
+```
+
+**2. Query Optimization:**
+```python
+# ✅ Good: Use indexed paths
+stmt = select(Product).where(
+    Product.attributes['brand'].astext == 'TechCorp'
+)
+
+# ❌ Bad: Full JSONB scan
+stmt = select(Product).where(
+    Product.attributes.contains({'brand': 'TechCorp'})
+)
+```
+
+**System Design Consideration**: JSONB and full-text search provide:
+1. **Flexibility**: Store varying data structures
+2. **Performance**: Indexed queries are fast
+3. **Power**: Query inside JSON structures
+4. **Native**: Built into PostgreSQL
+
+JSONB is ideal for flexible metadata, user preferences, and varying attributes. Full-text search enables powerful search capabilities. Always index frequently queried JSONB paths and use GIN indexes for full-text search. Understanding when to use JSONB vs structured columns and proper indexing strategies is crucial for performance.
+
+---
+
+### Q2: Explain when to use JSONB vs structured columns, JSONB query operators, indexing strategies for JSONB, and how to combine JSONB with full-text search. Discuss trade-offs and best practices.
+
+**Answer:**
+
+**JSONB vs Structured Columns:**
+
+**Use Structured Columns When:**
+- Schema is fixed and stable
+- Need foreign key relationships
+- Require strong type checking
+- Query performance is critical
+- Data is frequently filtered/sorted
+
+**Use JSONB When:**
+- Schema varies by record
+- Need flexible attributes
+- Metadata or configuration data
+- User preferences
+- Product attributes that vary
+
+**JSONB Query Operators:**
+
+**1. Access Operators:**
+```python
+# -> Returns JSONB (keeps type)
+product.attributes['brand']  # JSONB value
+
+# ->> Returns text
+product.attributes['brand'].astext  # String value
+
+# #> Path access
+product.attributes['user']['profile']['name']  # Nested access
+```
+
+**2. Containment:**
+```python
+# @> Contains
+Product.attributes.contains({'brand': 'TechCorp'})
+
+# <@ Contained by
+Product.attributes.contained_by({'brand': 'TechCorp', 'warranty': 2})
+```
+
+**3. Existence:**
+```python
+# has_key
+Product.attributes.has_key('brand')
+
+# ?| Any key exists
+Product.attributes.has_any(['brand', 'model'])
+
+# ?& All keys exist
+Product.attributes.has_all(['brand', 'model'])
+```
+
+**Indexing Strategies:**
+
+**1. GIN Index (General Purpose):**
+```python
+# Index entire JSONB column
+CREATE INDEX idx_products_attributes_gin
+ON products USING gin (attributes);
+
+# Use for: Contains, existence checks, full JSONB queries
+```
+
+**2. B-Tree Index (Specific Paths):**
+```python
+# Index specific path
+CREATE INDEX idx_products_attributes_brand
+ON products USING btree ((attributes->>'brand'));
+
+# Use for: Equality, range queries on specific fields
+```
+
+**3. GIN Index on Path:**
+```python
+# Index JSONB path
+CREATE INDEX idx_products_attributes_features
+ON products USING gin ((attributes->'features'));
+
+# Use for: Array containment, nested queries
+```
+
+**Combining JSONB with Full-Text Search:**
+```python
+# Search inside JSONB fields
+async def search_in_jsonb(search_query: str):
+    """Full-text search inside JSONB metadata."""
+    async with async_session_maker() as session:
+        stmt = select(Product).where(
+            func.to_tsvector('english',
+                func.jsonb_path_query_array(
+                    Product.attributes,
+                    '$.** ? (@.type() == "string")'
+                )::text
+            ).match(search_query)
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+```
+
+**Best Practices:**
+
+**1. Hybrid Approach:**
+```python
+# Structured fields for common queries
+class Product(Base):
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200))  # Structured
+    price = Column(Numeric(10, 2))  # Structured
+    attributes = Column(JSONB)  # Flexible attributes
+```
+
+**2. Validate JSONB:**
+```python
+from pydantic import BaseModel
+
+class ProductAttributes(BaseModel):
+    warranty: Optional[int] = None
+    brand: Optional[str] = None
+    model: Optional[str] = None
+
+# Validate before storing
+attributes = ProductAttributes(**data)
+product.attributes = attributes.dict()
+```
+
+**System Design Consideration**: JSONB requires:
+1. **Indexing**: Proper indexes for performance
+2. **Validation**: Validate JSONB structure
+3. **Hybrid**: Combine structured and JSONB
+4. **Querying**: Use appropriate operators
+
+Understanding when to use JSONB vs structured columns, query operators, indexing strategies, and combining with full-text search is essential for building flexible, performant applications. Always index frequently queried paths and validate JSONB structure.
+
+

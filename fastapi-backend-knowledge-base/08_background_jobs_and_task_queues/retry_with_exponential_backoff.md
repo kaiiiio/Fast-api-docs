@@ -440,3 +440,207 @@ Exponential backoff provides:
 - ✅ Configurable retry strategies
 
 Implement exponential backoff properly and your system will handle failures gracefully!
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain exponential backoff for retries in Celery/FastAPI, including how it works, formulas, jitter, maximum delay caps, error classification, and best practices. Provide detailed examples showing retry strategies.
+
+**Answer:**
+
+**Exponential Backoff Overview:**
+
+Exponential backoff is a retry strategy where the wait time between retries increases exponentially. It prevents overwhelming failing services and provides graceful failure handling.
+
+**Why Exponential Backoff:**
+
+**Without Backoff (Immediate Retry):**
+```python
+# ❌ Bad: Immediate retries
+# Retry immediately on failure
+# Problem: Overwhelms failing service
+# No time for service to recover
+```
+
+**With Exponential Backoff:**
+```python
+# ✅ Good: Increasing delays
+# Wait 2s, 4s, 8s, 16s...
+# Benefit: Gives service time to recover
+# Reduces load on failing service
+```
+
+**Basic Exponential Backoff:**
+```python
+@celery_app.task(bind=True, max_retries=5)
+def retry_task(self, data):
+    """Task with exponential backoff."""
+    try:
+        return process_data(data)
+    
+    except Exception as exc:
+        # Calculate backoff: 2^retry_count
+        wait_time = 2 ** self.request.retries
+        raise self.retry(exc=exc, countdown=wait_time, max_retries=5)
+```
+
+**With Jitter:**
+```python
+import random
+
+@celery_app.task(bind=True, max_retries=5)
+def retry_with_jitter(self, data):
+    """Exponential backoff with jitter."""
+    base_delay = 2 ** self.request.retries
+    jitter = random.uniform(0, 1)
+    wait_time = base_delay + jitter
+    
+    # Prevents thundering herd
+    # Distributes retries over time
+    raise self.retry(exc=exc, countdown=wait_time)
+```
+
+**With Maximum Cap:**
+```python
+@celery_app.task(bind=True, max_retries=7)
+def retry_with_cap(self, data):
+    """Exponential backoff with maximum delay cap."""
+    base_delay = 2 ** self.request.retries
+    wait_time = min(base_delay, 60)  # Cap at 60 seconds
+    
+    # Prevents extremely long waits
+    # Reasonable maximum delay
+    raise self.retry(exc=exc, countdown=wait_time)
+```
+
+**Error Classification:**
+```python
+@celery_app.task(bind=True, max_retries=5)
+def smart_retry_task(self, data):
+    """Retry only transient errors."""
+    try:
+        return process_data(data)
+    
+    except TransientError as exc:
+        # Retry transient errors (network, timeouts)
+        wait_time = 2 ** self.request.retries
+        raise self.retry(exc=exc, countdown=wait_time)
+    
+    except PermanentError as exc:
+        # Don't retry permanent errors (validation, auth)
+        raise  # Fail immediately
+```
+
+**Real-World Example:**
+```python
+@celery_app.task(
+    bind=True,
+    max_retries=7,
+    default_retry_delay=2
+)
+def process_payment_task(self, payment_id: int, amount: float):
+    """Payment processing with comprehensive retry logic."""
+    base_delay = 2 ** self.request.retries
+    jitter = random.uniform(0, 1)
+    wait_time = min(base_delay + jitter, 300)  # Cap at 5 minutes
+    
+    try:
+        result = payment_gateway.charge(payment_id, amount)
+        return {"status": "success", "transaction_id": result.id}
+    
+    except PaymentGatewayTimeout:
+        # Transient error - retry
+        raise self.retry(exc=exc, countdown=wait_time)
+    
+    except InvalidPaymentData:
+        # Permanent error - don't retry
+        raise
+```
+
+**Best Practices:**
+
+**1. Choose Appropriate max_retries:**
+```python
+# Too many: Wastes resources
+# Too few: Misses recoveries
+# Balance based on use case
+```
+
+**2. Use Jitter:**
+```python
+# Prevents thundering herd
+# Distributes retries
+# Essential for distributed systems
+```
+
+**3. Cap Maximum Delay:**
+```python
+# Don't wait indefinitely
+# Reasonable maximum
+# Consider user experience
+```
+
+**4. Classify Errors:**
+```python
+# Retry transient errors
+# Don't retry permanent errors
+# Understand error types
+```
+
+**System Design Consideration**: Exponential backoff provides:
+1. **Resilience**: Graceful failure handling
+2. **Efficiency**: Reduces load on failing services
+3. **Recovery**: Gives services time to recover
+4. **Standard Pattern**: Industry best practice
+
+Exponential backoff is essential for resilient systems. Understanding formulas, jitter, caps, and error classification is crucial for building reliable applications.
+
+---
+
+### Q2: Explain different backoff formulas, when to use each, monitoring retries, and circuit breaker patterns. Discuss trade-offs and best practices for production systems.
+
+**Answer:**
+
+**Backoff Formulas:**
+
+**1. Simple Exponential:**
+```python
+wait_time = 2 ** retry_count
+# 1, 2, 4, 8, 16, 32...
+```
+
+**2. Base × Multiplier:**
+```python
+wait_time = base_delay * (multiplier ** retry_count)
+# base=5, multiplier=2: 5, 10, 20, 40...
+```
+
+**3. Linear + Exponential:**
+```python
+wait_time = min(base + (retry_count * increment), max_delay)
+# base=5, increment=5, max=60: 5, 10, 15, 20...
+```
+
+**Monitoring:**
+```python
+# Track retry rates
+# Monitor error types
+# Alert on high retry rates
+```
+
+**Circuit Breaker:**
+```python
+# Stop retrying after threshold
+# Give service time to recover
+# Prevent cascading failures
+```
+
+**System Design Consideration**: Retry strategies require:
+1. **Formula**: Choose appropriate backoff
+2. **Monitoring**: Track retry patterns
+3. **Circuit Breaker**: Prevent overload
+4. **Error Classification**: Retry appropriate errors
+
+Understanding backoff formulas, monitoring, and circuit breakers is essential for building resilient production systems.
+

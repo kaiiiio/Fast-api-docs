@@ -452,3 +452,515 @@ Key components:
 
 Implement JWT properly and you have production-ready authentication!
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain JWT (JSON Web Token) authentication in FastAPI, including how it works, token creation and verification, refresh tokens, and security best practices. Provide detailed examples showing a complete JWT authentication implementation.
+
+**Answer:**
+
+**JWT Authentication Overview:**
+
+JWT (JSON Web Token) is a stateless authentication mechanism that allows servers to verify user identity without storing session data. It's ideal for distributed systems, microservices, and scalable applications.
+
+**How JWT Works:**
+
+**Token Structure:**
+```
+JWT = Header.Payload.Signature
+
+Header: {"alg": "HS256", "typ": "JWT"}
+Payload: {"sub": "user_id", "email": "user@example.com", "exp": 1234567890}
+Signature: HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)
+```
+
+**Authentication Flow:**
+```
+1. User logs in with credentials
+2. Server verifies credentials
+3. Server creates JWT token
+4. Server returns token to client
+5. Client stores token (localStorage, cookie, etc.)
+6. Client sends token with requests (Authorization header)
+7. Server verifies token on each request
+8. Server processes request if token valid
+```
+
+**Token Creation:**
+
+**Basic Token Creation:**
+```python
+from datetime import datetime, timedelta
+from jose import jwt
+from typing import Optional
+
+SECRET_KEY = "your-secret-key"  # In production: from environment
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """
+    Create a JWT access token.
+    
+    Args:
+        data: Data to encode in token (typically user ID, email)
+        expires_delta: Optional expiration time
+    
+    Returns:
+        Encoded JWT token string
+    """
+    to_encode = data.copy()
+    
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    to_encode.update({
+        "exp": expire,  # Expiration time
+        "iat": datetime.utcnow(),  # Issued at
+        "type": "access"  # Token type
+    })
+    
+    encoded_jwt = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+    
+    return encoded_jwt
+```
+
+**Token Verification:**
+
+**Verify Token:**
+```python
+from jose import JWTError
+
+def verify_token(token: str) -> Optional[dict]:
+    """
+    Verify and decode JWT token.
+    
+    Args:
+        token: JWT token string
+    
+    Returns:
+        Decoded payload or None if invalid
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+        return payload
+    except JWTError:
+        return None
+```
+
+**Login Endpoint:**
+
+**Complete Login Implementation:**
+```python
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+
+router = APIRouter()
+
+@router.post("/auth/login")
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Authenticate user and return JWT token.
+    
+    Flow:
+    1. User submits username (email) and password
+    2. Verify credentials
+    3. Generate JWT token
+    4. Return token to client
+    """
+    # Step 1: Find user by email
+    stmt = select(User).where(User.email == form_data.username)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password"
+        )
+    
+    # Step 2: Verify password
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password"
+        )
+    
+    # Step 3: Generate access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": str(user.id), "email": user.email},
+        expires_delta=access_token_expires
+    )
+    
+    # Step 4: Return token
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    }
+```
+
+**Protected Endpoints:**
+
+**Get Current User Dependency:**
+```python
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    """
+    Dependency to get current authenticated user.
+    
+    Extracts token from Authorization header and verifies it.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        # Verify token
+        payload = verify_token(token)
+        if payload is None:
+            raise credentials_exception
+        
+        # Extract user ID from token
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    
+    except JWTError:
+        raise credentials_exception
+    
+    # Get user from database
+    user = await db.get(User, int(user_id))
+    if user is None:
+        raise credentials_exception
+    
+    return user
+
+# Use in protected endpoints
+@router.get("/users/me")
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user's information."""
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name
+    }
+```
+
+**Refresh Tokens:**
+
+**Refresh Token Implementation:**
+```python
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+def create_refresh_token(data: dict) -> str:
+    """Create a long-lived refresh token."""
+    to_encode = data.copy()
+    
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    
+    to_encode.update({
+        "exp": expire,
+        "iat": datetime.utcnow(),
+        "type": "refresh"  # Different type
+    })
+    
+    return jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+@router.post("/auth/refresh")
+async def refresh_token(
+    refresh_token: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Refresh access token using refresh token."""
+    try:
+        payload = jwt.decode(
+            refresh_token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+        
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        
+        user_id = payload.get("sub")
+        user = await db.get(User, int(user_id))
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        # Create new access token
+        new_access_token = create_access_token(
+            data={"sub": str(user.id), "email": user.email}
+        )
+        
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer"
+        }
+    
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+```
+
+**Token Blacklisting (Logout):**
+
+**Blacklist Implementation:**
+```python
+import aioredis
+
+async def blacklist_token(token: str, redis: aioredis.Redis):
+    """Add token to blacklist until it expires."""
+    payload = verify_token(token)
+    if payload:
+        expires_at = datetime.fromtimestamp(payload["exp"])
+        ttl = (expires_at - datetime.utcnow()).total_seconds()
+        
+        await redis.setex(
+            f"blacklist:{token}",
+            int(ttl),
+            "1"
+        )
+
+async def is_token_blacklisted(token: str, redis: aioredis.Redis) -> bool:
+    """Check if token is blacklisted."""
+    blacklisted = await redis.get(f"blacklist:{token}")
+    return blacklisted is not None
+
+# Updated get_current_user
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    redis: aioredis.Redis = Depends(get_redis),
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    # Check blacklist first
+    if await is_token_blacklisted(token, redis):
+        raise HTTPException(status_code=401, detail="Token has been revoked")
+    
+    # ... rest of verification
+```
+
+**Security Best Practices:**
+
+**1. Strong Secret Key:**
+```python
+import secrets
+
+# Generate secure secret key
+secret_key = secrets.token_urlsafe(32)  # 32 bytes = 256 bits
+
+# Store in environment variable, never in code!
+# .env file:
+# SECRET_KEY=your-generated-secret-key
+```
+
+**2. Token Expiration:**
+```python
+# Short-lived access tokens (15-30 minutes)
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Longer refresh tokens (7-30 days)
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+# Balance security vs user experience
+```
+
+**3. HTTPS Only:**
+```python
+# In production, only accept tokens over HTTPS
+# Set Secure flag in cookie (if using cookie-based)
+# Validate token transmission security
+```
+
+**4. Token Rotation:**
+```python
+# When refreshing, issue new refresh token too
+# Prevents token reuse attacks
+# Invalidate old refresh token
+```
+
+**5. Token Storage:**
+```python
+# Client-side storage options:
+# - localStorage: Easy but vulnerable to XSS
+# - httpOnly cookies: More secure, protected from XSS
+# - Memory: Most secure but lost on refresh
+
+# Recommendation: Use httpOnly cookies in production
+```
+
+**System Design Consideration**: JWT authentication provides:
+1. **Stateless**: No server-side session storage
+2. **Scalable**: Works across multiple servers
+3. **Standard**: Industry-standard implementation
+4. **Flexible**: Self-contained tokens
+
+JWT authentication in FastAPI provides stateless, scalable authentication. Understanding token creation, verification, refresh tokens, and security best practices is essential for building secure APIs. Always use strong secret keys, short-lived access tokens, and proper token storage mechanisms.
+
+---
+
+### Q2: Explain refresh tokens, token blacklisting, and security considerations for JWT authentication. Discuss when to use refresh tokens, how to implement logout, and best practices for token management in production.
+
+**Answer:**
+
+**Refresh Tokens:**
+
+**Why Refresh Tokens:**
+
+Access tokens are short-lived (15-30 minutes) for security. Refresh tokens are long-lived (7-30 days) and used to obtain new access tokens without re-authentication.
+
+**Benefits:**
+- Better security: Short-lived access tokens limit exposure
+- Better UX: Users don't need to login frequently
+- Token rotation: Can invalidate refresh tokens on refresh
+
+**Implementation:**
+```python
+def create_refresh_token(data: dict) -> str:
+    """Create a long-lived refresh token."""
+    to_encode = data.copy()
+    
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    
+    to_encode.update({
+        "exp": expire,
+        "iat": datetime.utcnow(),
+        "type": "refresh"
+    })
+    
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+@router.post("/auth/refresh")
+async def refresh_token(
+    refresh_token: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Refresh access token using refresh token."""
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        
+        user_id = payload.get("sub")
+        user = await db.get(User, int(user_id))
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        # Create new access token
+        new_access_token = create_access_token(
+            data={"sub": str(user.id), "email": user.email}
+        )
+        
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer"
+        }
+    
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+```
+
+**Token Blacklisting (Logout):**
+
+**Problem:** JWTs are stateless - once issued, they're valid until expiration. To implement logout, we need to blacklist tokens.
+
+**Solution:**
+```python
+async def blacklist_token(token: str, redis: aioredis.Redis):
+    """Add token to blacklist until it expires."""
+    payload = verify_token(token)
+    if payload:
+        expires_at = datetime.fromtimestamp(payload["exp"])
+        ttl = (expires_at - datetime.utcnow()).total_seconds()
+        
+        await redis.setex(
+            f"blacklist:{token}",
+            int(ttl),
+            "1"
+        )
+
+async def is_token_blacklisted(token: str, redis: aioredis.Redis) -> bool:
+    """Check if token is blacklisted."""
+    blacklisted = await redis.get(f"blacklist:{token}")
+    return blacklisted is not None
+
+@router.post("/auth/logout")
+async def logout(
+    current_user: User = Depends(get_current_user),
+    token: str = Depends(oauth2_scheme),
+    redis: aioredis.Redis = Depends(get_redis)
+):
+    """Logout user by blacklisting token."""
+    await blacklist_token(token, redis)
+    return {"message": "Logged out successfully"}
+```
+
+**Security Best Practices:**
+
+**1. Secret Key Management:**
+```python
+# ✅ Good: From environment
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+# ❌ Bad: Hardcoded
+SECRET_KEY = "my-secret-key"
+```
+
+**2. Token Expiration:**
+```python
+# Short-lived access tokens
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Longer refresh tokens
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+```
+
+**3. HTTPS Only:**
+```python
+# Always use HTTPS in production
+# Tokens transmitted securely
+# Prevents man-in-the-middle attacks
+```
+
+**System Design Consideration**: JWT security requires:
+1. **Strong Secrets**: Secure key generation and storage
+2. **Token Expiration**: Short-lived access tokens
+3. **Refresh Tokens**: Long-lived tokens for UX
+4. **Blacklisting**: Logout functionality
+5. **HTTPS**: Secure transmission
+
+Refresh tokens provide better UX while maintaining security. Token blacklisting enables logout functionality. Always use strong secret keys, short-lived access tokens, and HTTPS in production.
+
+

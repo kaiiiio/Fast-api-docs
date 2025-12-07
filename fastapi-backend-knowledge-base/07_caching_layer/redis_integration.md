@@ -542,3 +542,500 @@ Key patterns:
 
 Redis is an essential tool for high-performance FastAPI applications!
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain Redis integration in FastAPI, including connection setup, caching patterns (cache-aside, write-through, write-back), data structures (strings, hashes, lists, sets), and use cases like rate limiting and session storage. Provide detailed examples.
+
+**Answer:**
+
+**Redis Overview:**
+
+Redis is an in-memory data structure store used as a database, cache, and message broker. In FastAPI, Redis is primarily used for caching, session storage, rate limiting, and pub/sub messaging.
+
+**Why Redis:**
+
+**Without Redis (Database Only):**
+```python
+# ❌ Bad: Every request hits database
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, user_id)  # Database query every time
+    return user
+# Problem: Slow, database overload
+```
+
+**With Redis (Caching):**
+```python
+# ✅ Good: Cache frequently accessed data
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, redis: Redis = Depends(get_redis)):
+    # Check cache first
+    cached = await redis.get(f"user:{user_id}")
+    if cached:
+        return json.loads(cached)  # Fast cache hit
+    
+    # Cache miss: query database
+    user = await db.get(User, user_id)
+    # Store in cache
+    await redis.setex(
+        f"user:{user_id}",
+        3600,  # TTL: 1 hour
+        json.dumps(user.dict())
+    )
+    return user
+# Benefit: Fast cache hits, reduced database load
+```
+
+**Redis Connection Setup:**
+
+**Async Redis Client:**
+```python
+import aioredis
+from fastapi import Depends
+
+# Create connection pool
+redis_pool = aioredis.ConnectionPool.from_url(
+    "redis://localhost:6379",
+    max_connections=50,
+    decode_responses=True  # Auto-decode bytes to strings
+)
+
+redis_client = aioredis.Redis(connection_pool=redis_pool)
+
+# Dependency injection
+async def get_redis() -> aioredis.Redis:
+    return redis_client
+```
+
+**Caching Patterns:**
+
+**1. Cache-Aside (Lazy Loading):**
+```python
+async def get_user_cached(user_id: int, db: AsyncSession):
+    """
+    Cache-aside pattern: Application manages cache.
+    
+    Flow:
+    1. Check cache
+    2. If found, return cached data
+    3. If not, get from database
+    4. Store in cache for next time
+    """
+    redis = await get_redis()
+    cache_key = f"user:{user_id}"
+    
+    # Step 1: Try cache
+    cached_user = await redis.get(cache_key)
+    if cached_user:
+        return json.loads(cached_user)  # Cache hit
+    
+    # Step 2: Cache miss - get from database
+    user = await db.get(User, user_id)
+    if not user:
+        return None
+    
+    # Step 3: Store in cache
+    await redis.setex(
+        cache_key,
+        3600,  # TTL: 1 hour
+        json.dumps(user.dict())
+    )
+    
+    return user.dict()
+```
+
+**2. Write-Through:**
+```python
+async def update_user_with_cache(
+    user_id: int,
+    updates: dict,
+    db: AsyncSession
+):
+    """
+    Write-through pattern: Update cache when writing to database.
+    
+    Flow:
+    1. Update database
+    2. Update cache immediately
+    """
+    redis = await get_redis()
+    cache_key = f"user:{user_id}"
+    
+    # Update database
+    user = await db.get(User, user_id)
+    for key, value in updates.items():
+        setattr(user, key, value)
+    await db.commit()
+    
+    # Update cache
+    await redis.setex(
+        cache_key,
+        3600,
+        json.dumps(user.dict())
+    )
+    
+    return user
+```
+
+**3. Write-Back (Write-Behind):**
+```python
+async def update_user_write_back(
+    user_id: int,
+    updates: dict,
+    db: AsyncSession
+):
+    """
+    Write-back pattern: Write to cache first, database later.
+    
+    Flow:
+    1. Update cache immediately
+    2. Queue database update (async)
+    3. Database updated in background
+    """
+    redis = await get_redis()
+    cache_key = f"user:{user_id}"
+    
+    # Get current data
+    user = await db.get(User, user_id)
+    for key, value in updates.items():
+        setattr(user, key, value)
+    
+    # Update cache immediately
+    await redis.setex(
+        cache_key,
+        3600,
+        json.dumps(user.dict())
+    )
+    
+    # Queue database update (async)
+    await background_update_db(user_id, updates)
+    
+    return user
+```
+
+**4. Cache Invalidation:**
+```python
+async def invalidate_user_cache(user_id: int):
+    """Remove user from cache."""
+    redis = await get_redis()
+    await redis.delete(f"user:{user_id}")
+
+async def update_user_invalidate(
+    user_id: int,
+    updates: dict,
+    db: AsyncSession
+):
+    """Update user and invalidate cache."""
+    # Update database
+    user = await db.get(User, user_id)
+    for key, value in updates.items():
+        setattr(user, key, value)
+    await db.commit()
+    
+    # Invalidate cache (will be reloaded on next read)
+    await invalidate_user_cache(user_id)
+    
+    return user
+```
+
+**Redis Data Structures:**
+
+**1. Strings (Simple Key-Value):**
+```python
+# Set value
+await redis.set("key", "value")
+await redis.setex("key", 3600, "value")  # With TTL
+
+# Get value
+value = await redis.get("key")
+
+# Increment/decrement
+await redis.incr("counter")
+await redis.decr("counter")
+```
+
+**2. Hashes (Objects):**
+```python
+# Set hash fields
+await redis.hset(
+    "user:1",
+    mapping={
+        "id": "1",
+        "email": "user@example.com",
+        "name": "John Doe"
+    }
+)
+
+# Get hash field
+email = await redis.hget("user:1", "email")
+
+# Get all fields
+user = await redis.hgetall("user:1")
+
+# Increment hash field
+await redis.hincrby("user:1", "login_count", 1)
+```
+
+**3. Lists (Ordered Collections):**
+```python
+# Add to list
+await redis.lpush("recent_searches:user1", "laptop")
+await redis.rpush("recent_searches:user1", "mouse")
+
+# Get range
+items = await redis.lrange("recent_searches:user1", 0, 9)  # First 10
+
+# Remove items
+first = await redis.lpop("recent_searches:user1")
+
+# Trim list
+await redis.ltrim("recent_searches:user1", 0, 9)  # Keep only first 10
+```
+
+**4. Sets (Unique Collections):**
+```python
+# Add to set
+await redis.sadd("user:1:tags", "vip", "premium")
+
+# Check membership
+is_vip = await redis.sismember("user:1:tags", "vip")
+
+# Get all members
+tags = await redis.smembers("user:1:tags")
+
+# Set operations
+common = await redis.sinter("set1", "set2")  # Intersection
+all_items = await redis.sunion("set1", "set2")  # Union
+```
+
+**Rate Limiting:**
+```python
+async def rate_limit(key: str, limit: int, window: int) -> bool:
+    """
+    Rate limiting using Redis.
+    
+    Args:
+        key: Unique identifier (user_id, IP, etc.)
+        limit: Maximum requests allowed
+        window: Time window in seconds
+    
+    Returns:
+        True if within limit, False if exceeded
+    """
+    redis = await get_redis()
+    
+    # Sliding window log
+    now = await redis.time()
+    current_time = now[0]
+    
+    # Clean old entries
+    window_start = current_time - window
+    await redis.zremrangebyscore(key, 0, window_start)
+    
+    # Count current requests
+    count = await redis.zcard(key)
+    
+    if count < limit:
+        # Add current request
+        await redis.zadd(key, {str(current_time): current_time})
+        await redis.expire(key, window)
+        return True
+    
+    return False
+
+@app.get("/api/data")
+async def get_data(
+    request: Request,
+    redis: aioredis.Redis = Depends(get_redis)
+):
+    client_ip = request.client.host
+    key = f"rate_limit:{client_ip}"
+    
+    if not await rate_limit(key, limit=100, window=60):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded"
+        )
+    
+    return {"data": "..."}
+```
+
+**Session Storage:**
+```python
+async def create_session(user_id: int) -> str:
+    """Create a new session."""
+    import secrets
+    
+    redis = await get_redis()
+    session_token = secrets.token_urlsafe(32)
+    session_key = f"session:{session_token}"
+    
+    # Store session data
+    await redis.hset(
+        session_key,
+        mapping={
+            "user_id": str(user_id),
+            "created_at": datetime.utcnow().isoformat()
+        }
+    )
+    await redis.expire(session_key, 86400)  # 24 hours
+    
+    return session_token
+
+async def get_session(session_token: str) -> Optional[dict]:
+    """Get session data."""
+    redis = await get_redis()
+    session_key = f"session:{session_token}"
+    return await redis.hgetall(session_key)
+```
+
+**System Design Consideration**: Redis provides:
+1. **Performance**: Ultra-fast in-memory access
+2. **Caching**: Reduce database load
+3. **Rate Limiting**: Protect APIs
+4. **Session Storage**: Scalable sessions
+5. **Pub/Sub**: Real-time messaging
+
+Redis is essential for high-performance FastAPI applications. Understanding caching patterns, data structures, rate limiting, and session storage is crucial for building scalable systems. Always use appropriate TTLs, handle cache misses gracefully, and monitor Redis memory usage.
+
+---
+
+### Q2: Explain Redis data structures (strings, hashes, lists, sets, sorted sets), when to use each, and advanced patterns like pub/sub, distributed locks, and cache invalidation strategies. Provide examples showing real-world use cases.
+
+**Answer:**
+
+**Redis Data Structures:**
+
+**1. Strings:**
+```python
+# Use for: Simple values, counters, flags
+await redis.set("user:1:status", "active")
+await redis.setex("session:token", 3600, "user_id")
+await redis.incr("page:views")
+await redis.decr("inventory:product:1")
+```
+
+**2. Hashes:**
+```python
+# Use for: Objects, user profiles, configurations
+await redis.hset("user:1", mapping={
+    "email": "user@example.com",
+    "name": "John",
+    "age": "30"
+})
+user = await redis.hgetall("user:1")
+```
+
+**3. Lists:**
+```python
+# Use for: Queues, activity feeds, recent items
+await redis.lpush("activity:user:1", "action1", "action2")
+recent = await redis.lrange("activity:user:1", 0, 9)
+```
+
+**4. Sets:**
+```python
+# Use for: Tags, permissions, unique tracking
+await redis.sadd("user:1:tags", "vip", "premium")
+tags = await redis.smembers("user:1:tags")
+```
+
+**5. Sorted Sets:**
+```python
+# Use for: Leaderboards, rankings, time-series
+await redis.zadd("leaderboard", {"user:1": 100, "user:2": 200})
+top_users = await redis.zrevrange("leaderboard", 0, 9, withscores=True)
+```
+
+**Pub/Sub (Publish-Subscribe):**
+```python
+# Publisher
+async def publish_event(channel: str, message: dict):
+    redis = await get_redis()
+    await redis.publish(channel, json.dumps(message))
+
+# Subscriber
+async def subscribe_events(channel: str):
+    redis = await get_redis()
+    pubsub = redis.pubsub()
+    await pubsub.subscribe(channel)
+    
+    async for message in pubsub.listen():
+        if message["type"] == "message":
+            data = json.loads(message["data"])
+            process_event(data)
+```
+
+**Distributed Locks:**
+```python
+async def acquire_lock(key: str, timeout: int = 10) -> bool:
+    """Acquire distributed lock."""
+    redis = await get_redis()
+    lock_key = f"lock:{key}"
+    
+    # Try to acquire lock
+    acquired = await redis.set(
+        lock_key,
+        "locked",
+        ex=timeout,
+        nx=True  # Only set if not exists
+    )
+    
+    return acquired is not None
+
+async def release_lock(key: str):
+    """Release distributed lock."""
+    redis = await get_redis()
+    await redis.delete(f"lock:{key}")
+```
+
+**Cache Invalidation Strategies:**
+
+**1. TTL-Based:**
+```python
+# Automatic expiration
+await redis.setex("user:1", 3600, user_data)  # Expires in 1 hour
+```
+
+**2. Event-Based:**
+```python
+# Invalidate on update
+async def update_user(user_id: int, updates: dict):
+    # Update database
+    user = await update_db(user_id, updates)
+    
+    # Invalidate cache
+    await redis.delete(f"user:{user_id}")
+    
+    # Publish invalidation event
+    await publish_event("cache:invalidate", {"key": f"user:{user_id}"})
+```
+
+**3. Tag-Based:**
+```python
+# Invalidate by tags
+async def invalidate_by_tag(tag: str):
+    redis = await get_redis()
+    pattern = f"tag:{tag}:*"
+    
+    # Find all keys with tag
+    keys = []
+    async for key in redis.scan_iter(match=pattern):
+        keys.append(key)
+    
+    # Delete all
+    if keys:
+        await redis.delete(*keys)
+```
+
+**System Design Consideration**: Redis data structures enable:
+1. **Flexibility**: Choose right structure for use case
+2. **Performance**: Optimized operations
+3. **Scalability**: Distributed patterns
+4. **Reliability**: Distributed locks, pub/sub
+
+Understanding Redis data structures, pub/sub, distributed locks, and cache invalidation is essential for building scalable, distributed systems. Always choose the right data structure for your use case and implement proper cache invalidation strategies.
+
+

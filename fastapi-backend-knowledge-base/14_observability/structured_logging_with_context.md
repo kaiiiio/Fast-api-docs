@@ -432,3 +432,262 @@ Structured logging provides:
 - ✅ Production-ready logging
 
 Implement structured logging for comprehensive observability!
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain structured logging in FastAPI, including how to implement it, add context to logs, correlation IDs, error logging, and integration with log aggregation systems. Provide detailed examples showing production-ready logging.
+
+**Answer:**
+
+**Structured Logging Overview:**
+
+Structured logging uses key-value pairs instead of free-form text, making logs machine-readable and easier to query, filter, and analyze.
+
+**Why Structured Logging:**
+
+**Without Structured Logging (Free Text):**
+```python
+# ❌ Bad: Free-form text logs
+logger.info("User logged in")
+logger.error("Payment failed")
+# Problem: Hard to query, filter, analyze
+```
+
+**With Structured Logging:**
+```python
+# ✅ Good: Structured key-value pairs
+logger.info("user_logged_in", user_id=123, email="user@example.com")
+logger.error("payment_failed", order_id=456, error="insufficient_funds")
+# Benefit: Easy to query, filter, analyze
+```
+
+**Setting Up Structured Logging:**
+```python
+import structlog
+import logging
+
+# Configure structlog
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.processors.JSONRenderer()  # JSON output
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
+logger = structlog.get_logger()
+```
+
+**Correlation IDs:**
+```python
+from fastapi import Request
+import uuid
+
+@app.middleware("http")
+async def add_correlation_id(request: Request, call_next):
+    """Add correlation ID to requests."""
+    # Generate or extract correlation ID
+    correlation_id = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
+    request.state.correlation_id = correlation_id
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Add to response
+    response.headers["X-Correlation-ID"] = correlation_id
+    
+    return response
+```
+
+**Context in Logs:**
+```python
+@router.get("/users/{user_id}")
+async def get_user(user_id: int, request: Request):
+    """Log with automatic context."""
+    log = logger.bind(
+        correlation_id=request.state.correlation_id,
+        user_id=user_id,
+        operation="get_user"
+    )
+    
+    log.info("fetching_user")
+    
+    user = await db.get(User, user_id)
+    
+    log.info("user_fetched", email=user.email)
+    
+    return user
+```
+
+**Error Logging:**
+```python
+@router.post("/orders")
+async def create_order(order_data: OrderCreate, request: Request):
+    """Comprehensive error logging."""
+    log = logger.bind(
+        operation="create_order",
+        correlation_id=request.state.correlation_id
+    )
+    
+    log.info("order_creation_started", user_id=order_data.user_id)
+    
+    try:
+        user = await db.get(User, order_data.user_id)
+        if not user:
+            log.warning("user_not_found", user_id=order_data.user_id)
+            raise HTTPException(404, "User not found")
+        
+        order = await create_order_logic(order_data)
+        log.info("order_created", order_id=order.id)
+        
+        return order
+    
+    except HTTPException:
+        raise
+    
+    except Exception as e:
+        log.error(
+            "order_creation_failed",
+            error=str(e),
+            error_type=type(e).__name__,
+            exc_info=True  # Include traceback
+        )
+        raise HTTPException(500, "Internal server error")
+```
+
+**Performance Logging:**
+```python
+@router.get("/products/search")
+async def search_products(query: str):
+    """Log performance metrics."""
+    start_time = time.time()
+    
+    log = logger.bind(operation="search_products", query=query)
+    log.info("search_started")
+    
+    try:
+        products = await search_logic(query)
+        
+        duration = time.time() - start_time
+        log.info(
+            "search_completed",
+            duration_ms=duration * 1000,
+            result_count=len(products)
+        )
+        
+        return {"products": products}
+    
+    except Exception as e:
+        duration = time.time() - start_time
+        log.error(
+            "search_failed",
+            duration_ms=duration * 1000,
+            error=str(e)
+        )
+        raise
+```
+
+**Log Aggregation Integration:**
+```python
+# ELK Stack
+from pythonjsonlogger import jsonlogger
+
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter()
+logHandler.setFormatter(formatter)
+logging.getLogger().addHandler(logHandler)
+
+# CloudWatch
+import watchtower
+
+handler = watchtower.CloudWatchLogHandler(
+    log_group="fastapi-app",
+    stream_name="api"
+)
+logging.getLogger().addHandler(handler)
+```
+
+**Best Practices:**
+
+**1. Always Include Correlation ID:**
+```python
+# Track requests across services
+# Essential for distributed tracing
+```
+
+**2. Log at Appropriate Levels:**
+```python
+# Info: Normal flow
+# Warning: Recoverable issues
+# Error: Failures
+# Debug: Detailed debugging
+```
+
+**3. Don't Log Sensitive Data:**
+```python
+# Never log passwords, tokens, PII
+# Sanitize before logging
+```
+
+**System Design Consideration**: Structured logging provides:
+1. **Observability**: Better debugging and monitoring
+2. **Traceability**: Track requests across services
+3. **Analytics**: Query and analyze logs
+4. **Production-Ready**: Integration with log aggregation
+
+Structured logging is essential for production applications. Understanding correlation IDs, context, error logging, and log aggregation is crucial for building observable systems.
+
+---
+
+### Q2: Explain correlation IDs, distributed tracing, log aggregation, and performance logging. Discuss best practices for production logging and common pitfalls.
+
+**Answer:**
+
+**Correlation IDs:**
+```python
+# Track requests across services
+# Essential for distributed systems
+# Pass in headers
+```
+
+**Distributed Tracing:**
+```python
+# Use OpenTelemetry
+# Track requests end-to-end
+# Identify bottlenecks
+```
+
+**Log Aggregation:**
+```python
+# ELK Stack, CloudWatch, Datadog
+# Centralized log storage
+# Query and analyze logs
+```
+
+**Performance Logging:**
+```python
+# Log request duration
+# Track slow queries
+# Monitor performance
+```
+
+**System Design Consideration**: Production logging requires:
+1. **Correlation**: Track requests across services
+2. **Aggregation**: Centralized log storage
+3. **Performance**: Monitor request duration
+4. **Security**: Don't log sensitive data
+
+Understanding correlation IDs, distributed tracing, and log aggregation is essential for building observable production systems.
+

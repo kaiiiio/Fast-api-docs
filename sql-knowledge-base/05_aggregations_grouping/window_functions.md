@@ -574,3 +574,618 @@ Window functions enable powerful analytics without collapsing rows. They're perf
 - Study [CTEs](../06_advanced_querying/ctes.md) with window functions
 - Master [Performance Optimization](../10_performance_optimization/) for window function tuning
 
+---
+
+## 🎯 Interview Questions: SQL
+
+### Q1: Explain what window functions are and how they differ from aggregate functions with GROUP BY. Provide detailed examples showing when to use window functions vs GROUP BY, and explain the performance implications of each approach.
+
+**Answer:**
+
+**Window Functions Definition:**
+
+Window functions perform calculations across a set of table rows that are somehow related to the current row. Unlike aggregate functions with GROUP BY, window functions do not collapse rows—they return a value for each row while performing calculations across a "window" of rows. This makes them powerful for analytics, rankings, and comparisons without losing row-level detail.
+
+**Key Difference from GROUP BY:**
+
+**GROUP BY:**
+- **Collapses rows** into groups
+- Returns **one row per group**
+- Loses individual row details
+- Must include all non-aggregated columns in GROUP BY
+
+**Window Functions:**
+- **Preserves all rows**
+- Returns **one row per input row**
+- Keeps individual row details
+- Can add aggregated values to each row
+
+**Visual Comparison:**
+
+**GROUP BY Example:**
+```sql
+SELECT user_id, COUNT(*) AS order_count, SUM(total) AS total_spent
+FROM orders
+GROUP BY user_id;
+```
+
+**Result (Collapsed):**
+```
+┌─────────┬─────────────┬─────────────┐
+│ user_id │ order_count │ total_spent │
+├─────────┼─────────────┼─────────────┤
+│ 1       │ 5           │ 500.00      │
+│ 2       │ 3           │ 300.00      │
+│ 3       │ 2           │ 200.00      │
+└─────────┴─────────────┴─────────────┘
+-- 3 rows (one per user group)
+-- Individual order details lost
+```
+
+**Window Function Example:**
+```sql
+SELECT 
+    id,
+    user_id,
+    total,
+    COUNT(*) OVER (PARTITION BY user_id) AS order_count,
+    SUM(total) OVER (PARTITION BY user_id) AS total_spent
+FROM orders;
+```
+
+**Result (All Rows Preserved):**
+```
+┌────┬─────────┬────────┬─────────────┬─────────────┐
+│ id │ user_id │ total  │ order_count │ total_spent │
+├────┼─────────┼────────┼─────────────┼─────────────┤
+│ 1  │ 1       │ 100.00 │ 5           │ 500.00      │
+│ 2  │ 1       │ 150.00 │ 5           │ 500.00      │
+│ 3  │ 1       │ 250.00 │ 5           │ 500.00      │
+│ 4  │ 2       │ 100.00 │ 3           │ 300.00      │
+│ 5  │ 2       │ 200.00 │ 3           │ 300.00      │
+└────┴─────────┴────────┴─────────────┴─────────────┘
+-- 5 rows (all orders preserved)
+-- Individual order details + aggregated values
+```
+
+**When to Use Window Functions:**
+
+**1. Rankings and Ordering:**
+
+```sql
+-- Top 3 orders per user (preserving order details)
+SELECT 
+    id,
+    user_id,
+    total,
+    ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total DESC) AS rank
+FROM orders
+WHERE ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total DESC) <= 3;
+
+-- With GROUP BY, you'd lose individual order details
+-- Window function preserves which specific orders are top 3
+```
+
+**2. Running Totals and Moving Averages:**
+
+```sql
+-- Daily revenue with running total
+SELECT 
+    DATE(created_at) AS sale_date,
+    SUM(total) AS daily_revenue,
+    SUM(SUM(total)) OVER (ORDER BY DATE(created_at)) AS running_total
+FROM orders
+GROUP BY DATE(created_at)
+ORDER BY sale_date;
+
+-- GROUP BY can't calculate running totals
+-- Window function adds cumulative calculation
+```
+
+**3. Comparing with Previous/Next Rows:**
+
+```sql
+-- Month-over-month growth
+SELECT 
+    DATE_TRUNC('month', created_at) AS month,
+    SUM(total) AS revenue,
+    LAG(SUM(total)) OVER (ORDER BY DATE_TRUNC('month', created_at)) AS prev_month,
+    SUM(total) - LAG(SUM(total)) OVER (ORDER BY DATE_TRUNC('month', created_at)) AS growth
+FROM orders
+GROUP BY DATE_TRUNC('month', created_at);
+
+-- Window function enables comparing with previous period
+-- GROUP BY alone can't access previous group's value
+```
+
+**4. Percentiles and Relative Rankings:**
+
+```sql
+-- Products ranked by price percentile
+SELECT 
+    id,
+    name,
+    price,
+    PERCENT_RANK() OVER (ORDER BY price) AS price_percentile,
+    CASE 
+        WHEN PERCENT_RANK() OVER (ORDER BY price) >= 0.9 THEN 'Premium'
+        WHEN PERCENT_RANK() OVER (ORDER BY price) >= 0.5 THEN 'Mid-range'
+        ELSE 'Budget'
+    END AS price_tier
+FROM products;
+
+-- Window function calculates relative position
+-- GROUP BY can't determine percentile rankings
+```
+
+**When to Use GROUP BY:**
+
+**1. Simple Aggregations:**
+
+```sql
+-- Total revenue per user (don't need order details)
+SELECT user_id, SUM(total) AS total_spent
+FROM orders
+GROUP BY user_id;
+
+-- Simpler and more efficient than window function
+-- No need to preserve individual rows
+```
+
+**2. Filtering on Aggregates:**
+
+```sql
+-- Users who spent more than $1000
+SELECT user_id, SUM(total) AS total_spent
+FROM orders
+GROUP BY user_id
+HAVING SUM(total) > 1000;
+
+-- GROUP BY with HAVING is straightforward
+-- Window function would require subquery/CTE
+```
+
+**3. Small Result Sets:**
+
+```sql
+-- Count orders per status
+SELECT status, COUNT(*) AS count
+FROM orders
+GROUP BY status;
+
+-- Only a few groups (statuses)
+-- GROUP BY is more efficient
+```
+
+**Performance Implications:**
+
+**1. Result Set Size:**
+
+**GROUP BY:**
+- Smaller result set (one row per group)
+- Less data to process, transfer, and store
+- More efficient for large datasets when details aren't needed
+
+**Window Functions:**
+- Larger result set (one row per input row)
+- More data to process and transfer
+- May be slower for very large tables
+
+**2. Memory Usage:**
+
+**GROUP BY:**
+- Memory for groups (typically small)
+- Efficient for many groups
+
+**Window Functions:**
+- Memory for window partitions
+- May require sorting entire partitions
+- Can be memory-intensive for large partitions
+
+**3. Execution Strategy:**
+
+**GROUP BY:**
+```sql
+-- Execution plan:
+HashAggregate (cost=...)
+  -> Seq Scan on orders
+-- Single pass, groups rows, calculates aggregates
+```
+
+**Window Functions:**
+```sql
+-- Execution plan:
+WindowAgg (cost=...)
+  -> Sort (cost=...)  -- May need to sort for PARTITION BY/ORDER BY
+      -> Seq Scan on orders
+-- May require sorting, then window calculation
+```
+
+**4. Index Usage:**
+
+**GROUP BY:**
+- Can use indexes for filtering
+- Less dependent on ORDER BY for performance
+
+**Window Functions:**
+- Benefit greatly from indexes on PARTITION BY and ORDER BY columns
+- Without indexes, may require expensive sorts
+
+**Performance Comparison Example:**
+
+**Scenario:** 1 million orders, 100,000 users
+
+**Query 1: GROUP BY (Total per user)**
+```sql
+SELECT user_id, SUM(total) AS total_spent
+FROM orders
+GROUP BY user_id;
+-- Result: 100,000 rows
+-- Execution: Fast (single pass, hash aggregate)
+-- Memory: ~100,000 groups
+```
+
+**Query 2: Window Function (Total per user, all orders)**
+```sql
+SELECT 
+    id,
+    user_id,
+    total,
+    SUM(total) OVER (PARTITION BY user_id) AS total_spent
+FROM orders;
+-- Result: 1,000,000 rows
+-- Execution: Slower (must process all rows, maintain partitions)
+-- Memory: Partitions for 100,000 users
+```
+
+**When Window Functions Are More Efficient:**
+
+**1. Top N Per Group:**
+```sql
+-- Window function (efficient with index)
+SELECT *
+FROM (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total DESC) AS rn
+    FROM orders
+) ranked
+WHERE rn <= 3;
+
+-- vs GROUP BY approach (less efficient)
+-- Would require self-join or correlated subquery
+```
+
+**2. Avoiding Multiple Passes:**
+```sql
+-- Window function: Single pass
+SELECT 
+    user_id,
+    total,
+    COUNT(*) OVER (PARTITION BY user_id) AS order_count,
+    SUM(total) OVER (PARTITION BY user_id) AS total_spent,
+    AVG(total) OVER (PARTITION BY user_id) AS avg_order
+FROM orders;
+
+-- GROUP BY approach: Would require multiple queries or self-joins
+```
+
+**System Design Consideration**: Understanding when to use window functions vs GROUP BY is crucial for:
+1. **Query Efficiency**: Choosing the right approach for performance
+2. **Data Requirements**: Preserving row details vs. aggregating
+3. **Analytics**: Enabling complex analytical queries
+4. **Maintainability**: Writing clear, efficient queries
+
+Window functions and GROUP BY serve different purposes. GROUP BY is better for simple aggregations where you don't need row-level details. Window functions are essential for analytics, rankings, and comparisons where you need aggregated values alongside individual row data. The choice depends on your data requirements and performance needs.
+
+---
+
+### Q2: Explain how window function frames work (ROWS vs RANGE). Provide detailed examples of different frame specifications and explain when to use each. How do frames affect performance and what are the implications of UNBOUNDED vs bounded frames?
+
+**Answer:**
+
+**Window Function Frames:**
+
+A window frame defines which rows are included in the window function calculation for each row. It specifies the range of rows relative to the current row that should be considered. Frames are specified using `ROWS` (physical rows) or `RANGE` (logical range based on values).
+
+**ROWS vs RANGE:**
+
+**ROWS:**
+- Specifies a **physical number of rows** before/after the current row
+- Based on row position in the ordered result set
+- Precise, deterministic
+- More efficient (doesn't need to evaluate values)
+
+**RANGE:**
+- Specifies a **logical range** based on the ORDER BY column values
+- Based on the actual values, not row positions
+- May include variable numbers of rows
+- Less efficient (must evaluate values)
+
+**Frame Syntax:**
+
+```sql
+function() OVER (
+    PARTITION BY column
+    ORDER BY column
+    ROWS BETWEEN start AND end
+    -- OR
+    RANGE BETWEEN start AND end
+)
+```
+
+**Frame Boundaries:**
+
+**Start Options:**
+- `UNBOUNDED PRECEDING`: From the start of the partition
+- `n PRECEDING`: n rows before current row (ROWS) or n units before (RANGE)
+- `CURRENT ROW`: Current row
+
+**End Options:**
+- `CURRENT ROW`: Current row
+- `n FOLLOWING`: n rows after current row (ROWS) or n units after (RANGE)
+- `UNBOUNDED FOLLOWING`: To the end of the partition
+
+**ROWS Examples:**
+
+**1. Current Row Only:**
+```sql
+SELECT 
+    id,
+    total,
+    SUM(total) OVER (ORDER BY id ROWS BETWEEN CURRENT ROW AND CURRENT ROW) AS current_only
+FROM orders;
+-- Frame: Just the current row
+-- Result: Same as total (no aggregation across rows)
+```
+
+**2. Previous 2 Rows + Current:**
+```sql
+SELECT 
+    id,
+    total,
+    AVG(total) OVER (
+        ORDER BY created_at 
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ) AS moving_avg_3
+FROM orders;
+```
+
+**Result:**
+```
+┌────┬────────┬──────────────┐
+│ id │ total  │ moving_avg_3│
+├────┼────────┼──────────────┤
+│ 1  │ 100.00 │ 100.00      │ (only row 1)
+│ 2  │ 150.00 │ 125.00      │ (rows 1-2: (100+150)/2)
+│ 3  │ 200.00 │ 150.00      │ (rows 1-3: (100+150+200)/3)
+│ 4  │ 250.00 │ 200.00      │ (rows 2-4: (150+200+250)/3)
+│ 5  │ 300.00 │ 250.00      │ (rows 3-5: (200+250+300)/3)
+└────┴────────┴──────────────┘
+```
+
+**3. Running Total (Unbounded Preceding):**
+```sql
+SELECT 
+    id,
+    total,
+    SUM(total) OVER (
+        ORDER BY created_at 
+        ROWS UNBOUNDED PRECEDING
+    ) AS running_total
+FROM orders;
+```
+
+**Result:**
+```
+┌────┬────────┬──────────────┐
+│ id │ total  │ running_total│
+├────┼────────┼──────────────┤
+│ 1  │ 100.00 │ 100.00       │ (100)
+│ 2  │ 150.00 │ 250.00       │ (100+150)
+│ 3  │ 200.00 │ 450.00       │ (100+150+200)
+│ 4  │ 250.00 │ 700.00       │ (100+150+200+250)
+└────┴────────┴──────────────┘
+```
+
+**4. Current + Next Row:**
+```sql
+SELECT 
+    id,
+    total,
+    SUM(total) OVER (
+        ORDER BY created_at 
+        ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING
+    ) AS current_and_next
+FROM orders;
+```
+
+**RANGE Examples:**
+
+**1. Range with Date Intervals:**
+```sql
+SELECT 
+    id,
+    total,
+    created_at,
+    SUM(total) OVER (
+        ORDER BY created_at 
+        RANGE BETWEEN INTERVAL '7 days' PRECEDING AND CURRENT ROW
+    ) AS sum_last_7_days
+FROM orders;
+```
+
+**Key Difference:**
+- **ROWS**: "Last 3 physical rows" (always exactly 3 rows)
+- **RANGE**: "All rows within 7 days" (variable number of rows)
+
+**Example:**
+```
+Orders:
+┌────┬────────┬─────────────────────┐
+│ id │ total  │ created_at          │
+├────┼────────┼─────────────────────┤
+│ 1  │ 100.00 │ 2024-01-01 10:00:00 │
+│ 2  │ 150.00 │ 2024-01-02 11:00:00 │
+│ 3  │ 200.00 │ 2024-01-08 12:00:00 │ (7 days later)
+│ 4  │ 250.00 │ 2024-01-09 13:00:00 │
+└────┴────────┴─────────────────────┘
+
+For row 3 (2024-01-08):
+- ROWS BETWEEN 2 PRECEDING: rows 1, 2, 3 (3 rows)
+- RANGE BETWEEN 7 DAYS PRECEDING: rows 3 only (row 1 is 7 days ago, excluded)
+```
+
+**2. Range with Numeric Values:**
+```sql
+SELECT 
+    id,
+    price,
+    SUM(quantity) OVER (
+        ORDER BY price 
+        RANGE BETWEEN 10 PRECEDING AND CURRENT ROW
+    ) AS quantity_within_10
+FROM products;
+```
+
+**Frame: All products within $10 of current product's price**
+
+**Performance Implications:**
+
+**1. UNBOUNDED Frames:**
+
+**UNBOUNDED PRECEDING/FOLLOWING:**
+```sql
+SUM(total) OVER (PARTITION BY user_id)
+-- Frame: Entire partition
+-- Must scan entire partition for each row
+-- Memory: Stores entire partition
+-- Performance: O(n) per row = O(n²) total for partition
+```
+
+**Performance Impact:**
+- Must process entire partition
+- Higher memory usage
+- Slower for large partitions
+- May require disk-based sorting
+
+**2. Bounded Frames:**
+
+**Bounded (e.g., 2 PRECEDING to CURRENT ROW):**
+```sql
+AVG(total) OVER (
+    ORDER BY created_at 
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+)
+-- Frame: Only 3 rows (current + 2 preceding)
+-- Only needs to maintain 3 rows in memory
+-- Performance: O(1) per row = O(n) total
+```
+
+**Performance Impact:**
+- Only processes frame rows
+- Lower memory usage
+- Much faster for large datasets
+- Can use sliding window optimization
+
+**Performance Comparison:**
+
+**Scenario:** 1 million orders, calculating running totals
+
+**UNBOUNDED Frame:**
+```sql
+SELECT 
+    id,
+    total,
+    SUM(total) OVER (ORDER BY created_at ROWS UNBOUNDED PRECEDING) AS running_total
+FROM orders;
+-- Execution: Must maintain running sum for all previous rows
+-- Memory: Grows with partition size
+-- Time: O(n) but with overhead for each row
+```
+
+**Bounded Frame:**
+```sql
+SELECT 
+    id,
+    total,
+    AVG(total) OVER (
+        ORDER BY created_at 
+        ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+    ) AS moving_avg_7
+FROM orders;
+-- Execution: Only maintains last 7 rows
+-- Memory: Constant (7 rows)
+-- Time: O(n) with constant overhead
+```
+
+**ROWS vs RANGE Performance:**
+
+**ROWS:**
+- More efficient (physical row access)
+- Deterministic (always same number of rows)
+- Can use index efficiently
+- Better for performance
+
+**RANGE:**
+- Less efficient (must evaluate values)
+- Variable number of rows
+- May require sorting and value comparison
+- Slower, especially with many duplicate values
+
+**Example Performance Difference:**
+
+```sql
+-- ROWS: Fast
+AVG(total) OVER (
+    ORDER BY created_at 
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+)
+-- Always exactly 3 rows
+-- Direct row access
+
+-- RANGE: Slower
+AVG(total) OVER (
+    ORDER BY created_at 
+    RANGE BETWEEN INTERVAL '1 day' PRECEDING AND CURRENT ROW
+)
+-- Variable number of rows
+-- Must evaluate date differences
+-- May include many rows if many orders on same day
+```
+
+**Common Frame Patterns:**
+
+**1. Running Total:**
+```sql
+SUM(value) OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)
+```
+
+**2. Moving Average:**
+```sql
+AVG(value) OVER (
+    ORDER BY date 
+    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+)
+```
+
+**3. Current and Previous:**
+```sql
+LAG(value) OVER (ORDER BY date ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)
+-- Or simply: LAG(value) OVER (ORDER BY date)
+```
+
+**4. Entire Partition:**
+```sql
+SUM(value) OVER (PARTITION BY group)
+-- Default frame: UNBOUNDED PRECEDING TO UNBOUNDED FOLLOWING
+```
+
+**System Design Consideration**: Understanding window frames is crucial for:
+1. **Performance**: Bounded frames are much faster than unbounded
+2. **Correctness**: ROWS vs RANGE can produce different results
+3. **Memory Usage**: Frame size affects memory requirements
+4. **Query Optimization**: Choosing appropriate frames for efficiency
+
+Window function frames are powerful but can significantly impact performance. UNBOUNDED frames process entire partitions and can be slow for large datasets. Bounded frames are much more efficient. ROWS is generally faster than RANGE. Understanding these differences helps write efficient window function queries that perform well at scale.
+

@@ -314,3 +314,294 @@ Connection pool management essentials:
 - ✅ Monitor pool usage and adjust as needed
 
 Proper pool management ensures your application can handle load efficiently without exhausting database connections.
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain database connection pooling in FastAPI, including how it works, why it's important, how to configure it properly, and common issues. Provide examples showing connection pool setup for both SQLAlchemy and MongoDB.
+
+**Answer:**
+
+**Connection Pooling Overview:**
+
+Connection pooling is a technique where a pool of database connections is maintained and reused across requests. Instead of creating a new connection for each request, connections are borrowed from the pool, used, and returned. This significantly improves performance and resource utilization.
+
+**Why Connection Pooling is Important:**
+
+**Without Connection Pooling:**
+```python
+# ❌ Bad: New connection for each request
+@app.get("/users/{user_id}")
+async def get_user(user_id: int):
+    conn = create_connection()  # New connection (50-200ms)
+    user = await conn.get_user(user_id)
+    conn.close()  # Close connection
+    return user
+
+# Problems:
+# - Slow: Creating connections is expensive
+# - Resource intensive: Each connection uses memory
+# - Limited: Database has max connection limit
+# - Inefficient: Wastes time creating/destroying connections
+```
+
+**With Connection Pooling:**
+```python
+# ✅ Good: Reuse connections from pool
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await db.get_user(user_id)
+    return user
+    # Connection returned to pool automatically
+
+# Benefits:
+# - Fast: Reuse existing connections (<1ms)
+# - Efficient: Connections shared across requests
+# - Scalable: Handle more concurrent requests
+# - Resource-friendly: Limited number of connections
+```
+
+**How Connection Pooling Works:**
+
+**Pool Lifecycle:**
+```
+1. Application starts: Pool created with initial connections
+2. Request arrives: Connection borrowed from pool
+3. Request processed: Connection used for queries
+4. Request completes: Connection returned to pool
+5. Connection reused: Available for next request
+```
+
+**SQLAlchemy Connection Pooling:**
+
+**Basic Setup:**
+```python
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+
+# Create engine with connection pool
+engine = create_async_engine(
+    "postgresql+asyncpg://user:pass@localhost/db",
+    pool_size=20,              # Number of connections to maintain
+    max_overflow=10,           # Additional connections beyond pool_size
+    pool_pre_ping=True,        # Verify connections before use
+    pool_recycle=3600,         # Recycle connections after 1 hour
+    echo=False
+)
+
+# Create session factory
+async_session_maker = sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+# Dependency for getting database session
+async def get_db():
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+```
+
+**Pool Configuration Parameters:**
+
+**pool_size:**
+```python
+pool_size=20  # Number of connections to maintain
+# - Too small: Requests wait for available connections
+# - Too large: Wastes resources, may exceed DB limit
+# - Rule of thumb: (concurrent_requests × avg_query_time) / response_time
+```
+
+**max_overflow:**
+```python
+max_overflow=10  # Additional connections beyond pool_size
+# - Total max connections = pool_size + max_overflow = 30
+# - Used when pool is exhausted
+# - Temporary connections, closed when not needed
+```
+
+**pool_pre_ping:**
+```python
+pool_pre_ping=True  # Verify connection before use
+# - Checks if connection is still alive
+# - Replaces stale connections automatically
+# - Prevents "connection closed" errors
+```
+
+**pool_recycle:**
+```python
+pool_recycle=3600  # Recycle connections after 1 hour
+# - Prevents using stale connections
+# - Some databases close idle connections
+# - Recreates connections periodically
+```
+
+**Sizing the Pool:**
+
+**Calculation:**
+```python
+# Formula:
+# pool_size = (expected_concurrent_requests × avg_query_time) / response_time
+
+# Example:
+# - 100 concurrent requests
+# - Average query time: 50ms
+# - Desired response time: 100ms
+# pool_size = (100 × 0.05) / 0.1 = 50
+
+# In practice:
+pool_size=50
+max_overflow=10  # 20% of pool_size
+```
+
+**Common Issues and Solutions:**
+
+**1. Pool Exhaustion:**
+
+**Problem:** All connections in use, requests wait or timeout
+
+```python
+# Symptoms:
+# - Slow responses under load
+# - "Pool exhausted" errors
+# - Requests timing out
+
+# Solutions:
+# ✅ Increase pool_size
+pool_size=50  # More connections
+
+# ✅ Increase max_overflow
+max_overflow=20  # More temporary connections
+
+# ✅ Reduce connection hold time
+# Use dependency injection (automatic cleanup)
+async def get_db():
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        finally:
+            await session.close()  # Always close
+```
+
+**2. Stale Connections:**
+
+**Problem:** Database closes idle connections, pool still tries to use them
+
+```python
+# ✅ Enable pre-ping
+pool_pre_ping=True  # Checks connection before use
+
+# ✅ Recycle connections
+pool_recycle=3600  # Recreate after 1 hour
+```
+
+**3. Connection Leaks:**
+
+**Problem:** Sessions not properly closed, connections accumulate
+
+```python
+# ❌ Bad: Session not closed
+async def get_user(user_id: int):
+    session = async_session_maker()
+    user = await session.get(User, user_id)
+    return user  # Session never closed!
+
+# ✅ Good: Proper cleanup with dependency injection
+async def get_db():
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()  # Always closed
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, user_id)
+    return user  # Session auto-closed
+```
+
+**MongoDB Connection Pooling (Motor):**
+
+**Setup:**
+```python
+from motor.motor_asyncio import AsyncIOMotorClient
+
+client = AsyncIOMotorClient(
+    "mongodb://localhost:27017",
+    maxPoolSize=50,          # Max connections in pool
+    minPoolSize=10,          # Min connections to maintain
+    maxIdleTimeMS=45000,     # Close idle connections after 45s
+    serverSelectionTimeoutMS=5000,  # Timeout for server selection
+    connectTimeoutMS=10000   # Connection timeout
+)
+
+db = client.myapp
+
+# Dependency
+async def get_db():
+    yield db
+```
+
+**Best Practices:**
+
+**1. Use Dependency Injection:**
+```python
+# ✅ Good: Automatic session management
+@app.get("/users/")
+async def list_users(db: AsyncSession = Depends(get_db)):
+    return await db.execute(select(User))
+
+# ❌ Bad: Manual session management
+@app.get("/users/")
+async def list_users():
+    session = async_session_maker()
+    try:
+        return await session.execute(select(User))
+    finally:
+        await session.close()
+```
+
+**2. Commit or Rollback Explicitly:**
+```python
+async def get_db():
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()  # Commit on success
+        except Exception:
+            await session.rollback()  # Rollback on error
+            raise
+        finally:
+            await session.close()
+```
+
+**3. Monitor Pool Usage:**
+```python
+from prometheus_client import Gauge
+
+pool_size_gauge = Gauge('db_pool_size', 'Database pool size')
+pool_checked_out = Gauge('db_pool_checked_out', 'Connections in use')
+
+# Update metrics in pool event handlers
+```
+
+**System Design Consideration**: Connection pooling is crucial for:
+1. **Performance**: Reusing connections is much faster than creating new ones
+2. **Scalability**: Handling high concurrent load efficiently
+3. **Resource Management**: Efficient use of database connections
+4. **Reliability**: Preventing connection exhaustion
+
+Connection pooling is essential for high-performance FastAPI applications. It allows reusing database connections, significantly improving performance and enabling applications to handle high concurrent loads. Proper configuration, monitoring, and using dependency injection for automatic resource management are key to effective connection pooling.

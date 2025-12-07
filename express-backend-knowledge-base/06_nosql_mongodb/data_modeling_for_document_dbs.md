@@ -163,7 +163,7 @@ Reference (Normalize):
 
 **Decision Matrix:**
 
-| Criterion            | Embed             | Reference             |
+| Criterion           | Embed             | Reference             |
 |---------------------|-------------------|-----------------------|
 | Data size           | Small             | Large/unbounded       |
 | Access pattern      | Read together     | Separate reads        |

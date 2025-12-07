@@ -489,3 +489,263 @@ Database fixtures provide:
 - ✅ Reusable test data
 
 Implement comprehensive fixtures for reliable database testing!
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain pytest fixtures for database testing in FastAPI, including how to set up test databases, create fixtures for sessions, handle transactions, and test async endpoints. Provide detailed examples showing a complete testing setup.
+
+**Answer:**
+
+**Pytest Fixtures Overview:**
+
+Pytest fixtures provide a way to set up and tear down test dependencies. For database testing in FastAPI, fixtures handle database connections, sessions, and test data creation.
+
+**Why Fixtures:**
+
+**Without Fixtures (Manual Setup):**
+```python
+# ❌ Bad: Manual setup in each test
+async def test_get_user():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    session = AsyncSession(engine)
+    # ... test code ...
+    session.close()
+    engine.dispose()
+# Problems: Code duplication, error-prone, no isolation
+```
+
+**With Fixtures (Automatic Setup):**
+```python
+# ✅ Good: Fixture handles setup/teardown
+@pytest.mark.asyncio
+async def test_get_user(db_session: AsyncSession):
+    # Fixture provides clean session
+    user = await create_test_user(db_session)
+    # ... test code ...
+# Benefits: Clean, isolated, reusable
+```
+
+**Basic Database Fixtures:**
+
+**Test Engine:**
+```python
+@pytest.fixture(scope="session")
+async def test_engine():
+    """Test database engine (created once per test session)."""
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        poolclass=StaticPool,
+        echo=False
+    )
+    
+    # Create tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    
+    yield engine
+    
+    # Cleanup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await engine.dispose()
+```
+
+**Test Session:**
+```python
+@pytest.fixture
+async def db_session(test_engine: AsyncEngine) -> AsyncSession:
+    """Database session with transaction rollback."""
+    connection = await test_engine.connect()
+    transaction = await connection.begin()
+    
+    session = AsyncSession(bind=connection)
+    
+    yield session
+    
+    # Cleanup: Rollback transaction for isolation
+    await session.close()
+    await transaction.rollback()
+    await connection.close()
+```
+
+**Test Data Fixtures:**
+```python
+@pytest.fixture
+async def test_user(db_session: AsyncSession) -> User:
+    """Create a test user."""
+    user = User(email="test@example.com", name="Test User")
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+# Usage
+@pytest.mark.asyncio
+async def test_get_user(db_session: AsyncSession, test_user: User):
+    """Test with pre-created user."""
+    repo = UserRepository(db_session)
+    found_user = await repo.get_by_id(test_user.id)
+    
+    assert found_user.id == test_user.id
+    assert found_user.email == test_user.email
+```
+
+**Factory Pattern:**
+```python
+class UserFactory:
+    """Factory for creating test users."""
+    
+    @staticmethod
+    async def create(
+        db: AsyncSession,
+        email: Optional[str] = None,
+        name: Optional[str] = None,
+        **kwargs
+    ) -> User:
+        """Create user with defaults."""
+        user = User(
+            email=email or f"user_{uuid.uuid4().hex[:8]}@example.com",
+            name=name or "Test User",
+            **kwargs
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+# Usage
+@pytest.mark.asyncio
+async def test_with_factory(db_session: AsyncSession):
+    """Test using factory."""
+    user = await UserFactory.create(db_session, email="custom@example.com")
+    assert user.email == "custom@example.com"
+```
+
+**FastAPI Test Client:**
+```python
+from fastapi.testclient import TestClient
+from httpx import AsyncClient
+
+@pytest.fixture
+def client(test_engine: AsyncEngine) -> TestClient:
+    """Create FastAPI test client."""
+    # Override database dependency
+    def override_get_db():
+        async_session_maker = async_sessionmaker(
+            test_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
+        async def _get_db():
+            async with async_session_maker() as session:
+                yield session
+        
+        return _get_db()
+    
+    app.dependency_overrides[get_db] = override_get_db
+    
+    with TestClient(app) as test_client:
+        yield test_client
+    
+    app.dependency_overrides.clear()
+
+# Async client
+@pytest.fixture
+async def async_client(test_engine: AsyncEngine) -> AsyncClient:
+    """Create async FastAPI test client."""
+    async def override_get_db():
+        async_session_maker = async_sessionmaker(
+            test_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
+        async with async_session_maker() as session:
+            yield session
+    
+    app.dependency_overrides[get_db] = override_get_db
+    
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+    
+    app.dependency_overrides.clear()
+```
+
+**Best Practices:**
+
+**1. Use Transactions for Isolation:**
+```python
+# Rollback after each test
+# Ensures test isolation
+# No data leakage between tests
+```
+
+**2. Scope Appropriately:**
+```python
+# session scope: For expensive setup (engine)
+# function scope: For test data (sessions, users)
+```
+
+**3. Use Factories:**
+```python
+# Create test data easily
+# Reusable across tests
+# Flexible defaults
+```
+
+**System Design Consideration**: Database fixtures provide:
+1. **Isolation**: Each test has clean state
+2. **Reusability**: Share fixtures across tests
+3. **Maintainability**: Centralized setup/teardown
+4. **Performance**: Efficient test execution
+
+Pytest fixtures are essential for database testing in FastAPI. Understanding fixture setup, transaction handling, test data creation, and FastAPI test clients is crucial for building reliable test suites.
+
+---
+
+### Q2: Explain fixture scopes, transaction handling in tests, testing async endpoints, and best practices for test data management. Discuss performance optimization and common pitfalls.
+
+**Answer:**
+
+**Fixture Scopes:**
+
+**Session Scope:**
+```python
+@pytest.fixture(scope="session")
+async def test_engine():
+    """Created once per test session."""
+    # Expensive setup (database engine)
+    # Shared across all tests
+```
+
+**Function Scope:**
+```python
+@pytest.fixture
+async def db_session(test_engine):
+    """Created for each test."""
+    # Fresh session per test
+    # Ensures isolation
+```
+
+**Transaction Handling:**
+```python
+# Rollback after each test
+# Ensures test isolation
+# No data leakage
+```
+
+**Testing Async Endpoints:**
+```python
+# Use AsyncClient for async endpoints
+# Properly handle async dependencies
+# Test async behavior
+```
+
+**System Design Consideration**: Fixture scopes and transaction handling provide:
+1. **Performance**: Efficient test execution
+2. **Isolation**: Clean state per test
+3. **Reliability**: Consistent test results
+
+Understanding fixture scopes, transaction handling, and async testing is essential for building efficient, reliable test suites.
+

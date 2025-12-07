@@ -617,3 +617,269 @@ Health checks provide:
 - ✅ System monitoring
 
 Implement comprehensive health checks for production deployments!
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain health checks in FastAPI, including database and cache health checks, liveness vs readiness probes, Kubernetes integration, and best practices. Provide detailed examples showing comprehensive health check implementation.
+
+**Answer:**
+
+**Health Checks Overview:**
+
+Health checks allow container orchestration systems (Kubernetes, Docker Swarm) to determine if an application is healthy and ready to serve traffic. They're essential for automatic failover and traffic routing.
+
+**Why Health Checks:**
+
+**Without Health Checks:**
+```python
+# ❌ Bad: No way to know if app is healthy
+# Container might be running but app crashed
+# Traffic still routed to broken instances
+```
+
+**With Health Checks:**
+```python
+# ✅ Good: Orchestration knows app status
+# Automatic restart on failure
+# Traffic only to healthy instances
+```
+
+**Basic Health Check:**
+```python
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+router = APIRouter()
+
+@router.get("/health")
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """Basic health check."""
+    try:
+        # Check database
+        await db.execute(text("SELECT 1"))
+        return {"status": "healthy"}
+    except Exception:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unhealthy"}
+        )
+```
+
+**Comprehensive Health Check:**
+```python
+from enum import Enum
+from typing import Optional, Dict
+from datetime import datetime
+
+class HealthStatus(str, Enum):
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    UNHEALTHY = "unhealthy"
+
+class ComponentHealth:
+    def __init__(
+        self,
+        name: str,
+        status: HealthStatus,
+        response_time_ms: Optional[float] = None,
+        error: Optional[str] = None,
+        details: Optional[Dict] = None
+    ):
+        self.name = name
+        self.status = status
+        self.response_time_ms = response_time_ms
+        self.error = error
+        self.details = details or {}
+
+class HealthCheckService:
+    def __init__(self, db: Optional[AsyncSession] = None, redis: Optional[aioredis.Redis] = None):
+        self.db = db
+        self.redis = redis
+    
+    async def check_database(self) -> ComponentHealth:
+        """Check database health."""
+        start_time = time.time()
+        try:
+            await self.db.execute(text("SELECT 1"))
+            response_time = (time.time() - start_time) * 1000
+            
+            return ComponentHealth(
+                name="database",
+                status=HealthStatus.HEALTHY,
+                response_time_ms=response_time
+            )
+        except Exception as e:
+            return ComponentHealth(
+                name="database",
+                status=HealthStatus.UNHEALTHY,
+                error=str(e)
+            )
+    
+    async def check_cache(self) -> ComponentHealth:
+        """Check cache health."""
+        start_time = time.time()
+        try:
+            await self.redis.ping()
+            response_time = (time.time() - start_time) * 1000
+            
+            return ComponentHealth(
+                name="cache",
+                status=HealthStatus.HEALTHY,
+                response_time_ms=response_time
+            )
+        except Exception as e:
+            return ComponentHealth(
+                name="cache",
+                status=HealthStatus.UNHEALTHY,
+                error=str(e)
+            )
+    
+    async def check_all(self) -> Dict[str, ComponentHealth]:
+        """Check all components."""
+        checks = {}
+        
+        if self.db:
+            checks["database"] = await self.check_database()
+        
+        if self.redis:
+            checks["cache"] = await self.check_cache()
+        
+        return checks
+    
+    def get_overall_status(self, checks: Dict[str, ComponentHealth]) -> HealthStatus:
+        """Determine overall health status."""
+        statuses = [check.status for check in checks.values()]
+        
+        if HealthStatus.UNHEALTHY in statuses:
+            return HealthStatus.UNHEALTHY
+        elif HealthStatus.DEGRADED in statuses:
+            return HealthStatus.DEGRADED
+        else:
+            return HealthStatus.HEALTHY
+```
+
+**Liveness vs Readiness:**
+
+**Liveness Probe:**
+```python
+@router.get("/health/live")
+async def liveness_check():
+    """Liveness: Is the app running?"""
+    return {"status": "alive"}
+# Kubernetes: Restarts container if fails
+```
+
+**Readiness Probe:**
+```python
+@router.get("/health/ready")
+async def readiness_check(
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis)
+):
+    """Readiness: Can the app serve traffic?"""
+    health_service = HealthCheckService(db=db, redis=redis)
+    checks = await health_service.check_all()
+    overall_status = health_service.get_overall_status(checks)
+    
+    if overall_status == HealthStatus.UNHEALTHY:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready"}
+        )
+    
+    return {"status": "ready"}
+# Kubernetes: Removes from service if fails
+```
+
+**Kubernetes Integration:**
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+```
+
+**Best Practices:**
+
+**1. Fast Checks:**
+```python
+# Complete in < 1 second
+# Use timeouts
+# Don't check non-critical dependencies
+```
+
+**2. Separate Endpoints:**
+```python
+# /health/live: App is running
+# /health/ready: App can serve traffic
+# Different purposes, different checks
+```
+
+**System Design Consideration**: Health checks provide:
+1. **Reliability**: Automatic failover
+2. **Monitoring**: System health visibility
+3. **Traffic Routing**: Only healthy instances
+4. **Orchestration**: Container management
+
+Health checks are essential for production deployments. Understanding liveness vs readiness, Kubernetes integration, and best practices is crucial for building reliable systems.
+
+---
+
+### Q2: Explain health check patterns, timeout handling, caching health status, and monitoring health check metrics. Discuss trade-offs and best practices for high-traffic applications.
+
+**Answer:**
+
+**Health Check Patterns:**
+
+**1. Simple Check:**
+```python
+# Basic ping
+# Fast, minimal
+```
+
+**2. Dependency Check:**
+```python
+# Check database, cache
+# More comprehensive
+```
+
+**3. Deep Check:**
+```python
+# Check all dependencies
+# Most thorough, slower
+```
+
+**Timeout Handling:**
+```python
+# Use asyncio.wait_for
+# Prevent hanging checks
+# Return unhealthy on timeout
+```
+
+**Caching Health Status:**
+```python
+# Cache results briefly
+# Reduce load
+# Balance freshness vs performance
+```
+
+**System Design Consideration**: Health checks require:
+1. **Speed**: Fast completion
+2. **Reliability**: Accurate status
+3. **Monitoring**: Track metrics
+4. **Caching**: Reduce load
+
+Understanding health check patterns, timeouts, caching, and monitoring is essential for production systems.
+

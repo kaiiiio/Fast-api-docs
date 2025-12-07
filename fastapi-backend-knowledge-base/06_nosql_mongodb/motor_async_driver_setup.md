@@ -369,3 +369,199 @@ Key takeaways:
 
 Now you can use MongoDB effectively in your FastAPI applications!
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain Motor (async MongoDB driver) in FastAPI, including connection setup, CRUD operations, connection pooling, error handling, and best practices. Provide detailed examples showing a complete MongoDB integration.
+
+**Answer:**
+
+**Motor Overview:**
+
+Motor is the official async MongoDB driver for Python. It provides non-blocking database operations, making it perfect for FastAPI's async architecture.
+
+**Why Motor:**
+
+**Without Motor (Sync Driver):**
+```python
+# ❌ Bad: Blocking operations
+from pymongo import MongoClient
+client = MongoClient()
+db = client.database
+result = db.users.find_one({"_id": user_id})  # Blocks thread
+# Problem: Blocks event loop, poor performance
+```
+
+**With Motor (Async Driver):**
+```python
+# ✅ Good: Non-blocking operations
+from motor.motor_asyncio import AsyncIOMotorClient
+client = AsyncIOMotorClient()
+db = client.database
+result = await db.users.find_one({"_id": user_id})  # Non-blocking
+# Benefit: Yields control, handles other requests
+```
+
+**Connection Setup:**
+```python
+from motor.motor_asyncio import AsyncIOMotorClient
+from contextlib import asynccontextmanager
+
+client: Optional[AsyncIOMotorClient] = None
+database = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage MongoDB connection lifecycle."""
+    global client, database
+    
+    # Startup
+    client = AsyncIOMotorClient(
+        "mongodb://localhost:27017/",
+        maxPoolSize=100,
+        minPoolSize=10
+    )
+    database = client.ecommerce
+    
+    # Test connection
+    await client.admin.command('ping')
+    
+    yield
+    
+    # Shutdown
+    if client:
+        client.close()
+
+app = FastAPI(lifespan=lifespan)
+```
+
+**CRUD Operations:**
+
+**Create:**
+```python
+async def create_user(user_data: dict):
+    """Create user."""
+    result = await db.users.insert_one(user_data)
+    return str(result.inserted_id)
+```
+
+**Read:**
+```python
+async def get_user(user_id: str):
+    """Get user by ID."""
+    from bson import ObjectId
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if user:
+        user["_id"] = str(user["_id"])  # Convert ObjectId
+    return user
+```
+
+**Update:**
+```python
+async def update_user(user_id: str, updates: dict):
+    """Update user."""
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": updates}
+    )
+    return result.modified_count > 0
+```
+
+**Delete:**
+```python
+async def delete_user(user_id: str):
+    """Delete user."""
+    result = await db.users.delete_one({"_id": ObjectId(user_id)})
+    return result.deleted_count > 0
+```
+
+**Error Handling:**
+```python
+from pymongo.errors import DuplicateKeyError, OperationFailure
+
+async def create_user_safe(user_data: dict):
+    """Create user with error handling."""
+    try:
+        result = await db.users.insert_one(user_data)
+        return {"success": True, "user_id": str(result.inserted_id)}
+    
+    except DuplicateKeyError:
+        raise HTTPException(400, "User already exists")
+    
+    except OperationFailure as e:
+        raise HTTPException(500, f"Database error: {str(e)}")
+```
+
+**Best Practices:**
+
+**1. Connection Pooling:**
+```python
+# Configure pool size
+# Reuse connections
+# Monitor pool usage
+```
+
+**2. ObjectId Handling:**
+```python
+# Convert ObjectId to string for JSON
+# Handle ObjectId in queries
+```
+
+**3. Error Handling:**
+```python
+# Handle MongoDB-specific errors
+# Provide meaningful messages
+```
+
+**System Design Consideration**: Motor provides:
+1. **Performance**: Non-blocking operations
+2. **Scalability**: Connection pooling
+3. **Integration**: Easy FastAPI setup
+4. **Reliability**: Proper error handling
+
+Motor is essential for MongoDB in FastAPI. Understanding connection setup, CRUD operations, and best practices is crucial for building efficient applications.
+
+---
+
+### Q2: Explain MongoDB connection pooling, ObjectId handling, error handling patterns, and when to use MongoDB vs PostgreSQL. Discuss performance optimization and best practices.
+
+**Answer:**
+
+**Connection Pooling:**
+```python
+# Configure pool size
+# Reuse connections efficiently
+# Monitor pool health
+```
+
+**ObjectId Handling:**
+```python
+# Convert to string for JSON
+# Handle in queries
+# Validate ObjectId format
+```
+
+**Error Handling:**
+```python
+# MongoDB-specific errors
+# DuplicateKeyError, OperationFailure
+# Provide meaningful messages
+```
+
+**MongoDB vs PostgreSQL:**
+```python
+# MongoDB: Document store, flexible schema
+# PostgreSQL: Relational, structured data
+# Choose based on use case
+```
+
+**System Design Consideration**: MongoDB requires:
+1. **Pooling**: Efficient connection management
+2. **ObjectId**: Proper handling
+3. **Error Handling**: MongoDB-specific errors
+4. **Schema Design**: Document structure
+
+Understanding connection pooling, ObjectId handling, and when to use MongoDB is essential for building scalable applications.
+
+

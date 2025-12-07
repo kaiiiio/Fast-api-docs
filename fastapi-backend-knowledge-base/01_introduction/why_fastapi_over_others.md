@@ -288,3 +288,571 @@ def test_get_user():
 
 **Particularly strong for:** Backend APIs, microservices, and data-intensive applications where performance and type safety matter.
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain why FastAPI is preferred over other Python frameworks like Flask and Django for building modern APIs. Discuss its key advantages including performance, type safety, automatic validation, and developer experience. Provide detailed examples showing how FastAPI handles these aspects better than traditional frameworks.
+
+**Answer:**
+
+**FastAPI Overview:**
+
+FastAPI is a modern, high-performance web framework for building APIs with Python. It was created in 2018 to address the limitations of traditional Python frameworks (Flask, Django) in handling modern requirements like high concurrency, type safety, automatic validation, and excellent developer experience.
+
+**Key Advantages:**
+
+**1. Performance - Async/Await Native Support:**
+
+**The Problem with Synchronous Frameworks:**
+
+Traditional frameworks like Flask use synchronous, blocking I/O. Each request requires a thread, and threads block while waiting for I/O operations (database queries, external API calls, file operations).
+
+**Flask (Synchronous) Example:**
+```python
+# Flask: Synchronous, blocking
+@app.route("/users/<int:user_id>")
+def get_user(user_id):
+    user = db.get_user(user_id)  # Blocks thread until DB responds
+    orders = db.get_orders(user_id)  # Blocks again
+    return jsonify({"user": user, "orders": orders})
+
+# Problems:
+# - Each request = one thread
+# - Thread sits idle during I/O waits
+# - Limited concurrency (e.g., 1000 threads = high memory)
+# - CPU underutilized during I/O
+```
+
+**FastAPI (Asynchronous) Example:**
+```python
+# FastAPI: Asynchronous, non-blocking
+@app.get("/users/{user_id}")
+async def get_user(user_id: int):
+    user = await db.get_user(user_id)  # Yields control, handles other requests
+    orders = await db.get_orders(user_id)  # Yields control again
+    return {"user": user, "orders": orders}
+
+# Benefits:
+# - One event loop handles thousands of requests
+# - Yields control during I/O, processes other requests
+# - Better resource utilization
+# - High concurrency with minimal resources
+```
+
+**Performance Comparison:**
+
+**Concurrent Requests Handling:**
+```
+Flask (Sync):
+- 4 CPU cores: ~400-800 concurrent requests max
+- Memory: ~8MB per thread × 800 = ~6.4GB
+- Response time: Slower under load
+
+FastAPI (Async):
+- Same 4 cores: 10,000+ concurrent requests easily
+- Memory: ~50-100MB for event loop
+- Response time: Fast, efficient resource usage
+```
+
+**2. Type Safety & Automatic Validation:**
+
+**The Problem Without Type Safety:**
+
+Traditional frameworks require manual validation, which is error-prone and verbose.
+
+**Flask Example (Manual Validation):**
+```python
+# Flask: Manual validation required
+@app.route("/users", methods=["POST"])
+def create_user():
+    data = request.json  # What if None? What if missing fields?
+    
+    # Manual validation
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    email = data.get("email")
+    if not email or "@" not in email:
+        return jsonify({"error": "Invalid email"}), 400
+    
+    age = data.get("age")
+    if not isinstance(age, int) or age < 0:
+        return jsonify({"error": "Invalid age"}), 400
+    
+    # More validation code...
+    user = create_user_in_db(email, age)
+    return jsonify(user), 201
+```
+
+**FastAPI Example (Automatic Validation):**
+```python
+# FastAPI: Automatic validation with Pydantic
+from pydantic import BaseModel, EmailStr, validator
+
+class UserCreate(BaseModel):
+    email: EmailStr  # Automatically validates email format
+    age: int
+    
+    @validator('age')
+    def validate_age(cls, v):
+        if v < 18:
+            raise ValueError('Must be 18 or older')
+        if v > 150:
+            raise ValueError('Invalid age')
+        return v
+
+@app.post("/users/", response_model=User)
+async def create_user(user: UserCreate):
+    # By the time we reach here:
+    # - user.email is guaranteed to be a valid email string
+    # - user.age is guaranteed to be an integer between 18-150
+    # - All validation happened automatically
+    return await create_user_in_db(user)
+
+# Benefits:
+# - Automatic validation before function runs
+# - Detailed error messages (422 Unprocessable Entity)
+# - Type coercion (e.g., "25" → 25)
+# - Less boilerplate code
+```
+
+**3. Automatic API Documentation:**
+
+**FastAPI Auto-Generated Docs:**
+
+FastAPI automatically generates interactive API documentation from your code:
+
+**Access Points:**
+- `http://localhost:8000/docs` - Swagger UI (interactive)
+- `http://localhost:8000/redoc` - ReDoc (beautiful documentation)
+
+**Example:**
+```python
+@app.get("/users/{user_id}")
+async def get_user(user_id: int):
+    """
+    Get user by ID.
+    
+    - **user_id**: User identifier (integer)
+    - Returns: User object
+    """
+    return {"id": user_id, "name": "John"}
+
+# FastAPI automatically:
+# 1. Documents the endpoint
+# 2. Shows that user_id is an integer parameter
+# 3. Lets you test it right in the browser
+# 4. Shows example requests/responses
+# 5. Validates input in the UI
+```
+
+**Comparison with Other Frameworks:**
+
+**Flask/Django:**
+- Manual documentation (Swagger/OpenAPI setup required)
+- Must maintain documentation separately
+- Easy to get out of sync with code
+
+**FastAPI:**
+- Documentation generated automatically from code
+- Always in sync with implementation
+- Interactive testing built-in
+
+**4. Dependency Injection Made Simple:**
+
+**FastAPI Dependency System:**
+
+FastAPI has built-in dependency injection that's elegant and powerful.
+
+**Example:**
+```python
+# Database dependency
+def get_db():
+    db = create_connection()
+    try:
+        yield db  # Resource available during request
+    finally:
+        db.close()  # Always cleanup
+
+# Authentication dependency
+def get_current_user(token: str = Header(...)):
+    return verify_token(token)
+
+# Route with dependencies
+@app.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    db = Depends(get_db),  # Automatically injected
+    current_user = Depends(get_current_user)  # Automatically injected
+):
+    # db and current_user are automatically provided
+    return await db.get_user(user_id)
+
+# Benefits:
+# - Reusable dependencies
+# - Easy testing (override dependencies)
+# - Automatic resource management
+# - Dependency graph resolution
+```
+
+**5. Modern Python Features:**
+
+**FastAPI leverages modern Python:**
+- Type hints (Python 3.6+)
+- Async/await (Python 3.5+)
+- Data classes and Pydantic models
+- Context managers and generators
+
+**6. Standards-Based:**
+
+**FastAPI follows industry standards:**
+- OpenAPI 3.0 (API documentation standard)
+- JSON Schema (data validation standard)
+- OAuth2 (authentication standard)
+- WebSocket support (real-time communication)
+
+**Comparison Matrix:**
+
+| Feature | FastAPI | Flask | Django REST |
+|---------|---------|-------|-------------|
+| **Async/Await** | ✅ Native | ⚠️ Limited | ⚠️ Limited |
+| **Performance** | ⚡ Very High | 🐌 Medium | 🐌 Medium |
+| **Type Safety** | ✅ Excellent | ❌ None | ⚠️ Optional |
+| **Auto Docs** | ✅ Built-in | ❌ Manual | ⚠️ Third-party |
+| **Validation** | ✅ Automatic | ❌ Manual | ⚠️ Serializers |
+| **Learning Curve** | ✅ Moderate | ✅ Easy | ⚠️ Steep |
+| **WebSocket** | ✅ Native | ⚠️ Extensions | ⚠️ Channels |
+
+**When to Use FastAPI:**
+
+**Best For:**
+- High-performance APIs (many concurrent requests)
+- Type-safe APIs (compile-time-like safety)
+- Modern Python applications (Python 3.6+)
+- Microservices (lightweight, fast startup)
+- Data-intensive applications (great with data science libraries)
+- AI/ML APIs (easy integration with ML models)
+
+**Trade-offs:**
+
+**Considerations:**
+- **Ecosystem**: Flask/Django have larger ecosystems
+- **Maturity**: FastAPI is newer (2018) vs Flask (2010), Django (2005)
+- **Tutorials**: Fewer tutorials compared to older frameworks
+- **Complex Apps**: Django might be better for content-heavy sites with admin panels
+
+**System Design Consideration**: FastAPI is ideal for:
+1. **Performance**: High-concurrency APIs
+2. **Type Safety**: Reducing runtime errors
+3. **Developer Experience**: Faster development
+4. **Modern Stack**: Leveraging Python 3.6+ features
+5. **Standards**: OpenAPI, JSON Schema compliance
+
+FastAPI excels over traditional Python frameworks by providing native async/await support for high performance, automatic type validation through Pydantic, built-in API documentation, elegant dependency injection, and modern Python features. It's particularly strong for building high-performance APIs, microservices, and data-intensive applications where performance and type safety matter.
+
+---
+
+### Q2: Compare FastAPI with Express.js and Spring Boot, discussing their architectural differences, performance characteristics, and when to choose each framework. Provide examples showing how each framework handles common API development tasks.
+
+**Answer:**
+
+**Framework Comparison:**
+
+Understanding when to choose FastAPI, Express.js, or Spring Boot depends on your requirements, team expertise, and application needs. Each framework has distinct strengths and architectural approaches.
+
+**1. FastAPI (Python):**
+
+**Architecture:**
+- Built on Starlette (async web framework)
+- Uses Pydantic for validation
+- Native async/await support
+- Event loop-based concurrency
+
+**Performance:**
+```python
+# FastAPI: High performance with async
+@app.get("/users/{user_id}")
+async def get_user(user_id: int):
+    user = await db.get_user(user_id)  # Non-blocking
+    return user
+
+# Handles 10,000+ concurrent requests easily
+# Low memory footprint (~50-100MB)
+```
+
+**Strengths:**
+- Excellent performance (async native)
+- Type safety (Pydantic validation)
+- Automatic API documentation
+- Modern Python features
+- Great for data science/AI integration
+
+**Weaknesses:**
+- Newer framework (smaller ecosystem)
+- Python-specific (not suitable for Node.js/Java teams)
+
+**2. Express.js (Node.js):**
+
+**Architecture:**
+- Built on Node.js event loop
+- Middleware-based architecture
+- Callback/Promise/async-await support
+- Single-threaded with event loop
+
+**Performance:**
+```javascript
+// Express.js: High performance with async
+app.get('/users/:userId', async (req, res) => {
+    const user = await db.getUser(req.params.userId);
+    res.json(user);
+});
+
+// Handles high concurrency
+// Good for I/O-bound operations
+```
+
+**Strengths:**
+- Large ecosystem (npm packages)
+- JavaScript/TypeScript support
+- Mature framework
+- Great for real-time applications
+- Easy to learn
+
+**Weaknesses:**
+- No built-in type safety (TypeScript optional)
+- Manual validation required
+- No automatic documentation
+- Callback hell (if not using async/await)
+
+**3. Spring Boot (Java):**
+
+**Architecture:**
+- Built on Spring Framework
+- Dependency injection container
+- Thread pool-based concurrency
+- Reactive support (WebFlux)
+
+**Performance:**
+```java
+// Spring Boot: Traditional (thread pool)
+@GetMapping("/users/{userId}")
+public User getUser(@PathVariable Long userId) {
+    return userService.getUser(userId);
+}
+
+// Spring WebFlux (reactive)
+@GetMapping("/users/{userId}")
+public Mono<User> getUser(@PathVariable Long userId) {
+    return userService.getUser(userId);
+}
+
+// Handles moderate concurrency
+// Higher memory usage (threads)
+```
+
+**Strengths:**
+- Enterprise-grade framework
+- Strong typing (Java)
+- Comprehensive ecosystem
+- Excellent tooling
+- Great for large teams
+
+**Weaknesses:**
+- Slower startup time
+- Higher memory usage
+- Steeper learning curve
+- More verbose code
+
+**Detailed Comparison:**
+
+**1. Type Safety & Validation:**
+
+**FastAPI:**
+```python
+from pydantic import BaseModel, EmailStr
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    age: int
+
+@app.post("/users/")
+async def create_user(user: UserCreate):
+    # Automatic validation
+    return await create_user(user)
+```
+
+**Express.js:**
+```javascript
+// Manual validation required
+app.post('/users', async (req, res) => {
+    const { email, age } = req.body;
+    
+    // Manual validation
+    if (!email || !email.includes('@')) {
+        return res.status(400).json({ error: 'Invalid email' });
+    }
+    if (!age || age < 0) {
+        return res.status(400).json({ error: 'Invalid age' });
+    }
+    
+    const user = await createUser({ email, age });
+    res.json(user);
+});
+```
+
+**Spring Boot:**
+```java
+// Validation with annotations
+public class UserCreate {
+    @Email
+    private String email;
+    
+    @Min(0)
+    private Integer age;
+}
+
+@PostMapping("/users")
+public User createUser(@Valid @RequestBody UserCreate user) {
+    // Automatic validation
+    return userService.create(user);
+}
+```
+
+**2. API Documentation:**
+
+**FastAPI:**
+```python
+# Automatic documentation
+# Visit /docs for Swagger UI
+# Visit /redoc for ReDoc
+# Generated from code automatically
+```
+
+**Express.js:**
+```javascript
+// Manual setup required
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+// Must write OpenAPI spec manually
+const swaggerSpec = swaggerJsdoc({
+    definition: {
+        openapi: '3.0.0',
+        info: { title: 'API', version: '1.0.0' }
+    },
+    apis: ['./routes/*.js']
+});
+```
+
+**Spring Boot:**
+```java
+// SpringDoc OpenAPI (automatic)
+@Configuration
+public class OpenApiConfig {
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+            .info(new Info().title("API").version("1.0.0"));
+    }
+}
+// Automatic documentation at /swagger-ui.html
+```
+
+**3. Dependency Injection:**
+
+**FastAPI:**
+```python
+def get_db():
+    db = create_connection()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: int, db = Depends(get_db)):
+    return await db.get_user(user_id)
+```
+
+**Express.js:**
+```javascript
+// Manual dependency management
+const db = require('./db');
+
+app.get('/users/:userId', async (req, res) => {
+    const user = await db.getUser(req.params.userId);
+    res.json(user);
+});
+```
+
+**Spring Boot:**
+```java
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository userRepository;
+    
+    public User getUser(Long id) {
+        return userRepository.findById(id);
+    }
+}
+```
+
+**Performance Comparison:**
+
+**Concurrent Requests:**
+```
+FastAPI (Async):
+- 10,000+ concurrent requests
+- Low memory (~50-100MB)
+- Fast response times
+
+Express.js (Async):
+- 10,000+ concurrent requests
+- Low memory (~50-100MB)
+- Fast response times
+
+Spring Boot (Traditional):
+- ~500-1000 concurrent requests
+- Higher memory (~500MB-1GB)
+- Slower response times
+
+Spring Boot (WebFlux - Reactive):
+- 5,000+ concurrent requests
+- Moderate memory (~200-500MB)
+- Good response times
+```
+
+**When to Choose Each:**
+
+**Choose FastAPI When:**
+- Building Python-based APIs
+- Need high performance with async
+- Want automatic validation and docs
+- Working with data science/AI
+- Team knows Python
+
+**Choose Express.js When:**
+- Building Node.js applications
+- Need JavaScript/TypeScript
+- Want large ecosystem (npm)
+- Building real-time applications
+- Team knows JavaScript
+
+**Choose Spring Boot When:**
+- Building Java-based applications
+- Need enterprise features
+- Working in large teams
+- Need comprehensive tooling
+- Enterprise environment
+
+**System Design Consideration**: Framework choice impacts:
+1. **Performance**: Concurrency handling
+2. **Developer Experience**: Productivity and ease
+3. **Ecosystem**: Available libraries and tools
+4. **Team Expertise**: Learning curve
+5. **Long-term Maintenance**: Framework maturity
+
+FastAPI excels in performance and developer experience for Python APIs. Express.js is excellent for Node.js applications with a large ecosystem. Spring Boot is ideal for enterprise Java applications with comprehensive features. Choose based on your language preference, performance requirements, and team expertise.
+

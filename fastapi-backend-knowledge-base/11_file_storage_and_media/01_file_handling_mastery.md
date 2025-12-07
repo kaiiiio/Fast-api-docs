@@ -163,4 +163,217 @@ async def upload_image(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
     
     return {"url": f"/static/{filename}"}
+
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain file handling in FastAPI, including file uploads, downloads, streaming, security considerations, and best practices. Provide detailed examples showing secure file handling.
+
+**Answer:**
+
+**File Handling Overview:**
+
+FastAPI provides two ways to handle file uploads: `bytes` for simple cases and `UploadFile` for production use. Understanding the differences and security implications is crucial.
+
+**UploadFile vs bytes:**
+
+**bytes (Simple but Limited):**
+```python
+# ❌ Bad: Loads entire file into memory
+@app.post("/upload")
+async def upload_file(file: bytes = File(...)):
+    # Entire file in memory - crashes with large files
+    return {"size": len(file)}
+# Problem: Memory issues with large files
+```
+
+**UploadFile (Production-Ready):**
+```python
+# ✅ Good: Handles large files safely
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    # Uses SpooledTemporaryFile
+    # Small files in memory, large files on disk
+    contents = await file.read()
+    return {
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "size": len(contents)
+    }
+# Benefit: Safe, efficient, exposes metadata
+```
+
+**Streaming Uploads:**
+```python
+import shutil
+from pathlib import Path
+
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+@app.post("/save-file")
+async def save_file(file: UploadFile = File(...)):
+    """Stream file to disk without loading into memory."""
+    destination = UPLOAD_DIR / file.filename
+    
+    # Stream file chunk by chunk (memory efficient)
+    with destination.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"path": str(destination)}
+```
+
+**Security: Path Traversal Prevention:**
+```python
+import uuid
+
+@app.post("/safe-upload")
+async def safe_upload(file: UploadFile = File(...)):
+    """Secure upload with UUID filename."""
+    # ❌ Bad: Trust user filename
+    # destination = UPLOAD_DIR / file.filename  # Path traversal risk!
+    
+    # ✅ Good: Generate safe filename
+    extension = file.filename.split(".")[-1]
+    new_filename = f"{uuid.uuid4()}.{extension}"  # UUID prevents attacks
+    
+    destination = UPLOAD_DIR / new_filename
+    
+    with destination.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"id": new_filename}
+```
+
+**File Type Validation:**
+```python
+import filetype
+
+@app.post("/upload-image")
+async def upload_image(file: UploadFile = File(...)):
+    """Secure image upload with validation."""
+    # 1. Read first 2KB to check file signature
+    head = await file.read(2048)
+    kind = filetype.guess(head)  # Checks magic numbers
+    
+    if kind is None or not kind.mime.startswith("image/"):
+        raise HTTPException(400, "Invalid image type")
+    
+    # 2. Reset cursor
+    await file.seek(0)
+    
+    # 3. Save safely
+    filename = f"{uuid.uuid4()}.{kind.extension}"
+    path = UPLOAD_DIR / filename
+    
+    with path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/static/{filename}"}
+```
+
+**File Downloads:**
+```python
+from fastapi.responses import FileResponse, StreamingResponse
+
+# FileResponse: For files on disk
+@app.get("/download/{file_id}")
+async def download_file(file_id: str):
+    file_path = UPLOAD_DIR / file_id
+    if not file_path.exists():
+        raise HTTPException(404, "File not found")
+    
+    return FileResponse(
+        path=file_path,
+        filename=f"download_{file_id}",
+        media_type="application/octet-stream"
+    )
+
+# StreamingResponse: For large files or generated content
+@app.get("/generate-csv")
+async def generate_csv():
+    def iter_csv():
+        yield "id,name,email\n"
+        for i in range(1000):
+            yield f"{i},User{i},user{i}@example.com\n"
+    
+    return StreamingResponse(iter_csv(), media_type="text/csv")
+```
+
+**Best Practices:**
+
+**1. Validate File Types:**
+```python
+# Use magic numbers, not extensions
+# Check file signatures
+# Validate MIME types
+```
+
+**2. Sanitize Filenames:**
+```python
+# Generate UUID filenames
+# Never trust user input
+# Prevent path traversal
+```
+
+**3. Stream Large Files:**
+```python
+# Don't load entire file into memory
+# Use streaming for large files
+# Chunk-based processing
+```
+
+**System Design Consideration**: File handling requires:
+1. **Security**: Path traversal prevention
+2. **Performance**: Streaming for large files
+3. **Validation**: File type checking
+4. **Storage**: Efficient file management
+
+File handling is essential for many applications. Understanding uploads, downloads, streaming, and security is crucial for building secure, efficient file handling systems.
+
+---
+
+### Q2: Explain file validation strategies, handling large files, security best practices, and when to use FileResponse vs StreamingResponse. Discuss performance optimization and common security pitfalls.
+
+**Answer:**
+
+**File Validation:**
+```python
+# Use magic numbers (file signatures)
+# Validate MIME types
+# Check file size limits
+# Verify file extensions
+```
+
+**Large File Handling:**
+```python
+# Stream files, don't load into memory
+# Use chunk-based processing
+# Implement resumable uploads
+```
+
+**Security Best Practices:**
+```python
+# Generate UUID filenames
+# Validate file types
+# Limit file sizes
+# Sanitize paths
+# Use secure storage
+```
+
+**FileResponse vs StreamingResponse:**
+```python
+# FileResponse: Files on disk
+# StreamingResponse: Generated content or large files
+```
+
+**System Design Consideration**: File handling security requires:
+1. **Validation**: File type and size
+2. **Sanitization**: Filename and path
+3. **Storage**: Secure file storage
+4. **Access Control**: Proper permissions
+
+Understanding file validation, large file handling, and security is essential for building secure file handling systems.
+
 ```

@@ -310,3 +310,218 @@ Async transaction management requires:
 
 Proper transaction management ensures data consistency and prevents common async database issues.
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain transaction management in async FastAPI applications, including how async transactions work, commit/rollback patterns, exception handling, isolation levels, and best practices. Provide detailed examples showing proper transaction handling.
+
+**Answer:**
+
+**Transaction Management Overview:**
+
+Transactions ensure data consistency by grouping multiple database operations into atomic units. In async FastAPI, transactions require careful handling of async context managers and proper commit/rollback logic.
+
+**Why Transactions:**
+
+**Without Transactions (Inconsistent):**
+```python
+# ❌ Bad: No transaction
+async def transfer_money(from_id: int, to_id: int, amount: float):
+    from_acc = await db.get(Account, from_id)
+    from_acc.balance -= amount  # Operation 1
+    
+    to_acc = await db.get(Account, to_id)
+    to_acc.balance += amount  # Operation 2
+    
+    # If error occurs between operations, data inconsistent
+```
+
+**With Transactions (Consistent):**
+```python
+# ✅ Good: Transaction ensures atomicity
+async def transfer_money(from_id: int, to_id: int, amount: float):
+    try:
+        from_acc = await db.get(Account, from_id)
+        from_acc.balance -= amount
+        
+        to_acc = await db.get(Account, to_id)
+        to_acc.balance += amount
+        
+        await db.commit()  # Both operations committed together
+    except Exception:
+        await db.rollback()  # Both operations rolled back
+        raise
+```
+
+**Basic Transaction Pattern:**
+```python
+async def get_db() -> AsyncSession:
+    """Dependency with transaction management."""
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()  # Commit on success
+        except Exception:
+            await session.rollback()  # Rollback on error
+            raise
+        finally:
+            await session.close()  # Always cleanup
+```
+
+**Exception Handling:**
+```python
+# ✅ Good: Proper rollback
+async def update_user(user_id: int, db: AsyncSession):
+    try:
+        user = await db.get(User, user_id)
+        user.email = "new@example.com"
+        await db.commit()
+    except Exception:
+        await db.rollback()  # Rollback on error
+        raise
+```
+
+**Isolation Levels:**
+```python
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
+# Set isolation level
+@event.listens_for(Engine, "connect")
+def set_isolation_level(dbapi_conn, connection_record):
+    dbapi_conn.isolation_level = "READ COMMITTED"  # Default
+    # Options: READ UNCOMMITTED, READ COMMITTED,
+    #          REPEATABLE READ, SERIALIZABLE
+```
+
+**Deadlock Handling:**
+```python
+from sqlalchemy.exc import OperationalError
+
+async def transfer_with_retry(
+    from_id: int,
+    to_id: int,
+    amount: Decimal,
+    db: AsyncSession
+):
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # Lock rows explicitly
+            from_acc = await db.get(Account, from_id, with_for_update=True)
+            to_acc = await db.get(Account, to_id, with_for_update=True)
+            
+            from_acc.balance -= amount
+            to_acc.balance += amount
+            await db.commit()
+            return
+            
+        except OperationalError as e:
+            if "deadlock" in str(e).lower() and attempt < max_retries - 1:
+                await db.rollback()
+                await asyncio.sleep(0.1 * (attempt + 1))  # Exponential backoff
+                continue
+            raise
+```
+
+**Best Practices:**
+
+**1. Keep Transactions Short:**
+```python
+# ❌ Bad: Long transaction
+async def process_order(order_id: int, db: AsyncSession):
+    order = await db.get(Order, order_id)
+    # ... long processing ...
+    await external_api_call()  # Blocks transaction!
+    await db.commit()
+
+# ✅ Good: Short transaction
+async def process_order(order_id: int, db: AsyncSession):
+    order = await db.get(Order, order_id)
+    await db.commit()  # Commit early
+    
+    # Do external calls after commit
+    await external_api_call()
+```
+
+**2. Use Explicit Locks:**
+```python
+# Lock rows to prevent concurrent modifications
+from_acc = await db.get(Account, from_id, with_for_update=True)
+```
+
+**3. Handle Stale Data:**
+```python
+# Refresh after commit if needed
+user = await db.get(User, user_id)
+await db.commit()
+await db.refresh(user)  # Reload from database
+```
+
+**System Design Consideration**: Transaction management provides:
+1. **Consistency**: Atomic operations
+2. **Isolation**: Prevent concurrent issues
+3. **Durability**: Committed changes persist
+4. **Reliability**: Proper error handling
+
+Transaction management is essential for data consistency. Understanding async transactions, commit/rollback patterns, exception handling, isolation levels, and best practices is crucial for building reliable applications.
+
+---
+
+### Q2: Explain transaction isolation levels, deadlock handling, nested transactions, and when to use explicit locks. Discuss performance implications and best practices for high-concurrency scenarios.
+
+**Answer:**
+
+**Transaction Isolation Levels:**
+
+**READ UNCOMMITTED:**
+```python
+# Lowest isolation, fastest
+# Can read uncommitted changes
+# Dirty reads possible
+```
+
+**READ COMMITTED (Default):**
+```python
+# Can only read committed changes
+# Prevents dirty reads
+# Non-repeatable reads possible
+```
+
+**REPEATABLE READ:**
+```python
+# Consistent reads within transaction
+# Prevents non-repeatable reads
+# Phantom reads possible
+```
+
+**SERIALIZABLE:**
+```python
+# Highest isolation, slowest
+# Prevents all concurrency issues
+# Can cause deadlocks
+```
+
+**Deadlock Handling:**
+```python
+# Retry with exponential backoff
+# Lock rows in consistent order
+# Use shorter transactions
+```
+
+**Explicit Locks:**
+```python
+# Use when needed to prevent race conditions
+from_acc = await db.get(Account, from_id, with_for_update=True)
+```
+
+**System Design Consideration**: Transaction isolation requires:
+1. **Balance**: Isolation vs performance
+2. **Deadlock Prevention**: Consistent lock order
+3. **Performance**: Shorter transactions
+4. **Monitoring**: Track deadlocks
+
+Understanding isolation levels, deadlock handling, and explicit locks is essential for high-concurrency scenarios. Always balance isolation with performance and implement proper deadlock handling.
+
+

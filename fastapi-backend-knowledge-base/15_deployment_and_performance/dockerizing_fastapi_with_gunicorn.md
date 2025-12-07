@@ -331,3 +331,223 @@ Production Docker setup provides:
 
 Follow these patterns for production-ready FastAPI deployments!
 
+---
+
+## 🎯 Interview Questions: FastAPI
+
+### Q1: Explain Dockerizing FastAPI applications with Gunicorn, including multi-stage builds, Gunicorn configuration, Docker Compose setup, and production best practices. Provide detailed examples showing a complete production deployment setup.
+
+**Answer:**
+
+**Docker Overview:**
+
+Docker containerizes FastAPI applications, ensuring consistent environments across development, staging, and production. Gunicorn serves as the production WSGI/ASGI server, handling multiple worker processes.
+
+**Why Docker + Gunicorn:**
+
+**Without Docker (Inconsistent):**
+```python
+# ❌ Bad: Different environments
+# Development: Python 3.11, dependencies X
+# Production: Python 3.9, dependencies Y
+# Problem: "Works on my machine" issues
+```
+
+**With Docker (Consistent):**
+```python
+# ✅ Good: Same environment everywhere
+# Docker image ensures consistency
+# Gunicorn handles production workload
+```
+
+**Multi-Stage Dockerfile:**
+```dockerfile
+# Stage 1: Build dependencies
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Stage 2: Production image
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /root/.local
+
+# Copy application code
+COPY . .
+
+# Make sure scripts are executable
+ENV PATH=/root/.local/bin:$PATH
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Run with Gunicorn
+CMD ["gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", "-w", "4", "-b", "0.0.0.0:8000"]
+```
+
+**Gunicorn Configuration:**
+```python
+# gunicorn_config.py
+import multiprocessing
+
+# Server socket
+bind = "0.0.0.0:8000"
+backlog = 2048
+
+# Worker processes
+workers = multiprocessing.cpu_count() * 2 + 1
+worker_class = "uvicorn.workers.UvicornWorker"
+worker_connections = 1000
+timeout = 30
+keepalive = 2
+
+# Logging
+accesslog = "-"
+errorlog = "-"
+loglevel = "info"
+
+# Process naming
+proc_name = "fastapi-app"
+
+# Server mechanics
+daemon = False
+pidfile = None
+umask = 0
+user = None
+group = None
+tmp_upload_dir = None
+```
+
+**Docker Compose:**
+```yaml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+**Best Practices:**
+
+**1. Multi-Stage Builds:**
+```dockerfile
+# Smaller production images
+# Separate build and runtime
+# Security: Fewer packages in production
+```
+
+**2. Non-Root User:**
+```dockerfile
+# Security best practice
+# Run as non-root user
+# Reduce attack surface
+```
+
+**3. Health Checks:**
+```yaml
+# Container orchestration
+# Automatic restart on failure
+# Traffic routing decisions
+```
+
+**System Design Consideration**: Docker + Gunicorn provides:
+1. **Consistency**: Same environment everywhere
+2. **Scalability**: Multiple workers handle load
+3. **Security**: Isolated containers
+4. **Deployment**: Easy CI/CD integration
+
+Dockerizing FastAPI with Gunicorn is essential for production deployments. Understanding multi-stage builds, Gunicorn configuration, Docker Compose, and best practices is crucial for building scalable, secure applications.
+
+---
+
+### Q2: Explain Gunicorn worker configuration, worker types (sync vs async), worker count optimization, and monitoring. Discuss when to use Gunicorn vs Uvicorn directly and performance considerations.
+
+**Answer:**
+
+**Gunicorn Workers:**
+
+**Sync Workers:**
+```python
+# Standard workers for sync code
+worker_class = "sync"
+workers = 4
+```
+
+**Async Workers (Uvicorn):**
+```python
+# For async FastAPI applications
+worker_class = "uvicorn.workers.UvicornWorker"
+workers = (2 * CPU_COUNT) + 1
+```
+
+**Worker Count Optimization:**
+```python
+# Formula: (2 × CPU_COUNT) + 1
+# Too few: Underutilized CPU
+# Too many: Context switching overhead
+```
+
+**Monitoring:**
+```python
+# Track worker health
+# Monitor request rates
+# Watch for worker timeouts
+```
+
+**System Design Consideration**: Gunicorn configuration requires:
+1. **Worker Type**: Choose sync vs async
+2. **Worker Count**: Optimize for CPU
+3. **Monitoring**: Track performance
+4. **Scaling**: Adjust based on load
+
+Understanding Gunicorn workers, optimization, and monitoring is essential for production deployments.
+
+

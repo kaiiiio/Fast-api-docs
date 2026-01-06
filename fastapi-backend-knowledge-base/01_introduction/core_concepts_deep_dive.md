@@ -28,6 +28,11 @@ class Item(BaseModel):
 You can add custom validation logic easily using validators.
 
 ```python
+# validator - Pydantic decorator for custom field validation
+# Runs after type coercion, before the model is created
+# cls - Class method, receives the class (not instance)
+# v - The value being validated
+# Can raise ValueError to reject invalid data
 from pydantic import validator
 
 # User: Custom validator enforces business rules.
@@ -111,6 +116,10 @@ Optional configuration with default values.
 
 ```python
 # Query parameters: Default values make them optional.
+# skip: int = 0 - Default value makes it optional, type hint ensures int
+# fake_items_db[skip : skip + limit] - Python slice syntax
+# Slice extracts items from index 'skip' to 'skip + limit'
+# Example: [skip:skip+limit] = [0:10] gets first 10 items
 @app.get("/items/")
 def read_items(skip: int = 0, limit: int = 10):
     return fake_items_db[skip : skip + limit]
@@ -124,6 +133,11 @@ You can enforce strict rules on parameters using `Query` and `Path`.
 from fastapi import Query
 
 # Query validation: Enforces length and regex patterns.
+# Query(None, ...) - None means optional (can be omitted)
+# min_length=3 - Minimum 3 characters
+# max_length=50 - Maximum 50 characters
+# regex="^fixedquery$" - Must match exact pattern (starts with ^, ends with $)
+# This validates BEFORE the function runs, returns 422 error if invalid
 @app.get("/items/")
 def read_items(q: str = Query(None, min_length=3, max_length=50, regex="^fixedquery$")):
     # Query parameter validated before function runs.
@@ -146,6 +160,10 @@ Middleware runs **before** the request hits your route and **after** the respons
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
+    # call_next(request) - Passes request to the next middleware or route handler
+    # await - Waits for the route handler to complete and return response
+    # This is the "handoff" point - everything before is pre-processing,
+    # everything after is post-processing
     response = await call_next(request)  # Pass to route handler
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)  # Add header
@@ -205,6 +223,9 @@ class User(BaseModel):
     @validator('email')
     def validate_email(cls, v):
         if '@' not in v:
+            # raise ValueError - Pydantic catches this and returns 422 error
+            # Error message is sent to client in response
+            # This is how you reject invalid data in validators
             raise ValueError('Invalid email format')
         return v
     
@@ -534,6 +555,10 @@ def get_db():
         yield session
 
 # tests/conftest.py
+# TestClient - FastAPI's test client for making HTTP requests in tests
+# Similar to requests library but for testing FastAPI apps
+# Doesn't require running server, executes synchronously
+# Automatically handles startup/shutdown events
 from fastapi.testclient import TestClient
 from app.main import app
 from app.api.deps import get_db
@@ -593,6 +618,9 @@ FastAPI caches dependency results within a single request:
 
 ```python
 def get_config():
+    # Expensive operation - reads file, parses config, etc.
+    # Without caching, this would run multiple times per request
+    # With use_cache=True in Depends, runs only once per request
     return load_config_from_file()  # Expensive operation
 
 @app.get("/items/")
@@ -609,6 +637,12 @@ async def read_items(config = Depends(get_config, use_cache=True)):
 **1. Use Annotated for Type Hints:**
 
 ```python
+# Annotated - Python 3.9+ type hint that combines type and metadata
+# Annotated[Type, metadata] - Type is the actual type, metadata is extra info
+# Separates type information from dependency injection
+# Makes code cleaner and more readable
+# Example: Annotated[AsyncSession, Depends(get_db)]
+#          ^^^^^^^^^^^^^^^^^^^ type hint  ^^^^^^^^^^^^^^^^^^^ dependency
 from typing import Annotated
 
 @app.get("/users/")

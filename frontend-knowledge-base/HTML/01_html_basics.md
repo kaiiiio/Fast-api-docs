@@ -239,13 +239,21 @@ HTML stands for **HyperText Markup Language**. It is the standard markup languag
 
 **Answer:**
 
-**Self-closing tags** (also called void elements or empty elements) are HTML tags that don't have closing tags because they don't contain any content.
+**Self-closing tags** (also called **void elements** or **empty elements**) are HTML tags that don't need separate closing tags because they cannot contain any content. They represent standalone elements.
+
+**Key Point:** In HTML5, you can write them with or without the trailing slash (`/>`), but in XHTML, the slash is required.
 
 **Common Self-Closing Tags:**
 
 ```html
 <!-- Images -->
 <img src="photo.jpg" alt="Photo">
+<!-- HTML5 (both valid) -->
+<img src="photo.jpg" alt="Photo">
+<img src="photo.jpg" alt="Photo" />
+
+<!-- But you NEVER write -->
+<img src="photo.jpg" alt="Photo"></img>  ❌ Wrong!
 
 <!-- Line break -->
 <br>

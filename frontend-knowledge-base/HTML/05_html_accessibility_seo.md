@@ -536,6 +536,9 @@ Structured data helps search engines understand content.
 - Indicate external links
 - Show file type and size for downloads
 - Use `rel="noopener noreferrer"` for `target="_blank"`
+  - **`noopener`**: Prevents new page from accessing `window.opener` (security - prevents tabnabbing attacks)
+  - **`noreferrer`**: Doesn't send referrer info to new page (privacy - hides where user came from)
+  - **Why needed**: Without these, opened page can redirect your original page using `window.opener.location`
 - Ensure sufficient color contrast
 - Make links keyboard accessible
 

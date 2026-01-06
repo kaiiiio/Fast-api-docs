@@ -115,7 +115,18 @@ Centralize dependencies in a `deps.py` module. This promotes reusability, avoids
 ```python
 # app/api/deps.py
 from fastapi import Depends, HTTPException, status
+# OAuth2PasswordBearer - FastAPI security utility for OAuth2 password flow
+# Extracts Bearer token from Authorization header automatically
+# tokenUrl - Endpoint where clients get tokens (e.g., /api/v1/auth/login)
+# Creates a dependency that returns the token string
+# Adds automatic OpenAPI/Swagger UI "Authorize" button
+# Use for: JWT authentication, API key validation, OAuth2 flows
 from fastapi.security import OAuth2PasswordBearer
+# AsyncSession - SQLAlchemy's async database session
+# Provides async database operations (await session.execute())
+# Must use with async database drivers (asyncpg, aiomysql, aiosqlite)
+# Allows non-blocking database queries in async FastAPI endpoints
+# Manages transactions, commits, rollbacks automatically
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings

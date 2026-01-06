@@ -72,7 +72,7 @@ my_fastapi_app/
 │   │   ├── test_api.py
 │   │   └── test_db.py
 │   └── fixtures/
-│       └── factories.py
+│       └── factories.py 
 │
 ├── alembic/                        # Database migrations
 │   ├── versions/

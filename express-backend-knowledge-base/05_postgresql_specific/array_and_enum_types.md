@@ -42,6 +42,9 @@ const product = await Product.create({
 });
 
 // Query by array contains
+// Op.contains - Checks if the database array column contains ALL specified values
+// This uses PostgreSQL's @> operator (contains)
+// Example: tags @> ARRAY['electronics'] returns rows where tags array includes 'electronics'
 const products = await Product.findAll({
     where: {
         tags: {
@@ -51,6 +54,10 @@ const products = await Product.findAll({
 });
 
 // Query by array overlap
+// sequelize.fn - Calls a PostgreSQL function
+// array_overlap - Custom PostgreSQL function that checks if two arrays have any common elements
+// This is useful for finding products that match ANY of the specified tags
+// Returns true if arrays share at least one element
 const products = await Product.findAll({
     where: sequelize.where(
         sequelize.fn('array_overlap', sequelize.col('tags'), ['electronics', 'computers']),

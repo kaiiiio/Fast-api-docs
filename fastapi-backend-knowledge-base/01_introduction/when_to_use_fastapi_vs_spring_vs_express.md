@@ -69,6 +69,10 @@ public record User(
 ) {}
 
 @PostMapping("/users/")
+// @Valid - Spring annotation that triggers automatic validation
+// Validates the User object against @Email, @Min, @Max annotations
+// If validation fails, Spring returns 400 Bad Request automatically
+// @RequestBody - Tells Spring to deserialize JSON request body to User object
 public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
     // Bean validation
 }
@@ -188,6 +192,10 @@ app.post("/users/", (req: Request<{}, {}, User>, res) => {
 7. ✅ Integration with Java-based systems
 
 **Example use cases:**
+# SaaS (Software as a Service) Platforms - Cloud-based software delivered over internet
+# Examples: Salesforce, Slack, Zoom, Google Workspace, Microsoft 365
+# Characteristics: Multi-tenant architecture, subscription-based, hosted by provider
+# Spring Boot is excellent for building SaaS platforms due to enterprise features
 - Enterprise SaaS platforms
 - Banking/financial systems
 - Large-scale e-commerce

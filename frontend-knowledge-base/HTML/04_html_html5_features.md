@@ -401,6 +401,250 @@ document.addEventListener('click', (e) => {
 });
 ```
 
+### Understanding `window` vs `document`
+
+**`window`** - The global browser window object
+- Represents the browser window/tab
+- Contains everything (including `document`)
+- Global scope in browser
+- Has properties like `location`, `history`, `localStorage`
+
+**`document`** - The DOM (Document Object Model)
+- Represents the HTML document/page content
+- Child of `window` (`window.document`)
+- Contains all HTML elements
+- Used to manipulate page content
+
+```javascript
+// window - Browser/tab level
+window.innerWidth          // Browser width
+window.location.href       // Current URL
+window.history.back()      // Browser history
+window.localStorage        // Browser storage
+window.alert('Hello')      // Browser alert
+
+// document - Page content level
+document.getElementById('id')     // Get HTML element
+document.querySelector('.class')  // Query elements
+document.body                     // <body> element
+document.title                    // Page title
+document.createElement('div')     // Create element
+```
+
+### `addEventListener()` Explained
+
+**Syntax:**
+```javascript
+target.addEventListener(event, handler, options);
+```
+
+**Parameters:**
+- `event` - Event type (string): 'click', 'scroll', 'keydown', etc.
+- `handler` - Function to execute when event occurs
+- `options` - Optional: `{ capture, once, passive }`
+
+**Examples:**
+```javascript
+// Basic click event
+button.addEventListener('click', function(event) {
+    console.log('Button clicked!', event);
+});
+
+// Arrow function
+button.addEventListener('click', (e) => {
+    console.log('Clicked!');
+});
+
+// With options
+button.addEventListener('click', handleClick, {
+    once: true,      // Run only once, then remove
+    capture: false,  // Bubble phase (default)
+    passive: true    // Won't call preventDefault()
+});
+
+// Multiple listeners on same element
+button.addEventListener('click', handler1);
+button.addEventListener('click', handler2);  // Both will run
+
+// Remove listener
+button.removeEventListener('click', handler1);
+```
+
+### Common Events
+
+**Mouse Events:**
+```javascript
+element.addEventListener('click', handler);
+element.addEventListener('dblclick', handler);
+element.addEventListener('mousedown', handler);
+element.addEventListener('mouseup', handler);
+element.addEventListener('mousemove', handler);
+element.addEventListener('mouseenter', handler);
+element.addEventListener('mouseleave', handler);
+element.addEventListener('mouseover', handler);
+element.addEventListener('mouseout', handler);
+```
+
+**Keyboard Events:**
+```javascript
+document.addEventListener('keydown', (e) => {
+    console.log('Key pressed:', e.key, e.code);
+});
+document.addEventListener('keyup', handler);
+document.addEventListener('keypress', handler);  // Deprecated
+```
+
+**Form Events:**
+```javascript
+input.addEventListener('input', handler);     // Value changes
+input.addEventListener('change', handler);    // Value committed
+form.addEventListener('submit', handler);
+input.addEventListener('focus', handler);
+input.addEventListener('blur', handler);
+```
+
+**Window Events:**
+```javascript
+window.addEventListener('load', handler);      // Page fully loaded
+window.addEventListener('DOMContentLoaded', handler);  // DOM ready
+window.addEventListener('resize', handler);    // Window resized
+window.addEventListener('scroll', handler);    // Page scrolled
+window.addEventListener('beforeunload', handler);  // Before page unload
+```
+
+**Document Events:**
+```javascript
+document.addEventListener('DOMContentLoaded', handler);
+document.addEventListener('click', handler);   // Delegate events
+document.addEventListener('scroll', handler);
+```
+
+### `popstate` Event Explained
+
+The `popstate` event fires when the user navigates through browser history (back/forward buttons).
+
+**When it fires:**
+- User clicks browser back button
+- User clicks browser forward button
+- JavaScript calls `history.back()`, `history.forward()`, or `history.go()`
+
+**When it does NOT fire:**
+- `history.pushState()` is called
+- `history.replaceState()` is called
+
+**Event Object:**
+```javascript
+window.addEventListener('popstate', (event) => {
+    console.log('Location:', location.pathname);
+    console.log('State:', event.state);  // State object from pushState
+    
+    // event.state contains the state object passed to pushState
+    if (event.state) {
+        console.log('Page:', event.state.page);
+        console.log('Data:', event.state.data);
+    }
+});
+```
+
+**Complete SPA Example:**
+```javascript
+// Navigate function (doesn't trigger popstate)
+function navigate(url, state) {
+    history.pushState(state, '', url);  // Updates URL, no popstate
+    loadContent(url);  // Manually load content
+}
+
+// Handle back/forward buttons (triggers popstate)
+window.addEventListener('popstate', (event) => {
+    console.log('User navigated via browser buttons');
+    console.log('Current URL:', location.pathname);
+    console.log('State:', event.state);
+    
+    // Load content for current URL
+    loadContent(location.pathname);
+});
+
+// Intercept link clicks
+document.addEventListener('click', (e) => {
+    if (e.target.matches('a[href^="/"]')) {  // Internal links only
+        e.preventDefault();
+        const url = e.target.getAttribute('href');
+        navigate(url, { page: url, timestamp: Date.now() });
+    }
+});
+
+// Load content function
+function loadContent(url) {
+    fetch(`/api${url}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('content').innerHTML = data.html;
+            document.title = data.title;
+        });
+}
+
+// Initial page load
+window.addEventListener('DOMContentLoaded', () => {
+    // Set initial state
+    history.replaceState({ page: location.pathname }, '', location.pathname);
+});
+```
+
+**Key Differences:**
+
+| Action | Triggers `popstate`? | Updates URL? |
+|--------|---------------------|--------------|
+| `history.pushState()` | ❌ No | ✅ Yes |
+| `history.replaceState()` | ❌ No | ✅ Yes |
+| `history.back()` | ✅ Yes | ✅ Yes |
+| `history.forward()` | ✅ Yes | ✅ Yes |
+| `history.go(-1)` | ✅ Yes | ✅ Yes |
+| Browser back button | ✅ Yes | ✅ Yes |
+| Browser forward button | ✅ Yes | ✅ Yes |
+
+**Common Pitfall:**
+```javascript
+// ❌ Wrong: This creates infinite loop
+window.addEventListener('popstate', () => {
+    history.pushState({}, '', '/page');  // Don't push in popstate!
+});
+
+// ✅ Correct: Just load content
+window.addEventListener('popstate', (event) => {
+    loadContent(location.pathname);  // Load content for current URL
+});
+```
+
+**Practical Use Cases:**
+```javascript
+// 1. SPA Navigation
+window.addEventListener('popstate', (event) => {
+    renderPage(location.pathname);
+});
+
+// 2. Restore scroll position
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.scrollY) {
+        window.scrollTo(0, event.state.scrollY);
+    }
+});
+
+// 3. Restore form data
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.formData) {
+        restoreFormData(event.state.formData);
+    }
+});
+
+// 4. Analytics tracking
+window.addEventListener('popstate', () => {
+    analytics.track('page_view', {
+        path: location.pathname,
+        referrer: document.referrer
+    });
+});
+```
+
 ---
 
 ## Q38. What is the Fetch API?

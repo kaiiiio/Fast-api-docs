@@ -8,6 +8,11 @@ Pydantic provides excellent configuration management for FastAPI applications, o
 
 ```python
 # app/core/config.py
+# pydantic_settings.BaseSettings - Special Pydantic class for configuration management
+# Automatically reads from environment variables and .env files
+# Provides type validation, default values, and nested configuration
+# Different from BaseModel: BaseModel for request/response, BaseSettings for config
+# Use case: Loading app configuration from environment variables
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 
@@ -228,6 +233,10 @@ class Settings(BaseSettings):
     # @property: Computes values on access, extracting from database_url.
     @property
     def database_host(self) -> str:
+        # urlparse - Python stdlib function to parse URLs into components
+        # Breaks "postgresql://user:pass@localhost:5432/dbname" into parts
+        # Returns ParseResult with: scheme, netloc, hostname, port, path, etc.
+        # .hostname extracts just the host part (e.g., "localhost")
         parsed = urlparse(self.database_url)
         return parsed.hostname  # Extract hostname from URL
     
@@ -335,6 +344,10 @@ For production, fetch secrets from secure vaults instead of files. Falls back to
 # app/core/config.py
 import os
 from pydantic_settings import BaseSettings
+# Optional - Type hint indicating value can be None
+# Optional[str] is equivalent to Union[str, None] or str | None (Python 3.10+)
+# Use when a value might not be present (e.g., optional config, nullable fields)
+# Helps IDEs and type checkers understand None is a valid value
 from typing import Optional
 import boto3  # For AWS Secrets Manager
 import json
@@ -350,11 +363,19 @@ class Settings(BaseSettings):
         """Load secrets from AWS Secrets Manager"""
         if os.getenv("ENVIRONMENT") == "production":
             # Production: Fetch from AWS Secrets Manager.
+            # boto3.client - AWS SDK for Python, creates service client
+            # "secretsmanager" - AWS service for storing/retrieving secrets securely
+            # Alternative to storing secrets in .env files (more secure for production)
+            # Requires AWS credentials configured (IAM role, env vars, or ~/.aws/credentials)
             client = boto3.client("secretsmanager")
             secret = client.get_secret_value(
                 SecretId="my-app/secrets"
             )
             secrets = json.loads(secret["SecretString"])
+            # cls(**secrets) - Unpacks dictionary as keyword arguments to create Settings
+            # Example: cls(**{"secret_key": "abc", "database_url": "..."}) 
+            # → Settings(secret_key="abc", database_url="...")
+            # cls is the class itself (Settings), not an instance
             return cls(**secrets)  # Create Settings from secrets
         else:
             # Use .env for local development: Fallback for dev/test.

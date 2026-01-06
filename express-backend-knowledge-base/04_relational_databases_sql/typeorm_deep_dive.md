@@ -2,6 +2,34 @@
 
 TypeORM is a mature ORM that supports both TypeScript and JavaScript, with decorators, repositories, and active record patterns. This guide covers using TypeORM in Express.js applications.
 
+## 📝 Interview-Ready Definitions
+
+**TypeORM:** A TypeScript-based ORM that uses decorators to define database entities and supports both Active Record and Data Mapper patterns. It provides a powerful query builder and works with multiple databases (PostgreSQL, MySQL, MongoDB, etc.).
+
+**DataSource:** The main class for database connection and configuration in TypeORM. It manages the connection pool, entities, migrations, and provides access to repositories. Think of it as the central hub for all database operations.
+
+**Entity:** A class decorated with `@Entity()` that represents a database table. Each instance of the entity class corresponds to a row in the table.
+
+**Repository:** A class that handles data access operations for a specific entity. It provides methods like `find()`, `save()`, `delete()` without mixing business logic with data access.
+
+**Active Record:** A pattern where the entity class itself has methods to save, update, and delete records (e.g., `user.save()`). Good for simple applications.
+
+**Data Mapper:** A pattern where repositories handle all database operations separately from entities. Better for complex applications with clear separation of concerns.
+
+**Query Builder:** A programmatic way to build SQL queries using TypeScript methods instead of writing raw SQL. Provides type safety and flexibility for complex queries.
+
+**Migration:** A version-controlled file that defines database schema changes (adding tables, columns, etc.). Allows you to track and apply database changes systematically.
+
+**Decorator:** A TypeScript feature (e.g., `@Column()`, `@PrimaryGeneratedColumn()`) that adds metadata to classes and properties, telling TypeORM how to map them to database structures.
+
+**Transaction:** A sequence of database operations that either all succeed or all fail together. Ensures data consistency (e.g., transferring money between accounts).
+
+**QueryRunner:** A low-level TypeORM class that provides manual control over database operations, transactions, and schema modifications.
+
+**Synchronize:** A TypeORM feature that automatically creates/updates database schema based on entities. **DANGER:** Never use in production as it can drop tables and lose data!
+
+---
+
 ## What is TypeORM?
 
 **TypeORM** is an ORM that can run in Node.js and supports:
@@ -11,7 +39,16 @@ TypeORM is a mature ORM that supports both TypeScript and JavaScript, with decor
 - Multiple databases (PostgreSQL, MySQL, MongoDB, etc.)
 
 ### Why TypeORM?
-
+users table:                posts table:
+┌────┬───────────┐         ┌────┬─────────┬───────────┐
+│ id │ email     │         │ id │ title   │ author_id │ ← Foreign Key
+├────┼───────────┤         ├────┼─────────┼───────────┤
+│ 1  │ john@...  │    ┌───→│ 1  │ Post 1  │ 1         │
+│ 2  │ jane@...  │    │    │ 2  │ Post 2  │ 1         │
+└────┴───────────┘    │    │ 3  │ Post 3  │ 2         │
+                      │    └────┴─────────┴───────────┘
+                      │
+                      └─── author_id column creates the relationship
 ```typescript
 // TypeORM: Decorator-based entities
 @Entity()
@@ -25,8 +62,29 @@ export class User {
     @Column()
     name: string;
     
+    // This is VIRTUAL - no column in database!
+    // Just for TypeScript/TypeORM to load related posts
     @OneToMany(() => Post, post => post.author)
-    posts: Post[];
+    posts: Post[];  // ← Virtual property, no actual column
+}
+
+
+@Entity('posts')
+export class Post {
+    @PrimaryGeneratedColumn()
+    id: number;
+    
+    @Column()
+    title: string;
+    
+    // This creates ACTUAL column 'author_id' in database
+    @ManyToOne(() => User, user => user.posts)
+    @JoinColumn({ name: 'author_id' })  // ← Specifies column name
+    author: User;  // Virtual property for TypeScript
+    
+    // This is the ACTUAL column in database
+    @Column({ name: 'author_id' })
+    authorId: number;  // ← Real foreign key column
 }
 ```
 
@@ -65,6 +123,8 @@ npm install -D @types/node typescript
 
 ```typescript
 // src/data-source.ts
+// DataSource - Main class for database connection and configuration in TypeORM
+// Manages connection pool, entities, migrations, and provides access to repositories
 import { DataSource } from 'typeorm';
 import { User } from './entity/User';
 import { Post } from './entity/Post';
@@ -93,6 +153,11 @@ AppDataSource.initialize()
 
 ```typescript
 // src/entity/User.ts
+// Entity - Decorator that marks a class as a database table
+// PrimaryGeneratedColumn - Auto-incrementing primary key column
+// Column - Decorator for regular database columns
+// CreateDateColumn - Automatically sets timestamp when record is created
+// UpdateDateColumn - Automatically updates timestamp when record is modified
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('users')
@@ -142,6 +207,8 @@ export class Post {
     published: boolean;
     
     @ManyToOne(() => User, user => user.posts)
+    // JoinColumn - Specifies the foreign key column name in the database
+    // Without this, TypeORM would default to 'authorId' instead of 'author_id'
     @JoinColumn({ name: 'author_id' })
     author: User;
     
@@ -302,6 +369,8 @@ const user = await User.findByEmail('john@example.com');
 
 ```typescript
 // Transaction with query runner
+// QueryRunner - Provides low-level control over database operations
+// Allows manual transaction management, raw queries, and schema modifications
 const queryRunner = AppDataSource.createQueryRunner();
 await queryRunner.connect();
 await queryRunner.startTransaction();
@@ -328,6 +397,8 @@ try {
 }
 
 // Or using transaction method
+// transaction() - Higher-level API for transactions, automatically handles commit/rollback
+// 'manager' is an EntityManager scoped to this transaction
 await AppDataSource.transaction(async (manager) => {
     const user = manager.create(User, { email: 'john@example.com', name: 'John' });
     await manager.save(user);
@@ -390,6 +461,8 @@ export default router;
 // Get users with post statistics
 router.get('/stats', async (req, res) => {
     const users = await userRepository
+        // createQueryBuilder - Creates a SQL query builder for complex queries
+        // 'user' is the alias used to reference this table in the query
         .createQueryBuilder('user')
         .leftJoin('user.posts', 'post')
         .select('user.id', 'userId')
@@ -423,9 +496,14 @@ npx typeorm migration:revert
 
 ```typescript
 // migrations/1234567890-AddPhoneToUsers.ts
+// MigrationInterface - Interface that all migration classes must implement
+// QueryRunner - Provides methods to execute SQL and modify database schema
+// TableColumn - Class representing a database column for schema modifications
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
 export class AddPhoneToUsers1234567890 implements MigrationInterface {
+    // up() - Defines changes to apply when running migration (forward)
+    // This method is called when you run 'npm run typeorm migration:run'
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.addColumn('users', new TableColumn({
             name: 'phone',
@@ -599,6 +677,9 @@ npm run typeorm migration:revert
 
 ```typescript
 // ❌ Never use in production
+// synchronize() - Automatically creates/updates database schema based on entities
+// DANGER: Can drop tables and lose data! Only use in development
+// In production, always use migrations for controlled schema changes
 await dataSource.synchronize();  // Auto-creates/updates schema
 
 // ✅ Use migrations instead

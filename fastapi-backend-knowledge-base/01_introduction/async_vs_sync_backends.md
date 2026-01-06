@@ -54,16 +54,23 @@ async def get_user(user_id: int):
 ```python
 # Async allows concurrent operations: Run multiple I/O operations in parallel.
 async def get_user_profile(user_id: int):
-    # asyncio.gather: Executes all operations concurrently, not sequentially.
+    # asyncio.gather - Runs multiple async operations concurrently (in parallel)
+    # Instead of sequential execution (wait for each one), all run at the same time
+    # Returns results in the same order as the input coroutines
+    # If any operation fails, gather raises the first exception encountered
+    # Use case: When you need data from multiple sources and they don't depend on each other
     user, orders, preferences = await asyncio.gather(
-        db.get_user(user_id),
-        db.get_orders(user_id),
-        cache.get_preferences(user_id)
+        db.get_user(user_id),        # Operation 1: ~100ms
+        db.get_orders(user_id),      # Operation 2: ~100ms (runs concurrently with 1)
+        cache.get_preferences(user_id)  # Operation 3: ~100ms (runs concurrently with 1 & 2)
     )
+    # Total time: ~100ms (not 300ms!)
     return combine_profile(user, orders, preferences)
 ```
 
 **Explanation:** `asyncio.gather` runs all operations concurrently. Instead of waiting for each one sequentially (3× wait time), they all execute in parallel (1× wait time).
+
+**Interview Tip:** Explain that `asyncio.gather()` is like Promise.all() in JavaScript - it executes multiple async operations concurrently and waits for all to complete. This is crucial for performance when fetching from multiple independent sources.
 
 ### ❌ Don't Use Async For:
 
@@ -143,23 +150,40 @@ from sqlalchemy.ext.asyncio import AsyncSession
 @app.get("/users/{user_id}")
 async def get_user(
     user_id: int,
+    # AsyncSession - SQLAlchemy's async database session for non-blocking DB operations
+    # Dependency injection: FastAPI creates and manages session lifecycle
+    # Session is automatically committed/rolled back and closed after request
+    # Allows concurrent database operations without blocking the event loop
+    # Must use with async database drivers (asyncpg for PostgreSQL, aiomysql for MySQL)
     session: AsyncSession = Depends(get_db_session)
 ):
+    # await session.execute() - Non-blocking database query
+    # Yields control to event loop while waiting for database response
     result = await session.execute(
         select(User).where(User.id == user_id)
     )
     return result.scalar_one_or_none()
 ```
 
+**Interview Tip:** Explain that AsyncSession is SQLAlchemy's async version of Session. It uses async database drivers (like asyncpg) to perform non-blocking database operations. This allows your application to handle other requests while waiting for database queries to complete, dramatically improving concurrency.
+
 ### 2. Multiple External APIs
 
 ```python
 async def fetch_user_data(user_id: int):
+    # httpx.AsyncClient - Async HTTP client for making non-blocking HTTP requests
+    # Similar to requests library but with async support
+    # 'async with' ensures proper connection cleanup (closes connections automatically)
+    # Supports connection pooling for better performance
+    # Use case: Calling external APIs, microservices, third-party services
     async with httpx.AsyncClient() as client:
+        # asyncio.gather runs all HTTP requests concurrently
+        # Instead of: request 1 (200ms) → request 2 (200ms) → request 3 (200ms) = 600ms total
+        # We get: all 3 requests in parallel = ~200ms total
         user, orders, analytics = await asyncio.gather(
-            client.get(f"/api/users/{user_id}"),
-            client.get(f"/api/orders/{user_id}"),
-            client.get(f"/api/analytics/{user_id}")
+            client.get(f"/api/users/{user_id}"),      # External API call 1
+            client.get(f"/api/orders/{user_id}"),     # External API call 2
+            client.get(f"/api/analytics/{user_id}")   # External API call 3
         )
         return {
             "user": user.json(),
@@ -168,30 +192,51 @@ async def fetch_user_data(user_id: int):
         }
 ```
 
+**Interview Tip:** Explain that httpx.AsyncClient is the async version of the requests library. It allows making HTTP requests without blocking the event loop. The 'async with' context manager ensures connections are properly closed. Combined with asyncio.gather, you can make multiple API calls concurrently, reducing total response time.
+
 ### 3. Background Tasks
 
 ```python
+# BackgroundTasks - FastAPI's built-in system for running tasks after sending response
+# Tasks run in the background without blocking the response to the client
+# Useful for: sending emails, logging, notifications, cleanup operations
+# Runs in the same process (not distributed like Celery)
+# Tasks execute after the response is sent to the client
 from fastapi import BackgroundTasks
 
 async def send_email_notification(user_id: int):
-    # This runs in background without blocking
+    # This runs in background without blocking the response
+    # Client gets response immediately, email sends afterwards
     await email_service.send(user_id)
 
 @app.post("/users/")
 async def create_user(
     user: UserCreate,
+    # BackgroundTasks injected by FastAPI
     background_tasks: BackgroundTasks
 ):
+    # Create user in database (blocks response)
     new_user = await db.create_user(user)
+    
+    # Add task to run after response is sent (doesn't block response)
+    # Client receives response immediately
+    # Email sends in background after response is sent
     background_tasks.add_task(send_email_notification, new_user.id)
-    return new_user
+    
+    return new_user  # Response sent immediately, email task runs after
 ```
+
+**Interview Tip:** Explain that BackgroundTasks allows you to run operations after sending the HTTP response. This improves response time for the client - they don't have to wait for slow operations like sending emails. The task runs in the same process, so it's good for lightweight operations. For heavy or distributed tasks, use Celery or RQ instead.
 
 ## Best Practices
 
 1. **Use async for all I/O operations**
    - Database calls
    - External API calls
+   # aiofiles - Async library for file I/O operations
+   # Prevents blocking the event loop during file reads/writes
+   # Use: async with aiofiles.open('file.txt', 'r') as f: content = await f.read()
+   # Without aiofiles, file operations would block the entire server
    - File operations (with aiofiles)
 
 2. **Keep CPU-bound work separate**
@@ -330,6 +375,10 @@ async def read_file(filename: str):
 # WebSocket connections
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    # websocket.accept() - Establishes WebSocket connection with client
+    # Must be called before sending/receiving messages
+    # Returns a coroutine, so must use 'await'
+    # After this, bidirectional communication channel is open
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
@@ -350,7 +399,11 @@ async def get_user(user_id: int):
 ```python
 # Run multiple I/O operations concurrently
 async def get_user_profile(user_id: int):
-    # asyncio.gather: Executes all operations concurrently
+    # asyncio.gather - Executes multiple async operations in parallel
+    # All three database calls happen simultaneously, not sequentially
+    # Returns results in same order as input (user, orders, preferences)
+    # If any fails, gather raises the first exception
+    # Total time: ~100ms (not 300ms if done sequentially)
     user, orders, preferences = await asyncio.gather(
         db.get_user(user_id),
         db.get_orders(user_id),

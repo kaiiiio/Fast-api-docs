@@ -132,6 +132,17 @@ Grid is a two-dimensional layout system (rows AND columns).
         "sidebar main main"
         "footer footer footer";
     
+    /* Auto flow (how items are placed) */
+    grid-auto-flow: row;  /* row | column | dense | row dense | column dense */
+    
+    /* Auto rows (size of implicit rows) */
+    grid-auto-rows: 100px;  /* Fixed size */
+    grid-auto-rows: minmax(100px, auto);  /* Min-max */
+    grid-auto-rows: 1fr;  /* Flexible */
+    
+    /* Auto columns (size of implicit columns) */
+    grid-auto-columns: 200px;
+    
     /* Alignment */
     justify-items: start;  /* start | end | center | stretch */
     align-items: start;
@@ -158,6 +169,129 @@ Grid is a two-dimensional layout system (rows AND columns).
     align-self: center;
 }
 ```
+
+**Grid Auto Flow & Auto Rows Examples:**
+
+```css
+/* Example 1: grid-auto-flow: row (default) */
+.grid-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-flow: row;  /* Items fill rows first */
+    gap: 10px;
+}
+/* Result: 
+   [1] [2] [3]
+   [4] [5] [6]
+*/
+
+/* Example 2: grid-auto-flow: column */
+.grid-column {
+    display: grid;
+    grid-template-rows: repeat(3, 100px);
+    grid-auto-flow: column;  /* Items fill columns first */
+    gap: 10px;
+}
+/* Result:
+   [1] [4]
+   [2] [5]
+   [3] [6]
+*/
+
+/* Example 3: grid-auto-flow: dense (fills gaps) */
+.grid-dense {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-flow: dense;  /* Fills empty cells */
+    gap: 10px;
+}
+/* Useful when items have different sizes */
+
+/* Example 4: grid-auto-rows (implicit rows) */
+.grid-auto {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 150px;  /* All auto-created rows are 150px */
+    gap: 10px;
+}
+
+/* Example 5: grid-auto-rows with minmax */
+.grid-flexible {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: minmax(100px, auto);  /* Min 100px, grows with content */
+    gap: 10px;
+}
+
+/* Example 6: Equal height rows */
+.grid-equal {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;  /* All rows equal height */
+    gap: 10px;
+}
+
+/* Example 7: Masonry-like layout */
+.masonry {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-auto-rows: 10px;  /* Small rows for fine control */
+    gap: 10px;
+}
+.masonry-item {
+    grid-row: span 10;  /* Span multiple small rows */
+}
+
+/* Example 8: Practical use case */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-auto-rows: minmax(200px, auto);  /* Cards at least 200px tall */
+    grid-auto-flow: dense;  /* Fill gaps */
+    gap: 20px;
+}
+```
+
+**Tailwind CSS Equivalents:**
+
+```html
+<!-- grid-auto-flow -->
+<div class="grid grid-flow-row">Row flow (default)</div>
+<div class="grid grid-flow-col">Column flow</div>
+<div class="grid grid-flow-dense">Dense packing</div>
+<div class="grid grid-flow-row-dense">Row dense</div>
+
+<!-- grid-auto-rows -->
+<div class="grid auto-rows-auto">Auto height</div>
+<div class="grid auto-rows-min">Min content</div>
+<div class="grid auto-rows-max">Max content</div>
+<div class="grid auto-rows-fr">1fr height</div>
+
+<!-- Custom values -->
+<div class="grid" style="grid-auto-rows: 1fr;">Equal rows</div>
+<div class="grid" style="grid-auto-rows: minmax(100px, auto);">Min 100px</div>
+
+<!-- Practical example -->
+<div class="grid grid-cols-3 auto-rows-min grid-flow-row gap-4">
+    <div>Item 1</div>
+    <div>Item 2</div>
+    <div>Item 3</div>
+</div>
+```
+
+**When to Use:**
+
+```css
+/* Use grid-auto-flow when: */
+- You want to control item placement direction
+- You need dense packing (fills gaps)
+- Building masonry layouts
+
+/* Use grid-auto-rows when: */
+- You have dynamic number of rows
+- You want consistent row heights
+- Content height varies
+
 
 ### Q34. Grid vs Flexbox - When to use which?
 

@@ -162,6 +162,10 @@ app = Flask(__name__)
 @app.route("/users/<int:user_id>", methods=["GET"])
 def get_user(user_id):
     # Manual validation
+    # isinstance(user_id, int) - Python built-in function to check type at runtime
+    # Returns True if user_id is an integer, False otherwise
+    # This is runtime type checking (happens when code executes)
+    # FastAPI does this automatically, Flask requires manual checks
     if not isinstance(user_id, int):
         return jsonify({"error": "Invalid user_id"}), 400
     # Manual serialization
@@ -642,6 +646,10 @@ public User getUser(@PathVariable Long userId) {
 }
 
 // Spring WebFlux (reactive)
+// Mono<User> - Reactive type representing 0 or 1 asynchronous value
+// Similar to Promise in JavaScript or Future in Python
+// Non-blocking, allows handling other requests while waiting
+// Part of Project Reactor library for reactive programming
 @GetMapping("/users/{userId}")
 public Mono<User> getUser(@PathVariable Long userId) {
     return userService.getUser(userId);
@@ -748,6 +756,10 @@ const swaggerSpec = swaggerJsdoc({
 **Spring Boot:**
 ```java
 // SpringDoc OpenAPI (automatic)
+// @Configuration - Spring annotation marking this as configuration class
+// @Bean - Tells Spring to create and manage this object
+// OpenAPI - Class for configuring API documentation
+// This setup enables automatic Swagger UI at /swagger-ui.html
 @Configuration
 public class OpenApiConfig {
     @Bean

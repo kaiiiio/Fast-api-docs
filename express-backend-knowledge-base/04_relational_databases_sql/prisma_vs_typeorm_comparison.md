@@ -1315,7 +1315,842 @@ await userRepository
 
 ---
 
+## GraphQL with ORMs
+
+### What is GraphQL?
+
+**Definition:** GraphQL is a query language for APIs and a runtime for executing those queries. It provides a complete and understandable description of the data in your API, giving clients the power to ask for exactly what they need.
+
+**Key Concepts:**
+- **Query Language:** Not a database query language, but an API query language
+- **Type System:** Strongly typed schema defines your API structure
+- **Single Endpoint:** Unlike REST with multiple endpoints, GraphQL uses one endpoint
+- **Client-Specified Queries:** Clients request exactly the data they need
+- **No Over-fetching/Under-fetching:** Get precisely what you ask for
+
+**GraphQL vs REST:**
+
+| Feature | GraphQL | REST |
+|---------|---------|------|
+| **Endpoints** | Single endpoint | Multiple endpoints |
+| **Data Fetching** | Get exactly what you need | Often over/under-fetch |
+| **Versioning** | No versioning needed | API versioning required |
+| **Learning Curve** | Steeper | Gentler |
+| **Caching** | More complex | Simple (HTTP caching) |
+| **Real-time** | Built-in (subscriptions) | Requires WebSockets |
+
+---
+
+### GraphQL Schema Basics
+
+```graphql
+# Type definitions
+type User {
+  id: ID!
+  email: String!
+  name: String
+  posts: [Post!]!
+  createdAt: DateTime!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String
+  published: Boolean!
+  author: User!
+  createdAt: DateTime!
+}
+
+# Queries (Read operations)
+type Query {
+  users: [User!]!
+  user(id: ID!): User
+  posts(published: Boolean): [Post!]!
+  post(id: ID!): Post
+}
+
+# Mutations (Write operations)
+type Mutation {
+  createUser(email: String!, name: String): User!
+  updateUser(id: ID!, name: String): User!
+  deleteUser(id: ID!): Boolean!
+  
+  createPost(title: String!, content: String, authorId: ID!): Post!
+  publishPost(id: ID!): Post!
+}
+
+# Subscriptions (Real-time)
+type Subscription {
+  postCreated: Post!
+  userUpdated(id: ID!): User!
+}
+```
+
+**Explanation:**
+- `!` means non-nullable (required field)
+- `[Post!]!` means non-nullable array of non-nullable Posts
+- `ID` is a special scalar type for unique identifiers
+- `Query` type defines all read operations
+- `Mutation` type defines all write operations
+- `Subscription` type defines real-time updates
+
+---
+
+### GraphQL with SQL Databases
+
+#### Using GraphQL with Prisma
+
+**Setup:**
+```bash
+npm install @apollo/server graphql
+npm install -D @graphql-codegen/cli
+```
+
+**Complete Example:**
+
+```typescript
+// schema.graphql
+type User {
+  id: ID!
+  email: String!
+  name: String
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String
+  published: Boolean!
+  author: User!
+}
+
+type Query {
+  users: [User!]!
+  user(id: ID!): User
+  posts: [Post!]!
+}
+
+type Mutation {
+  createUser(email: String!, name: String): User!
+  createPost(title: String!, authorId: ID!): Post!
+}
+```
+
+**Resolvers with Prisma:**
+
+```typescript
+// resolvers.ts
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export const resolvers = {
+  Query: {
+    // Get all users
+    users: async () => {
+      return await prisma.user.findMany({
+        include: { posts: true }
+      });
+    },
+    
+    // Get single user
+    user: async (_parent: any, args: { id: string }) => {
+      return await prisma.user.findUnique({
+        where: { id: parseInt(args.id) },
+        include: { posts: true }
+      });
+    },
+    
+    // Get all posts
+    posts: async () => {
+      return await prisma.post.findMany({
+        include: { author: true }
+      });
+    }
+  },
+  
+  Mutation: {
+    // Create user
+    createUser: async (_parent: any, args: { email: string; name?: string }) => {
+      return await prisma.user.create({
+        data: {
+          email: args.email,
+          name: args.name
+        }
+      });
+    },
+    
+    // Create post
+    createPost: async (_parent: any, args: { title: string; authorId: string }) => {
+      return await prisma.post.create({
+        data: {
+          title: args.title,
+          authorId: parseInt(args.authorId)
+        },
+        include: { author: true }
+      });
+    }
+  },
+  
+  // Field resolvers (optional, for custom logic)
+  User: {
+    posts: async (parent: any) => {
+      return await prisma.post.findMany({
+        where: { authorId: parent.id }
+      });
+    }
+  },
+  
+  Post: {
+    author: async (parent: any) => {
+      return await prisma.user.findUnique({
+        where: { id: parent.authorId }
+      });
+    }
+  }
+};
+```
+
+**Apollo Server Setup:**
+
+```typescript
+// server.ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { readFileSync } from 'fs';
+import { resolvers } from './resolvers';
+
+const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await startStandaloneServer(server, {
+  listen: { port: 4000 },
+});
+
+console.log(`🚀 Server ready at: ${url}`);
+```
+
+**Example Queries:**
+
+```graphql
+# Get all users with their posts
+query GetUsers {
+  users {
+    id
+    email
+    name
+    posts {
+      id
+      title
+      published
+    }
+  }
+}
+
+# Get specific user
+query GetUser {
+  user(id: "1") {
+    id
+    email
+    name
+    posts {
+      title
+    }
+  }
+}
+
+# Create user
+mutation CreateUser {
+  createUser(email: "john@example.com", name: "John Doe") {
+    id
+    email
+    name
+  }
+}
+
+# Create post
+mutation CreatePost {
+  createPost(title: "My First Post", authorId: "1") {
+    id
+    title
+    author {
+      name
+    }
+  }
+}
+```
+
+---
+
+#### Using GraphQL with TypeORM
+
+**Resolvers with TypeORM:**
+
+```typescript
+// resolvers.ts
+import { AppDataSource } from './data-source';
+import { User } from './entity/User';
+import { Post } from './entity/Post';
+
+const userRepository = AppDataSource.getRepository(User);
+const postRepository = AppDataSource.getRepository(Post);
+
+export const resolvers = {
+  Query: {
+    users: async () => {
+      return await userRepository.find({
+        relations: ['posts']
+      });
+    },
+    
+    user: async (_parent: any, args: { id: string }) => {
+      return await userRepository.findOne({
+        where: { id: parseInt(args.id) },
+        relations: ['posts']
+      });
+    },
+    
+    posts: async () => {
+      return await postRepository.find({
+        relations: ['author']
+      });
+    }
+  },
+  
+  Mutation: {
+    createUser: async (_parent: any, args: { email: string; name?: string }) => {
+      const user = userRepository.create({
+        email: args.email,
+        name: args.name
+      });
+      return await userRepository.save(user);
+    },
+    
+    createPost: async (_parent: any, args: { title: string; authorId: string }) => {
+      const post = postRepository.create({
+        title: args.title,
+        authorId: parseInt(args.authorId)
+      });
+      return await postRepository.save(post);
+    }
+  },
+  
+  // Field resolvers
+  User: {
+    posts: async (parent: User) => {
+      return await postRepository.find({
+        where: { authorId: parent.id }
+      });
+    }
+  },
+  
+  Post: {
+    author: async (parent: Post) => {
+      return await userRepository.findOne({
+        where: { id: parent.authorId }
+      });
+    }
+  }
+};
+```
+
+---
+
+### GraphQL with MongoDB
+
+#### Using GraphQL with Prisma (MongoDB)
+
+**Prisma Schema:**
+
+```prisma
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  name      String?
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+```
+
+**Resolvers (Same as SQL):**
+
+```typescript
+// The resolvers code is identical to SQL version!
+// Prisma abstracts the database differences
+
+export const resolvers = {
+  Query: {
+    users: async () => {
+      return await prisma.user.findMany({
+        include: { posts: true }
+      });
+    },
+    // ... rest is the same
+  }
+};
+```
+
+**Key Point:** With Prisma, GraphQL resolvers are database-agnostic. The same resolver code works for both SQL and MongoDB!
+
+---
+
+#### Using GraphQL with TypeORM (MongoDB)
+
+**Entity Definition:**
+
+```typescript
+// entity/User.ts
+import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
+
+@Entity('users')
+export class User {
+    @ObjectIdColumn()
+    id: ObjectId;
+    
+    @Column()
+    email: string;
+    
+    @Column()
+    name: string;
+    
+    // Virtual field for posts
+    posts?: Post[];
+}
+
+// entity/Post.ts
+@Entity('posts')
+export class Post {
+    @ObjectIdColumn()
+    id: ObjectId;
+    
+    @Column()
+    title: string;
+    
+    @Column()
+    content: string;
+    
+    @Column()
+    published: boolean;
+    
+    @Column()
+    authorId: ObjectId;
+    
+    // Virtual field for author
+    author?: User;
+}
+```
+
+**Resolvers with MongoDB:**
+
+```typescript
+import { AppDataSource } from './data-source';
+import { User } from './entity/User';
+import { Post } from './entity/Post';
+import { ObjectId } from 'mongodb';
+
+const userRepository = AppDataSource.getMongoRepository(User);
+const postRepository = AppDataSource.getMongoRepository(Post);
+
+export const resolvers = {
+  Query: {
+    users: async () => {
+      const users = await userRepository.find();
+      
+      // Manually populate posts
+      for (const user of users) {
+        user.posts = await postRepository.find({
+          where: { authorId: user.id }
+        });
+      }
+      
+      return users;
+    },
+    
+    user: async (_parent: any, args: { id: string }) => {
+      const user = await userRepository.findOne({
+        where: { _id: new ObjectId(args.id) }
+      });
+      
+      if (user) {
+        user.posts = await postRepository.find({
+          where: { authorId: user.id }
+        });
+      }
+      
+      return user;
+    }
+  },
+  
+  Mutation: {
+    createUser: async (_parent: any, args: { email: string; name?: string }) => {
+      const user = userRepository.create({
+        email: args.email,
+        name: args.name
+      });
+      return await userRepository.save(user);
+    },
+    
+    createPost: async (_parent: any, args: { title: string; authorId: string }) => {
+      const post = postRepository.create({
+        title: args.title,
+        authorId: new ObjectId(args.authorId),
+        published: false
+      });
+      return await postRepository.save(post);
+    }
+  },
+  
+  // MongoDB-specific aggregation example
+  Query: {
+    userStats: async () => {
+      return await userRepository.aggregate([
+        {
+          $lookup: {
+            from: 'posts',
+            localField: '_id',
+            foreignField: 'authorId',
+            as: 'posts'
+          }
+        },
+        {
+          $project: {
+            email: 1,
+            name: 1,
+            postCount: { $size: '$posts' }
+          }
+        }
+      ]).toArray();
+    }
+  }
+};
+```
+
+---
+
+### Advanced GraphQL Patterns
+
+#### DataLoader (N+1 Problem Solution)
+
+**Problem:** Without DataLoader, fetching users with posts causes N+1 queries:
+```
+1 query for users
+N queries for each user's posts (one per user)
+```
+
+**Solution with DataLoader:**
+
+```typescript
+import DataLoader from 'dataloader';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+// Create DataLoader for batching
+const postLoader = new DataLoader(async (authorIds: number[]) => {
+  const posts = await prisma.post.findMany({
+    where: {
+      authorId: { in: authorIds }
+    }
+  });
+  
+  // Group posts by authorId
+  const postsByAuthor = authorIds.map(id =>
+    posts.filter(post => post.authorId === id)
+  );
+  
+  return postsByAuthor;
+});
+
+// Use in resolver
+export const resolvers = {
+  User: {
+    posts: async (parent: any, _args: any, context: any) => {
+      return context.postLoader.load(parent.id);
+    }
+  }
+};
+
+// Pass DataLoader in context
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+await startStandaloneServer(server, {
+  context: async () => ({
+    postLoader: new DataLoader(/* ... */)
+  })
+});
+```
+
+**Result:** Multiple user post fetches are batched into a single query!
+
+---
+
+#### GraphQL Subscriptions (Real-time)
+
+```typescript
+// schema.graphql
+type Subscription {
+  postCreated: Post!
+  postUpdated(id: ID!): Post!
+}
+```
+
+**Resolver with PubSub:**
+
+```typescript
+import { PubSub } from 'graphql-subscriptions';
+
+const pubsub = new PubSub();
+
+export const resolvers = {
+  Mutation: {
+    createPost: async (_parent: any, args: any) => {
+      const post = await prisma.post.create({
+        data: args,
+        include: { author: true }
+      });
+      
+      // Publish event
+      pubsub.publish('POST_CREATED', { postCreated: post });
+      
+      return post;
+    }
+  },
+  
+  Subscription: {
+    postCreated: {
+      subscribe: () => pubsub.asyncIterator(['POST_CREATED'])
+    }
+  }
+};
+```
+
+**Client Subscription:**
+
+```graphql
+subscription OnPostCreated {
+  postCreated {
+    id
+    title
+    author {
+      name
+    }
+  }
+}
+```
+
+---
+
+### GraphQL Best Practices
+
+#### 1. Pagination
+
+```graphql
+type Query {
+  posts(skip: Int, take: Int): PostConnection!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PostEdge {
+  node: Post!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+```
+
+**Resolver:**
+
+```typescript
+posts: async (_parent: any, args: { skip?: number; take?: number }) => {
+  const skip = args.skip || 0;
+  const take = args.take || 10;
+  
+  const [posts, totalCount] = await Promise.all([
+    prisma.post.findMany({
+      skip,
+      take,
+      include: { author: true }
+    }),
+    prisma.post.count()
+  ]);
+  
+  return {
+    edges: posts.map(post => ({
+      node: post,
+      cursor: Buffer.from(post.id.toString()).toString('base64')
+    })),
+    pageInfo: {
+      hasNextPage: skip + take < totalCount,
+      hasPreviousPage: skip > 0,
+      startCursor: posts[0] ? Buffer.from(posts[0].id.toString()).toString('base64') : null,
+      endCursor: posts[posts.length - 1] ? Buffer.from(posts[posts.length - 1].id.toString()).toString('base64') : null
+    },
+    totalCount
+  };
+}
+```
+
+---
+
+#### 2. Error Handling
+
+```typescript
+import { GraphQLError } from 'graphql';
+
+export const resolvers = {
+  Query: {
+    user: async (_parent: any, args: { id: string }) => {
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(args.id) }
+      });
+      
+      if (!user) {
+        throw new GraphQLError('User not found', {
+          extensions: {
+            code: 'USER_NOT_FOUND',
+            http: { status: 404 }
+          }
+        });
+      }
+      
+      return user;
+    }
+  }
+};
+```
+
+---
+
+#### 3. Authentication & Authorization
+
+```typescript
+// Context with user authentication
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+await startStandaloneServer(server, {
+  context: async ({ req }) => {
+    // Get token from header
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    // Verify token and get user
+    const user = await verifyToken(token);
+    
+    return { user, prisma };
+  }
+});
+
+// Protected resolver
+export const resolvers = {
+  Mutation: {
+    createPost: async (_parent: any, args: any, context: any) => {
+      // Check authentication
+      if (!context.user) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED' }
+        });
+      }
+      
+      // Check authorization
+      if (context.user.role !== 'ADMIN') {
+        throw new GraphQLError('Not authorized', {
+          extensions: { code: 'FORBIDDEN' }
+        });
+      }
+      
+      return await prisma.post.create({
+        data: {
+          ...args,
+          authorId: context.user.id
+        }
+      });
+    }
+  }
+};
+```
+
+---
+
+### When to Use GraphQL vs REST
+
+**Use GraphQL when:**
+- Frontend needs flexible data fetching
+- Multiple clients with different data needs (web, mobile, etc.)
+- Reducing network requests is important
+- Real-time features are needed (subscriptions)
+- Strong typing is beneficial
+- Complex, nested data relationships
+
+**Use REST when:**
+- Simple CRUD operations
+- Caching is critical (HTTP caching)
+- File uploads/downloads
+- Team is unfamiliar with GraphQL
+- Simpler architecture preferred
+
+---
+
+### Interview Questions: GraphQL
+
+**Q: What is GraphQL and how does it differ from REST?**
+A: GraphQL is a query language for APIs that allows clients to request exactly the data they need. Unlike REST with multiple endpoints, GraphQL uses a single endpoint. It eliminates over-fetching and under-fetching, provides strong typing through schemas, and supports real-time updates via subscriptions.
+
+**Q: What is the N+1 problem in GraphQL and how do you solve it?**
+A: The N+1 problem occurs when fetching a list of items (1 query) and then fetching related data for each item (N queries). For example, fetching 100 users and then their posts results in 101 queries. Solution: Use DataLoader to batch and cache requests, reducing N+1 queries to 2 queries total.
+
+**Q: How do you implement authentication in GraphQL?**
+A: Authentication is typically handled in the context function. Extract the token from request headers, verify it, and add the authenticated user to the context. Resolvers can then access `context.user` to check authentication and authorization before executing operations.
+
+**Q: What are GraphQL subscriptions?**
+A: Subscriptions enable real-time, event-based updates from server to client. They use WebSockets instead of HTTP. When data changes on the server, it pushes updates to subscribed clients. Common use cases: chat apps, live notifications, real-time dashboards.
+
+**Q: How does GraphQL work with SQL vs MongoDB?**
+A: With Prisma, GraphQL resolvers are database-agnostic - the same code works for both SQL and MongoDB. With TypeORM, SQL uses standard repositories while MongoDB requires `getMongoRepository()` and manual relationship population. MongoDB also supports aggregation pipelines directly in resolvers.
+
+---
+
 ## Summary
+
 
 ### Quick Decision Matrix
 

@@ -1079,16 +1079,16 @@
 // These are **Resource Hints** used to improve website loading performance.
 
 // * **Preload:** Instructs the browser to fetch a resource (like fonts, CSS, images) early before it’s discovered in HTML.
-  // Example: `<link rel="preload" href="styles.css" as="style">`
+// Example: `<link rel="preload" href="styles.css" as="style">`
 
 // * **Prefetch:** Downloads resources for future navigations (next pages or routes).
-  // Example: `<link rel="prefetch" href="next-page.js">`
+// Example: `<link rel="prefetch" href="next-page.js">`
 
 // * **Preconnect:** Establishes early connections (DNS, TCP, TLS handshake) before an actual request.
-  // Example: `<link rel="preconnect" href="https://fonts.googleapis.com">`
+// Example: `<link rel="preconnect" href="https://fonts.googleapis.com">`
 
 // * **Prerender:** Fully renders an entire page in the background, ready for instant navigation.
-  // Example: `<link rel="prerender" href="https://example.com/next-page">`
+// Example: `<link rel="prerender" href="https://example.com/next-page">`
 
 // ---
 
@@ -1101,38 +1101,38 @@
 // 1. **Browser Caching:**
 //    Controlled via response headers like:
 
-   ```
+```
    Cache-Control: max-age=3600, public
    ETag: "abc123"
    ```
 
-// 2. **Service Worker Caching:**
-//    Store assets and responses in the Cache API for offline use.
-   // Example: `caches.open('v1').then(cache => cache.add('/index.html'))`
+  // 2. **Service Worker Caching:**
+  //    Store assets and responses in the Cache API for offline use.
+  // Example: `caches.open('v1').then(cache => cache.add('/index.html'))`
 
-// 3. **CDN Caching:**
-//    Use edge servers near users to deliver static assets faster.
+  // 3. **CDN Caching:**
+  //    Use edge servers near users to deliver static assets faster.
 
-// 4. **In-memory / Local Storage:**
-//    Store temporary or static data on the client side.
+  // 4. **In-memory / Local Storage:**
+  //    Store temporary or static data on the client side.
 
-// ---
+  // ---
 
 
 
-// **3. What are ETag, Cache-Control, and Document Fragment?**
+  // **3. What are ETag, Cache-Control, and Document Fragment?**
 
-// * **ETag (Entity Tag):**
-//   A unique fingerprint for a resource version.
-//   The browser sends it back via `If-None-Match` to check freshness.
+  // * **ETag (Entity Tag):**
+  //   A unique fingerprint for a resource version.
+  //   The browser sends it back via `If-None-Match` to check freshness.
 
-// * **Cache-Control:**
-//   Defines caching policy — how, when, and where caching happens.
-//   // Example: `Cache-Control: no-cache, must-revalidate`
+  // * **Cache-Control:**
+  //   Defines caching policy — how, when, and where caching happens.
+  //   // Example: `Cache-Control: no-cache, must-revalidate`
 
-// * **DocumentFragment:**
-//   A lightweight DOM container for batching DOM operations.
-//   Manipulating a DocumentFragment doesn’t cause reflows or repaints.
+  // * **DocumentFragment:**
+  //   A lightweight DOM container for batching DOM operations.
+  //   Manipulating a DocumentFragment doesn’t cause reflows or repaints.
 
   // Example:
 
@@ -1145,69 +1145,69 @@
   document.body.appendChild(fragment);
   ```
 
-// ---
+  // ---
 
 
 
 
-// **4. How do you optimize assets? What is image compression? What’s the difference between WebP, PNG, and JPG?**
+  // **4. How do you optimize assets? What is image compression? What’s the difference between WebP, PNG, and JPG?**
 
-// * **Asset Optimization:**
+  // * **Asset Optimization:**
 
-//   * Minify JS/CSS (remove whitespaces/comments)
-//   * Bundle modules (via Webpack/Vite)
-//   * Use lazy loading for images and components
-//   * Use CDNs and compression (Gzip, Brotli)
+  //   * Minify JS/CSS (remove whitespaces/comments)
+  //   * Bundle modules (via Webpack/Vite)
+  //   * Use lazy loading for images and components
+  //   * Use CDNs and compression (Gzip, Brotli)
 
-// * **Image Compression:**
-//   Reducing file size while maintaining acceptable visual quality.
+  // * **Image Compression:**
+  //   Reducing file size while maintaining acceptable visual quality.
 
-//   **Formats:**
+  //   **Formats:**
 
-//   * **WebP:** Modern, efficient, supports transparency + animation, smaller size.
-//   * **PNG:** Lossless, good for graphics/logos with transparency.
-//   * **JPG/JPEG:** Lossy, best for photos, smaller but lower quality on high compression.
+  //   * **WebP:** Modern, efficient, supports transparency + animation, smaller size.
+  //   * **PNG:** Lossless, good for graphics/logos with transparency.
+  //   * **JPG/JPEG:** Lossy, best for photos, smaller but lower quality on high compression.
 
-// ---
-
-
-
-// **5. What is a Memory Leak?**
-
-// A **memory leak** occurs when allocated memory is not released even though it’s no longer needed.
-
-// Common causes:
-
-// * Unremoved event listeners.
-// * Global variables not cleaned up.
-// * Detached DOM nodes still referenced in JS.
-// * Large arrays or closures retaining references.
-
-// To detect:
-
-// * Use Chrome DevTools → Performance → Memory tab.
-
-// ---
+  // ---
 
 
 
-// **6. What’s the difference between Repaint and Reflow (Rework)?**
+  // **5. What is a Memory Leak?**
 
-// * **Reflow (Layout):** Happens when the geometry of the page changes (adding/removing elements, changing size, etc.).
-// * **Repaint:** Happens when visual appearance changes (like color or background) but layout remains the same.
+  // A **memory leak** occurs when allocated memory is not released even though it’s no longer needed.
 
-// **Order:** Reflow → Repaint
-// Reflow is more expensive than repaint.
+  // Common causes:
 
-// ---
+  // * Unremoved event listeners.
+  // * Global variables not cleaned up.
+  // * Detached DOM nodes still referenced in JS.
+  // * Large arrays or closures retaining references.
+
+  // To detect:
+
+  // * Use Chrome DevTools → Performance → Memory tab.
+
+  // ---
 
 
 
-// **7. If a user clicks a button multiple times to fetch data, how to cancel old API calls and use only the latest result?**
+  // **6. What’s the difference between Repaint and Reflow (Rework)?**
 
-// Use **AbortController** in modern JS or **RxJS switchMap** in React/Angular.
+  // * **Reflow (Layout):** Happens when the geometry of the page changes (adding/removing elements, changing size, etc.).
+  // * **Repaint:** Happens when visual appearance changes (like color or background) but layout remains the same.
 
-```
+  // **Order:** Reflow → Repaint
+  // Reflow is more expensive than repaint.
+
+  // ---
+
+
+
+  // **7. If a user clicks a button multiple times to fetch data, how to cancel old API calls and use only the latest result?**
+
+  // Use **AbortController** in modern JS or **RxJS switchMap** in React/Angular.
+
+  ```
 // Example using AbortController
 let controller;
 function fetchData() {
@@ -1343,7 +1343,7 @@ car.start();
 **16. What are Semantic HTML Elements?**
 
 HTML elements that clearly describe their meaning.
-Examples: `<header>`, `<footer>`, `<article>`, `<section>`, `<nav>`
+Examples: `< header > `, ` < footer > `, ` < article > `, ` < section > `, ` < nav > `
 
 They improve **accessibility**, **SEO**, and **code readability**.
 
@@ -1354,10 +1354,10 @@ They improve **accessibility**, **SEO**, and **code readability**.
 Used to serve different images for different resolutions or devices.
 
 ```html
-<img src="small.jpg" 
-     srcset="large.jpg 1024w, medium.jpg 640w, small.jpg 320w" 
-     sizes="(max-width: 600px) 480px, 800px" alt="image">
-```
+  < img src = "small.jpg"
+srcset = "large.jpg 1024w, medium.jpg 640w, small.jpg 320w"
+sizes = "(max-width: 600px) 480px, 800px" alt = "image" >
+  ```
 
 ---
 
@@ -1384,7 +1384,7 @@ Used to serve different images for different resolutions or devices.
 Creates an instance of a constructor function and sets up the prototype chain.
 
 ```
-function Person(name){ this.name = name; }
+function Person(name) { this.name = name; }
 const user = new Person("Nikita");
 ```
 
@@ -1413,8 +1413,8 @@ const user = new Person("Nikita");
 Headers carry **metadata**:
 
 * Authentication (`Authorization: Bearer token`)
-* Caching (`Cache-Control`)
-* Content type (`Content-Type: application/json`)
+* Caching (`Cache - Control`)
+* Content type (`Content - Type: application / json`)
 
 ---
 
@@ -1440,7 +1440,7 @@ Fix by:
 **26. Can we bind `this` in an arrow function?**
 
 No. Arrow functions don’t have their own `this`; they inherit from their lexical scope.
-Using `new` with an arrow function throws an error.
+Using `new ` with an arrow function throws an error.
 
 ---
 
@@ -1489,17 +1489,17 @@ Use **Lighthouse**, **PageSpeed Insights**, or **Web Vitals API**.
 **Bonus 1. What are Symbols and Generators?**
 
 * **Symbol:** Unique and immutable primitive for object keys.
-  // Example: `const id = Symbol('id');`
+  // Example: `const id = Symbol('id'); `
 
 * **Generator:** Function that can pause execution using `yield`.
   // Example:
 
   ```
-  function* gen() {
-    yield 1;
-    yield 2;
-  }
-  ```
+function* gen() {
+  yield 1;
+  yield 2;
+}
+```
 
 ---
 
@@ -1667,7 +1667,7 @@ boundGreet("Hey");           // Hey Nikita
 // Example: arrow function this
 const obj = {
   name: "JS",
-  regular: function() {
+  regular: function () {
     console.log(this.name);
   },
   arrow: () => console.log(this.name),
@@ -1745,7 +1745,7 @@ Promises represent **eventual completion** of async tasks — they have 3 states
 
 **Q3. async/await behind the scenes?**
 `async` functions return a Promise.
-`await` pauses execution until the promise resolves.
+`await ` pauses execution until the promise resolves.
 
 ---
 
@@ -1803,7 +1803,7 @@ async function getData() {
 
 * **Call Stack:** Executes synchronous JS code (functions, loops, etc.).
 * **Microtask Queue:** Holds *Promise callbacks* and runs **right after** the current call stack.
-* **Task Queue (Macrotask):** Holds tasks like `setTimeout`, `setInterval`, `I/O`.
+* **Task Queue (Macrotask):** Holds tasks like `setTimeout`, `setInterval`, `I / O`.
 * **Order:**
   Call Stack → Microtask Queue → Macrotask Queue → repaint/render.
 
@@ -1930,12 +1930,12 @@ outer() {
 
 ---
 
-**Q2. What happens if you use `new` with an arrow function?**
+**Q2. What happens if you use `new ` with an arrow function?**
 
-Arrow functions **can’t be constructors**, so using `new` throws a TypeError.
+Arrow functions **can’t be constructors**, so using `new ` throws a TypeError.
 
 ```js
-const Arrow = () => {};
+const Arrow = () => { };
 new Arrow(); // ❌ TypeError: Arrow is not a constructor
 ```
 
@@ -1964,7 +1964,7 @@ console.log(lion.sound); // Roar
 function Person(name) {
   this.name = name;
 }
-Person.prototype.sayHi = function() {
+Person.prototype.sayHi = function () {
   console.log("Hi " + this.name);
 };
 
@@ -2013,7 +2013,7 @@ function sleep(ms) {
 
 ---
 
-**Q3. What happens if you `await` inside a loop?**
+**Q3. What happens if you `await ` inside a loop?**
 
 Each iteration waits for the previous one — serial execution (slow).
 Use `Promise.all()` for parallel execution.
@@ -2068,10 +2068,10 @@ Reason: property assignment (`a.x = ...`) uses the **original reference of `a`**
 
 ---
 
-**Q3. Explain the difference between `==` and `===` in terms of coercion**
+**Q3. Explain the difference between `== ` and ` === ` in terms of coercion**
 
-* `==` performs **type coercion**.
-* `===` checks both **type and value** strictly.
+* `== ` performs **type coercion**.
+* `=== ` checks both **type and value** strictly.
 
 Tricky case:
 
@@ -2241,11 +2241,11 @@ const deep = structuredClone(obj);
 
 ---
 
-**Q2. Difference between `Object.is()`, `===`, and `==`**
+**Q2. Difference between `Object.is()`, ` === `, and ` == `**
 
-* `==` allows coercion.
-* `===` strict comparison.
-* `Object.is()` like `===` but treats `NaN` and signed zeros differently.
+* `== ` allows coercion.
+* `=== ` strict comparison.
+* `Object.is()` like ` === ` but treats `NaN` and signed zeros differently.
 
 ```js
 // Example:
@@ -2306,9 +2306,9 @@ for (var i = 0; i < 3; i++) {
 Because parentheses turn a `function declaration` into an **expression**, making it executable immediately.
 
 ```js
-(function() {
-  console.log("Runs immediately!");
-})();
+  (function () {
+    console.log("Runs immediately!");
+  })();
 ```
 
 ---
@@ -2354,7 +2354,7 @@ requestIdleCallback(() => console.log("Idle time task"));
 
 ---
 
-**Q4. Why `await` blocks only inside async, not globally?**
+**Q4. Why `await ` blocks only inside async, not globally?**
 
 Because async functions run as microtasks.
 Outside, there’s no async context, so top-level await is available only in ES2022 modules.
@@ -2486,14 +2486,14 @@ console.log(x[5]); // undefined
 console.log(typeof null); // "object"
 ```
 
-Because `typeof` checks internal 32-bit type tag — for null it was `000`, same as object type in early JS.
+Because `typeof ` checks internal 32-bit type tag — for null it was `000`, same as object type in early JS.
 
 ---
 
 **Q3.**
 
 ```js
-function f() {}
+function f() { }
 console.log(f.prototype); // { constructor: f }
 console.log(Object.getPrototypeOf(f)); // Function.prototype
 ```
@@ -2531,7 +2531,7 @@ function all(promises) {
 
 ```js
 function allSettled(promises) {
-  return Promise.all(promises.map(p => 
+  return Promise.all(promises.map(p =>
     Promise.resolve(p)
       .then(value => ({ status: "fulfilled", value }))
       .catch(reason => ({ status: "rejected", reason }))
@@ -2586,7 +2586,7 @@ Because JS doesn’t implicitly coerce between arbitrary precision and floating 
 
 ---
 
-**Q5. What’s the difference between `structuredClone` and `JSON.parse/stringify`?**
+**Q5. What’s the difference between `structuredClone` and `JSON.parse / stringify`?**
 
 * `structuredClone` supports `Map`, `Set`, `Blob`, `Date`, etc.
 * `JSON` drops non-serializable values.
@@ -2612,7 +2612,7 @@ Functions applied to classes/properties to modify or annotate them.
 ```js
 function log(target, key, desc) {
   const original = desc.value;
-  desc.value = function(...args) {
+  desc.value = function (...args) {
     console.log("Called:", key);
     return original.apply(this, args);
   };
@@ -2634,7 +2634,7 @@ Nice — full deep-dive coming up. Below you’ll get **detailed theory + tricky
 Theory
 
 * `Promise.allSettled(iterable)` returns a promise that resolves **after every** input promise is settled (either fulfilled or rejected).
-* The resolved value is an array with objects `{ status: "fulfilled", value }` or `{ status: "rejected", reason }` preserving input order.
+* The resolved value is an array with objects `{ status: "fulfilled", value } ` or `{ status: "rejected", reason } ` preserving input order.
 * It never rejects (unless input is not iterable and throws synchronously).
 
 Polyfill (robust, accepts thenables, preserves order):
@@ -2688,16 +2688,16 @@ Edge notes:
 Theory
 
 * `Symbol.iterator` is a well-known symbol that defines the default iterator for an object.
-* When an object has `[Symbol.iterator]()` returning an iterator (an object with `next()` → `{value, done}`), it becomes iterable: usable with `for..of`, spread `[...]`, `Array.from()`, destructuring, and many builtins.
-* Generators (`function*`) implement `Symbol.iterator` automatically returning an iterator for the generator instance.
-* Iterators cooperate with `return()` and `throw()` methods to allow early cleanup (e.g., `break` in `for..of` calls `return()` on the iterator if present).
+* When an object has `[Symbol.iterator]()` returning an iterator (an object with `next()` → `{ value, done } `), it becomes iterable: usable with `for..of`, spread `[...]`, `Array.from()`, destructuring, and many builtins.
+* Generators (`function*`) implement `Symbol.iterator` automatically returning an iterator for the generator instance.v
+* Iterators cooperate with `return ()` and `throw ()` methods to allow early cleanup (e.g., `break` in `for..of` calls `return ()` on the iterator if present).
 
 Tricky/advanced behaviors
 
-* If `next()` returns `{ done: true, value: x }`, `for..of` will ignore `value` on completion (spec defines that final `value` is not consumed by `for..of`), but `iterator.next()` directly returns it.
+* If `next()` returns `{ done: true, value: x } `, `for..of` will ignore `value` on completion (spec defines that final `value` is not consumed by `for..of`), but `iterator.next()` directly returns it.
 * You can implement lazy infinite sequences via iterators.
 * `Array.from` and spread call the iterator; any side-effects in the iterator run during conversion.
-* You can implement custom iteration protocols that interoperate with `for..of` by returning objects that implement both `next()` and optionally `return()` / `throw()`.
+* You can implement custom iteration protocols that interoperate with `for..of` by returning objects that implement both `next()` and optionally `return ()` / `throw ()`.
 
 Examples:
 
@@ -2764,7 +2764,7 @@ Theory
 
 * **Shadow Realms** is a TC39 proposal to create a new isolated JavaScript realm with its **own global objects and intrinsics** (its own `Object`, `Array`, `Function`, etc.).
 * Use-cases: secure sandboxing, running untrusted code without altering your global realm, evaluating code with its own prototypes and globals.
-* Important: objects from different realms have different prototypes; straightforward `instanceof` / `Object.getPrototypeOf` comparisons will behave differently.
+* Important: objects from different realms have different prototypes; straightforward `instanceof ` / `Object.getPrototypeOf` comparisons will behave differently.
 
 Current reality & practical alternatives
 
@@ -2774,23 +2774,23 @@ Current reality & practical alternatives
 Conceptual example (what ShadowRealms API would look like — purely illustrative):
 
 ```js
-// Pseudocode - not real in all runtimes yet
-/*
-const realm = new ShadowRealm();
-const f = realm.evaluate('x => x + 1');
-f(2); // 3, but f is a function from shadow realm
-*/
+  // Pseudocode - not real in all runtimes yet
+  /*
+  const realm = new ShadowRealm();
+  const f = realm.evaluate('x => x + 1');
+  f(2); // 3, but f is a function from shadow realm
+  */
 
-// Instead of ShadowRealm (practical alternative in browser)
-/*
-const iframe = document.createElement('iframe');
-iframe.style.display = 'none';
-document.body.appendChild(iframe);
-const win = iframe.contentWindow;
-win.eval('function add(x){ return x + 1 }'); // defines add in iframe realm
-// call it via postMessage or by referencing via win.add if same-origin
-*/
-```
+  // Instead of ShadowRealm (practical alternative in browser)
+  /*
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  const win = iframe.contentWindow;
+  win.eval('function add(x){ return x + 1 }'); // defines add in iframe realm
+  // call it via postMessage or by referencing via win.add if same-origin
+  */
+  ```
 
 Tricky implications
 
@@ -2823,7 +2823,7 @@ const privateData = new WeakMap();
 function MyClass(secret) {
   privateData.set(this, { secret });
 }
-MyClass.prototype.getSecret = function() {
+MyClass.prototype.getSecret = function () {
   return privateData.get(this).secret;
 };
 
@@ -2840,7 +2840,7 @@ const registry = new FinalizationRegistry((heldValue) => {
   // cleanup or logging - not guaranteed to run immediately
   console.log('object finalized:', heldValue);
 });
-(function() {
+(function () {
   const key = {};
   registry.register(key, 'myKey');
   // when 'key' becomes unreachable, registry callback may run later
@@ -2859,13 +2859,13 @@ Pitfalls
 Theory
 
 * ES Modules are **statically analyzed** before execution: import/export bindings are resolved **statically**.
-* `import` *hoists* in the sense that modules are fetched and linked before evaluation of the importing module body.
+* `import ` *hoists* in the sense that modules are fetched and linked before evaluation of the importing module body.
 * **Live bindings**: imported bindings are not copies; they reference the exported binding — if exporter updates the export, import sees new value.
 * Module evaluation order:
 
   1. Parse and link all modules (resolve dependencies).
   2. Execute modules in topological order; for cycles, some modules are executed partially but their binding objects exist.
-* Top-level `await` pauses module evaluation until the awaited promise resolves (affects dependent modules — they also wait).
+* Top-level `await ` pauses module evaluation until the awaited promise resolves (affects dependent modules — they also wait).
 
 Cyclic dependency tricky behavior:
 
@@ -2905,12 +2905,12 @@ console.log('b.js executed, a=', a);
 Dynamic import & top-level await
 
 * `import()` is dynamic and returns a Promise — evaluated at runtime, not statically. Useful to break cycles or lazy-load.
-* `top-level await` will block module evaluation until resolved — so dependent modules that import this module wait as well.
+* `top - level await ` will block module evaluation until resolved — so dependent modules that import this module wait as well.
 
 Practical patterns to avoid cycle bugs
 
 * Export factory functions instead of values to defer access.
-* Use functions that fetch current state (`export function getX(){ return x }`) so callers always get current value.
+* Use functions that fetch current state (`export function getX() { return x } `) so callers always get current value.
 * Reorganize modules into smaller responsibility sets to break cycles.
 
 ---
@@ -2982,7 +2982,7 @@ Promise.resolve().then(() => {
 
 ```js
 // JSON discards functions, undefined, symbols
-const obj = { a: 1, b: undefined, c: () => {} };
+const obj = { a: 1, b: undefined, c: () => { } };
 JSON.parse(JSON.stringify(obj)); // { a: 1 } // b and c lost
 
 // structuredClone preserves many more types (Date, Map, Set) but not functions
@@ -3140,17 +3140,17 @@ I'll assume **Shared DB + Shared Schema** below (you said core SaaS). If you wan
 ### Example SQL: users + projects + versions
 
 ```sql
--- extension for UUID convenience
+--extension for UUID convenience
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE tenants (
+CREATE TABLE tenants(
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   plan TEXT,
   created_at timestamptz DEFAULT now()
 );
 
-CREATE TABLE users (
+CREATE TABLE users(
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -3159,9 +3159,9 @@ CREATE TABLE users (
   firebase_token TEXT,
   created_at timestamptz DEFAULT now()
 );
-CREATE INDEX idx_users_tenant_email ON users (tenant_id, email);
+CREATE INDEX idx_users_tenant_email ON users(tenant_id, email);
 
-CREATE TABLE projects (
+CREATE TABLE projects(
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   owner_id UUID REFERENCES users(id),
@@ -3169,10 +3169,10 @@ CREATE TABLE projects (
   status TEXT,
   created_at timestamptz DEFAULT now()
 );
-CREATE INDEX idx_projects_tenant_owner ON projects (tenant_id, owner_id);
-CREATE INDEX idx_projects_tenant ON projects (tenant_id);
+CREATE INDEX idx_projects_tenant_owner ON projects(tenant_id, owner_id);
+CREATE INDEX idx_projects_tenant ON projects(tenant_id);
 
-CREATE TABLE versions (
+CREATE TABLE versions(
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   project_id UUID REFERENCES projects(id),
@@ -3183,7 +3183,7 @@ CREATE TABLE versions (
   moods text[],
   created_at timestamptz DEFAULT now()
 );
-CREATE INDEX idx_versions_tenant_project ON versions (tenant_id, project_id);
+CREATE INDEX idx_versions_tenant_project ON versions(tenant_id, project_id);
 ```
 
 ---
@@ -3195,7 +3195,7 @@ If you use Prisma (you mentioned preference earlier), add `tenantId` to models:
 ```prisma
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
 generator client {
@@ -3203,47 +3203,47 @@ generator client {
 }
 
 model Tenant {
-  id        String   @id @default(uuid())
+  id        String @id @default (uuid())
   name      String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default (now())
   users     User[]
   projects  Project[]
 }
 
 model User {
-  id          String   @id @default(uuid())
+  id          String @id @default (uuid())
   tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  email       String   @unique
+  tenant      Tenant @relation(fields: [tenantId], references: [id])
+  email       String @unique
   password    String
-  role        String   @default("user")
-  firebaseToken String?
-  createdAt   DateTime @default(now())
+  role        String @default ("user")
+  firebaseToken String ?
+    createdAt   DateTime @default (now())
   @@index([tenantId, email])
 }
 
 model Project {
-  id        String   @id @default(uuid())
+  id        String @id @default (uuid())
   tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  ownerId   String?
-  name      String?
-  status    String?
-  versions  Version[]
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  ownerId   String ?
+    name      String ?
+      status    String ?
+        versions  Version[]
   @@index([tenantId, ownerId])
 }
 
 model Version {
-  id         String   @id @default(uuid())
+  id         String @id @default (uuid())
   tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
-  projectId  String?
-  name       String?
-  audioCdnUrl String?
-  imageCdnUrl String?
-  genres     String[]?
-  moods      String[]?
-  createdAt  DateTime @default(now())
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  projectId  String ?
+    name       String ?
+      audioCdnUrl String ?
+        imageCdnUrl String ?
+          genres     String[] ?
+            moods      String[] ?
+              createdAt  DateTime @default (now())
   @@index([tenantId, projectId])
 }
 ```
@@ -3256,7 +3256,7 @@ You must resolve tenant for each request and enforce it in DB queries. Common so
 
 * Subdomain (tenant1.myapp.com)
 * JWT claims (`tenant_id` in token)
-* Custom header (`x-tenant-id`)
+* Custom header (`x - tenant - id`)
   Use JWT approach for APIs.
 
 ### Example: FastAPI dependency to extract tenant from JWT
@@ -3270,18 +3270,18 @@ from typing import Optional
 SECRET = "your_jwt_secret"
 
 def get_tenant_id_from_auth(authorization: Optional[str] = Header(None)):
-    if not authorization:
+if not authorization:
         raise HTTPException(401, "Missing Authorization")
-    token = authorization.split(" ")[1]
-    try:
-        payload = jwt.decode(token, SECRET, algorithms=["HS256"])
+token = authorization.split(" ")[1]
+try:
+payload = jwt.decode(token, SECRET, algorithms = ["HS256"])
     except Exception:
         raise HTTPException(401, "Invalid token")
-    tenant_id = payload.get("tenant_id")
-    if not tenant_id:
+tenant_id = payload.get("tenant_id")
+if not tenant_id:
         raise HTTPException(400, "tenant_id missing in token")
-    return tenant_id
-```
+return tenant_id
+  ```
 
 Usage in endpoint:
 
@@ -3293,8 +3293,8 @@ router = APIRouter()
 
 @router.get("/projects")
 def list_projects(tenant_id: str = Depends(get_tenant_id_from_auth), db: Session = Depends(get_db)):
-    return db.query(Project).filter(Project.tenant_id == tenant_id).all()
-```
+return db.query(Project).filter(Project.tenant_id == tenant_id).all()
+  ```
 
 **Important:** Never trust a client-sent `tenant_id` header alone without auth verification.
 
@@ -3305,16 +3305,16 @@ def list_projects(tenant_id: str = Depends(get_tenant_id_from_auth), db: Session
 RLS ensures SQL-level isolation. Example:
 
 ```sql
--- enable RLS on projects table
+--enable RLS on projects table
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
--- create policy that allows select/insert/update/delete only for matching tenant_id
+--create policy that allows select / insert / update / delete only for matching tenant_id
 CREATE POLICY tenant_isolation ON projects
-  USING (tenant_id = current_setting('app.current_tenant')::uuid)
-  WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
+USING(tenant_id = current_setting('app.current_tenant'):: uuid)
+  WITH CHECK(tenant_id = current_setting('app.current_tenant'):: uuid);
 
--- when your app connects, set tenant context per session/tx
--- e.g. run: SET app.current_tenant = 'the-tenant-uuid';
+--when your app connects, set tenant context per session / tx
+--e.g.run: SET app.current_tenant = 'the-tenant-uuid';
 ```
 
 In connection pooling scenarios (e.g., PgBouncer), set the tenant in transaction before queries:
@@ -3322,7 +3322,7 @@ In connection pooling scenarios (e.g., PgBouncer), set the tenant in transaction
 ```sql
 BEGIN;
 SET LOCAL app.current_tenant = '...';
--- do selects/updates
+-- do selects / updates
 COMMIT;
 ```
 
@@ -3330,8 +3330,8 @@ Or in SQLAlchemy:
 
 ```python
 # before each request
-db.execute(text("SET LOCAL app.current_tenant = :t"), {"t": tenant_id})
-```
+db.execute(text("SET LOCAL app.current_tenant = :t"), { "t": tenant_id })
+  ```
 
 ---
 
@@ -3378,16 +3378,16 @@ FastAPI sample:
 ```python
 @router.post("/tenants")
 def create_tenant(name: str, db: Session = Depends(get_db)):
-    tenant = Tenant(name=name)
-    db.add(tenant)
-    db.commit()
-    db.refresh(tenant)
+tenant = Tenant(name = name)
+db.add(tenant)
+db.commit()
+db.refresh(tenant)
     # create default admin user & project
-    admin = User(email="owner@example.com", tenant_id=tenant.id, role="admin")
-    db.add(admin)
-    db.commit()
-    return {"tenant_id": str(tenant.id)}
-```
+admin = User(email = "owner@example.com", tenant_id = tenant.id, role = "admin")
+db.add(admin)
+db.commit()
+return { "tenant_id": str(tenant.id) }
+  ```
 
 ---
 
@@ -3395,15 +3395,15 @@ def create_tenant(name: str, db: Session = Depends(get_db)):
 
 * Index composite columns used in WHERE:
 
-  * `CREATE INDEX idx_versions_tenant_project ON versions (tenant_id, project_id);`
-  * `CREATE INDEX idx_users_tenant_email ON users (tenant_id, email);`
-* For full text search per tenant, use GIN indexes on `to_tsvector('english', coalesce(text,''))` and include tenant in WHERE.
+  * `CREATE INDEX idx_versions_tenant_project ON versions(tenant_id, project_id); `
+  * `CREATE INDEX idx_users_tenant_email ON users(tenant_id, email); `
+* For full text search per tenant, use GIN indexes on `to_tsvector('english', coalesce(text, ''))` and include tenant in WHERE.
 
 ---
 
 ## 9) Caching & rate limiting (tenant-aware)
 
-* Redis keys prefixed by tenant: `cache:{tenant_id}:user:123`
+* Redis keys prefixed by tenant: `cache: { tenant_id }: user: 123`
 * Rate-limit by tenant: use token-bucket keyed on `tenant_id` not global.
 * Feature flags per-tenant: store in `tenant_settings` table or remote config service.
 
@@ -3437,15 +3437,15 @@ def create_tenant(name: str, db: Session = Depends(get_db)):
 
 ```python
 def get_user_by_email(db: Session, tenant_id: str, email: str):
-    return db.query(User).filter(User.tenant_id == tenant_id, User.email == email).first()
+return db.query(User).filter(User.tenant_id == tenant_id, User.email == email).first()
 
 def create_project(db: Session, tenant_id: str, owner_id: str, name: str):
-    p = Project(tenant_id=tenant_id, owner_id=owner_id, name=name)
-    db.add(p)
-    db.commit()
-    db.refresh(p)
-    return p
-```
+p = Project(tenant_id = tenant_id, owner_id = owner_id, name = name)
+db.add(p)
+db.commit()
+db.refresh(p)
+return p
+  ```
 
 ---
 

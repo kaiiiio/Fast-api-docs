@@ -118,6 +118,90 @@ function App() {
 - **Accessibility**: ARIA attributes for screen readers
 - **Keyboard Navigation**: Can be enhanced with arrow keys
 
+### ARIA Attributes Explained
+
+> **ARIA (Accessible Rich Internet Applications)** attributes help screen readers and assistive technologies understand interactive components.
+
+#### **role="tablist"** (Line 20)
+- **What it does:** Tells screen readers this is a container for tabs
+- **Why:** Screen readers announce "tab list" so users know they can navigate between tabs
+
+#### **role="tab"** (Line 26)
+- **What it does:** Identifies each button as a tab
+- **Why:** Screen readers announce "tab" for each button, helping users understand the navigation structure
+
+#### **aria-selected={activeTab === index}** (Line 27)
+- **What it does:** Indicates which tab is currently active
+  - `aria-selected="true"` → This tab is selected
+  - `aria-selected="false"` → This tab is not selected
+- **Why:** Screen readers announce "selected" for the active tab, helping users know their current position
+- **Example:** If Tab 2 is active, screen reader says "Tab 2, selected"
+
+#### **aria-controls={`tab-panel-${index}`}** (Line 28)
+- **What it does:** Links the tab button to its corresponding content panel
+  - Creates a relationship: "This tab controls that panel"
+- **Why:** Screen readers can announce which content area will be shown when tab is clicked
+- **Example:** `aria-controls="tab-panel-0"` means this tab controls the panel with `id="tab-panel-0"`
+
+#### **id={`tab-${index}`}** (Line 29)
+- **What it does:** Unique identifier for each tab button
+- **Why:** Used by `aria-labelledby` in the panel to create bidirectional relationship
+
+#### **role="tabpanel"** (Line 41)
+- **What it does:** Identifies the content area as a tab panel
+- **Why:** Screen readers announce "tab panel" so users know this is the content area
+
+#### **aria-labelledby={`tab-${index}`}** (Line 42)
+- **What it does:** Links the panel back to its tab button
+  - Creates reverse relationship: "This panel is labeled by that tab"
+- **Why:** Screen readers can announce the tab's label when entering the panel
+- **Example:** When user enters panel, screen reader says "Tab 1 panel"
+
+#### **hidden={activeTab !== index}** (Line 44)
+- **What it does:** Hides inactive panels from screen readers AND visual display
+- **Why:** Prevents screen readers from reading hidden content, improves navigation
+
+### Complete ARIA Flow Example
+
+```jsx
+// Tab Button (index = 0, activeTab = 0)
+<button
+    role="tab"                          // "This is a tab"
+    aria-selected={true}                // "It's selected"
+    aria-controls="tab-panel-0"         // "It controls panel 0"
+    id="tab-0"                          // "My ID is tab-0"
+>
+    Tab 1
+</button>
+
+// Tab Panel (index = 0, activeTab = 0)
+<div
+    role="tabpanel"                     // "This is a tab panel"
+    aria-labelledby="tab-0"             // "I'm labeled by tab-0"
+    id="tab-panel-0"                    // "My ID is tab-panel-0"
+    hidden={false}                      // "I'm visible"
+>
+    Content for Tab 1
+</div>
+```
+
+**Screen Reader Announcement:**
+1. User focuses Tab 1 button: "Tab 1, tab, selected, 1 of 3"
+2. User presses Enter: "Tab 1 panel, content for Tab 1"
+3. User focuses Tab 2 button: "Tab 2, tab, not selected, 2 of 3"
+
+### Why This Matters
+
+✅ **Without ARIA:** Screen reader says "Button, Tab 1" (confusing)
+✅ **With ARIA:** Screen reader says "Tab 1, tab, selected, controls tab panel 0" (clear!)
+
+**Benefits:**
+- Blind users can navigate tabs easily
+- Keyboard users know which tab is active
+- Assistive technologies understand the tab structure
+- Improves SEO (search engines understand page structure)
+
+
 ### Visualization
 ```
 [Tab 1] [Tab 2] [Tab 3]
@@ -626,6 +710,46 @@ function App() {
 - **Visual Feedback**: Filled stars in gold, empty in gray
 - **Accessibility**: Keyboard navigation and ARIA labels
 - **Callback**: Notifies parent of rating changes
+
+### CSS Property Explained: `user-select: none`
+
+> **What it does:** Prevents users from selecting/highlighting text when clicking or dragging
+
+**In Star Rating Context (Line 686):**
+```css
+.star {
+    user-select: none;  /* Prevents text selection */
+}
+```
+
+**Why it's needed:**
+- When users click stars rapidly, the browser might try to select the star text (★)
+- This creates an ugly blue highlight that looks broken
+- `user-select: none` prevents this unwanted text selection
+
+**Visual Example:**
+
+```
+❌ Without user-select: none
+Click star → [★★★★★] (text gets selected/highlighted in blue)
+
+✅ With user-select: none  
+Click star → ★★★★★ (no text selection, clean interaction)
+```
+
+**Other Values:**
+- `user-select: auto` - Default browser behavior (text can be selected)
+- `user-select: text` - Text can be selected
+- `user-select: all` - Entire element selected with one click
+- `user-select: none` - Text cannot be selected
+
+**Common Use Cases:**
+- Buttons and interactive elements (like stars)
+- Drag-and-drop interfaces
+- Custom UI controls
+- Game interfaces
+- Anything where text selection would interfere with interaction
+
 
 ### Visualization
 ```

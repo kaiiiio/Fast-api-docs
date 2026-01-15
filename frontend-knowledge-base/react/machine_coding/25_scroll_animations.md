@@ -28,6 +28,20 @@ function ScrollComponent() {
     return <div>Scroll Y: {scrollY}px</div>;
 }
 
+/**
+ * 💡 Detailed Notes: Scroll Event Listeners
+ * addEventListener: Attach a listener to the 'window' object to monitor the scroll position globally.
+ * removeEventListener: It is mandatory to remove the listener in the cleanup function to prevent memory leaks.
+ * Performance: Scroll events trigger with high frequency (on every pixel). Avoid placing heavy logic inside handleScroll (Consider Throttling).
+ */
+
+### Oral Explanation (Interview Ready)
+
+> "When using global event listeners like `scroll` or `resize`, there are two critical considerations for a senior developer:"
+
+1.  **Memory Management**: If you fail to call `removeEventListener`, the function remains in memory even after the component unmounts. This leads to cumulative performance degradation and memory leaks.
+2.  **Performance & Junk**: Because the scroll event fires extremely frequently, it can interfere with the browser's 60 FPS rendering cycle. I always recommend using **Throttling** or **Debouncing** to ensure the scroll handler doesn't block the main thread.
+
 // Scroll to element
 function ScrollToElement() {
     const targetRef = useRef(null);
@@ -48,6 +62,13 @@ function ScrollToElement() {
     );
 }
 
+/**
+ * 💡 Detailed Notes: scrollIntoView
+ * Purpose: A native DOM method used to pull specific elements into the user's viewport.
+ * Options: behavior ('smooth' provides a better UX), block ('start', 'center', 'end', 'nearest'), and inline.
+ * Oral Point: "I prefer `behavior: smooth` over manual anchor tags for precise programmatic control."
+ */
+
 // Infinite scroll
 function InfiniteScroll({ onLoadMore }) {
     const observerRef = useRef(null);
@@ -65,6 +86,13 @@ function InfiniteScroll({ onLoadMore }) {
     
     return <div ref={lastElementRef}>Loading...</div>;
 }
+
+/**
+ * 🧠 Detailed Notes: IntersectionObserver
+ * Purpose: Provides asynchronous detection of an element's visibility/intersection with a parent or the viewport.
+ * Key properties: isIntersecting (boolean), intersectionRatio (percentage visible), and target (the element).
+ * Performance: It is a massive performance winner over scroll listeners because it is event-based and doesn't require constant polling or throttling.
+ */
 
 // Scroll position indicator
 function ScrollIndicator() {
@@ -112,6 +140,44 @@ User scrolls
        ▼
    Handler runs
 ```
+
+---
+
+## 🛠️ Deep Dive: Browser APIs for Scrolling
+
+### 📍 `scrollIntoView` (The Easy Way)
+
+**What is it?**: A built-in DOM method used to scroll an element into the visible area of the browser window.
+
+**Properties Breakdown**:
+*   **`behavior`**: 
+    *   `smooth`: Nice animation (interpolated scroll).
+    *   `auto`: Instant jump.
+*   **`block` (Vertical)**:
+    *   `nearest`: If the element is already partially visible, it won't move; otherwise, it scrolls the shortest distance to bring it into view.
+*   **`inline` (Horizontal)**: Same keys as `block`, horizontal scroll ke liye.
+
+---
+
+### 👁️ `IntersectionObserver` (The Smart Way)
+
+**What is it?**: An API that allows you to "watch" when an element enters or leaves the viewport (or a specific parent element).
+
+**The Callback Parameters (`entries`)**:
+Jab callback trigger hota h, humein `entries` milti hain (Array of objects):
+1.  **`isIntersecting`**: (Boolean) The most critical property. Returns `true` if even 1 pixel of the target is visible.
+2.  **`intersectionRatio`**: (0.0 to 1.0) Exact kitna percentage dikh raha h (e.g., 0.5 means half-visible).
+3.  **`boundingClientRect`**: Element ki geometry (top, left, width, height).
+4.  **`target`**: Wo real HTML element jise observe kiya ja raha h (helpful when observing multiple items).
+
+**The Options Config**:
+1.  **`root`**: The element that is used as the viewport for checking visibility. Defaults to the browser window if `null`.
+2.  **`rootMargin`**: Acts like "fake padding" for detection. For example, `rootMargin: '100px'` will trigger `isIntersecting: true` 100px before the element actually enters the screen (perfect for pre-fetching data in infinite scrolls).
+3.  **`threshold`**: Defines the percentage of the element's visibility required to trigger the callback. `0.1` means 10%, while `[0, 0.5, 1]` triggers at the start, middle, and full visibility.
+
+### Oral Explanation (Interview Ready)
+
+> "The true powerhouse of the **`IntersectionObserver`** is the `rootMargin`. It allows us to load content just before the user actually sees it, creating a seamless 'infinite' feel. Since it is entirely event-driven, it places zero overhead on the main thread compared to traditional scroll listeners."
 
 ---
 

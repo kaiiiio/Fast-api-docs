@@ -1,51 +1,51 @@
 # Next.js Complete Deep Dive Notes
 
 ## Table of Contents
-1. [Introduction & Core Concepts](#introduction)
-2. [Routing System](#routing)
-3. [Layouts & Pages](#layouts-pages)
-4. [Navigation & Linking](#navigation)
-5. [Server vs Client Components](#components)
-6. [Data Fetching](#data-fetching)
-7. [Data Mutation & Actions](#data-mutation)
-8. [Caching & Revalidation](#caching)
-9. [Error Handling](#error-handling)
-10. [Styling (CSS)](#styling)
-11. [Image Optimization](#images)
-12. [Font Optimization](#fonts)
-13. [Route Handlers (API Routes)](#route-handlers)
-14. [Proxy & Rewrites](#proxy)
-15. [Deployment](#deployment)
-16. [Upgrading](#upgrading)
-17. [Accessibility](#accessibility)
-18. [Fast Refresh](#fast-refresh)
-19. [Next.js vs React](#comparison)
+1.[Introduction & Core Concepts](#introduction)
+2.[Routing System](#routing)
+3.[Layouts & Pages](#layouts - pages)
+4.[Navigation & Linking](#navigation)
+5.[Server vs Client Components](#components)
+6.[Data Fetching](#data - fetching)
+7.[Data Mutation & Actions](#data - mutation)
+8.[Caching & Revalidation](#caching)
+9.[Error Handling](#error - handling)
+10.[Styling(CSS)](#styling)
+11.[Image Optimization](#images)
+12.[Font Optimization](#fonts)
+13.[Route Handlers(API Routes)](#route - handlers)
+14.[Proxy & Rewrites](#proxy)
+15.[Deployment](#deployment)
+16.[Upgrading](#upgrading)
+17.[Accessibility](#accessibility)
+18.[Fast Refresh](#fast - refresh)
+19.[Next.js vs React](#comparison)
 
 ---
 
-## 1. Introduction & Core Concepts {#introduction}
+## 1. Introduction & Core Concepts { #introduction }
 
-### What is Next.js?
-Next.js is a React framework that provides:
-- **Server-Side Rendering (SSR)** - Pages rendered on server
-- **Static Site Generation (SSG)** - Pre-built HTML at build time
-- **File-based Routing** - No need for react-router
-- **API Routes** - Backend endpoints in same project
-- **Automatic Code Splitting** - Only load what's needed
-- **Image & Font Optimization** - Built-in optimizations
+### What is Next.js ?
+  Next.js is a React framework that provides:
+- ** Server - Side Rendering(SSR) ** - Pages rendered on server
+  - ** Static Site Generation(SSG) ** - Pre - built HTML at build time
+    - ** File - based Routing ** - No need for react - router
+      - ** API Routes ** - Backend endpoints in same project
+        - ** Automatic Code Splitting ** - Only load what's needed
+          - ** Image & Font Optimization ** - Built -in optimizations
 
 ### App Router vs Pages Router
-- **App Router** (app directory) - New, recommended since Next.js 13+
-- **Pages Router** (pages directory) - Legacy, still supported
+  - ** App Router ** (app directory) - New, recommended since Next.js 13 +
+- ** Pages Router ** (pages directory) - Legacy, still supported
 
-**These notes focus on App Router.**
+  ** These notes focus on App Router.**
 
----
+    ---
 
-## 2. Routing System {#routing}
+## 2. Routing System { #routing }
 
 ### Basic Routing
-Next.js uses **file-system based routing**. Every folder in `app/` directory becomes a route.
+Next.js uses ** file - system based routing **.Every folder in `app/` directory becomes a route.
 
 ```
 app/
@@ -59,12 +59,12 @@ app/
 ```
 
 ### Special Files
-- `page.tsx` - Makes route publicly accessible
-- `layout.tsx` - Shared UI for route segment
-- `loading.tsx` - Loading UI (Suspense boundary)
-- `error.tsx` - Error UI
-- `not-found.tsx` - 404 UI
-- `route.ts` - API endpoint
+  - `page.tsx` - Makes route publicly accessible
+    - `layout.tsx` - Shared UI for route segment
+      - `loading.tsx` - Loading UI(Suspense boundary)
+      - `error.tsx` - Error UI
+        - `not-found.tsx` - 404 UI
+          - `route.ts` - API endpoint
 
 ### Nested Routes
 Create deeper route hierarchies:
@@ -81,8 +81,8 @@ app/
 │           └── page.tsx            → /blog/category/tech
 ```
 
-**Example: Blog Post Page**
-```tsx
+  ** Example: Blog Post Page **
+    ```tsx
 // app/blog/[slug]/page.tsx
 export default function BlogPost({ params }: { params: { slug: string } }) {
   return (
@@ -98,7 +98,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 
 ### Dynamic Routes with Multiple Segments
 
-```
+  ```
 app/
 └── shop/
     └── [category]/
@@ -106,8 +106,8 @@ app/
             └── page.tsx            → /shop/electronics/laptop-123
 ```
 
-**Example:**
-```tsx
+  ** Example:**
+    ```tsx
 // app/shop/[category]/[productId]/page.tsx
 export default function ProductPage({ 
   params 
@@ -126,7 +126,7 @@ export default function ProductPage({
 // params = { category: 'electronics', productId: 'laptop-123' }
 ```
 
-### Catch-All Routes
+### Catch - All Routes
 Catch unlimited segments using `[...slug]`:
 
 ```
@@ -136,8 +136,8 @@ app/
         └── page.tsx    → /docs/a, /docs/a/b, /docs/a/b/c
 ```
 
-**Example:**
-```tsx
+  ** Example:**
+    ```tsx
 // app/docs/[...slug]/page.tsx
 export default function DocsPage({ 
   params 
@@ -156,7 +156,7 @@ export default function DocsPage({
 // params.slug = ['getting-started', 'installation']
 ```
 
-### Optional Catch-All Routes
+### Optional Catch - All Routes
 Use `[[...slug]]` to make catch-all optional:
 
 ```
@@ -197,8 +197,8 @@ app/
 └── layout.tsx
 ```
 
-**Example:**
-```tsx
+  ** Example:**
+    ```tsx
 // app/layout.tsx
 export default function Layout({
   children,
@@ -222,9 +222,9 @@ export default function Layout({
 ```
 
 ### Intercepting Routes
-Intercept routes for modals using `(..)folder`:
+Intercept routes for modals using`(..)folder`:
 
-```
+  ```
 app/
 ├── photos/
 │   ├── page.tsx
@@ -238,9 +238,9 @@ app/
 
 ---
 
-## 3. Layouts & Pages {#layouts-pages}
+## 3. Layouts & Pages { #layouts - pages }
 
-### Root Layout (Required)
+### Root Layout(Required)
 Every app needs a root layout:
 
 ```tsx
@@ -262,16 +262,16 @@ export default function RootLayout({
 }
 ```
 
-**Key Points:**
-- Must include `<html>` and `<body>` tags
-- Cannot be a Client Component
-- Shared across all pages
-- Only re-renders children, not the layout itself
+  ** Key Points:**
+    - Must include `<html>` and `<body>` tags
+      - Cannot be a Client Component
+        - Shared across all pages
+          - Only re - renders children, not the layout itself
 
 ### Nested Layouts
 Create layouts for specific route segments:
 
-```
+  ```
 app/
 ├── layout.tsx                  (Root Layout)
 ├── page.tsx                    → /
@@ -282,8 +282,8 @@ app/
 │       └── page.tsx            → /blog/post
 ```
 
-**Example: Blog Layout**
-```tsx
+    ** Example: Blog Layout **
+      ```tsx
 // app/blog/layout.tsx
 export default function BlogLayout({
   children,
@@ -307,7 +307,7 @@ export default function BlogLayout({
 }
 ```
 
-Layouts nest automatically. When visiting `/blog/post`, you get:
+Layouts nest automatically.When visiting`/blog/post`, you get:
 ```
 Root Layout
   └── Blog Layout
@@ -334,9 +334,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
 }
 ```
 
-**Layout vs Template:**
-- **Layout** - Persists across navigation, state preserved
-- **Template** - New instance on each navigation, state reset
+  ** Layout vs Template:**
+- ** Layout ** - Persists across navigation, state preserved
+  - ** Template ** - New instance on each navigation, state reset
 
 ### Metadata
 Add SEO metadata:
@@ -370,12 +370,12 @@ export default function BlogPost({ params }) {
 
 ---
 
-## 4. Navigation & Linking {#navigation}
+## 4. Navigation & Linking { #navigation }
 
 ### Link Component
-Use `<Link>` for client-side navigation:
+Use `<Link>` for client - side navigation:
 
-```tsx
+  ```tsx
 import Link from 'next/link';
 
 export default function Nav() {
@@ -429,6 +429,33 @@ export default function LoginButton() {
 ```
 
 ### usePathname Hook
+The `usePathname` hook is a Client Component hook that lets you read the current URL's **pathname**.
+
+  ** Example: Highlighting Active Links **
+    ```tsx
+'use client';
+
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+
+export default function Navbar() {
+  const pathname = usePathname();
+
+  return (
+    <nav>
+      <Link href="/dashboard" className={pathname === '/dashboard' ? 'text-blue-500' : 'text-gray-500'}>
+        Dashboard
+      </Link>
+      <Link href="/profile" className={pathname === '/profile' ? 'text-blue-500' : 'text-gray-500'}>
+        Profile
+      </Link>
+    </nav>
+  );
+}
+```
+
+    > [!NOTE]
+    > `usePathname` only works in ** Client Components **.If you need the pathname in a Server Component, you must pass it down from a layout or middleware.
 Get current pathname:
 
 ```tsx
@@ -460,6 +487,39 @@ export default function Navigation() {
 ```
 
 ### useSearchParams Hook
+A Client Component hook that lets you read the current URL's **query parameters**. It returns a read-only version of the `URLSearchParams` interface.
+
+  ** Example: Reading and Updating Search Params **
+    ```tsx
+'use client';
+
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+
+export default function SearchBar() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
+
+  function handleSearch(term: string) {
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set('query', term);
+    } else {
+      params.delete('query');
+    }
+    // Update the URL without a full page reload
+    replace(`${ pathname }?${ params.toString() } `);
+  }
+
+  return (
+    <input
+      placeholder="Search..."
+      onChange={(e) => handleSearch(e.target.value)}
+      defaultValue={searchParams.get('query')?.toString()}
+    />
+  );
+}
+```
 Access query parameters:
 
 ```tsx
@@ -511,9 +571,9 @@ Next.js automatically prefetches visible links:
 
 ---
 
-## 5. Server vs Client Components {#components}
+## 5. Server vs Client Components { #components }
 
-### Server Components (Default)
+### Server Components(Default)
 All components in `app/` are Server Components by default:
 
 ```tsx
@@ -540,17 +600,17 @@ export default async function BlogPage() {
 }
 ```
 
-**Benefits:**
-- ✅ Direct database/API access
-- ✅ Secure (secrets stay on server)
-- ✅ Smaller bundle size
-- ✅ Better SEO
-- ✅ Can use async/await directly
+  ** Benefits:**
+    - ✅ Direct database / API access
+      - ✅ Secure(secrets stay on server)
+        - ✅ Smaller bundle size
+          - ✅ Better SEO
+            - ✅ Can use async /await directly
 
-**Limitations:**
-- ❌ No useState, useEffect, event handlers
-- ❌ No browser APIs
-- ❌ No client-side interactivity
+              ** Limitations:**
+                - ❌ No useState, useEffect, event handlers
+                  - ❌ No browser APIs
+                    - ❌ No client - side interactivity
 
 ### Client Components
 Add `'use client'` directive:
@@ -575,12 +635,12 @@ export default function Counter() {
 }
 ```
 
-**When to use Client Components:**
-- Event handlers (onClick, onChange, etc.)
-- State and lifecycle (useState, useEffect)
-- Browser APIs (localStorage, geolocation)
-- Custom hooks
-- React class components
+  ** When to use Client Components:**
+    - Event handlers(onClick, onChange, etc.)
+      - State and lifecycle(useState, useEffect)
+        - Browser APIs(localStorage, geolocation)
+          - Custom hooks
+            - React class components
 
 ### Composition Pattern
 Mix Server and Client Components:
@@ -617,7 +677,7 @@ export default async function Dashboard() {
 }
 ```
 
-```tsx
+  ```tsx
 'use client';
 
 // app/dashboard/ClientSidebar.tsx
@@ -644,12 +704,12 @@ export default function ClientSidebar({ posts }) {
 ```
 
 ### Important Rules
-1. **Server → Client:** Can pass Server Components as props to Client Components
-2. **Client ↛ Server:** Cannot import Server Components into Client Components directly
-3. **Props:** Must be serializable (no functions, classes, Date objects)
+1. ** Server → Client:** Can pass Server Components as props to Client Components
+2. ** Client ↛ Server:** Cannot import Server Components into Client Components directly
+3. ** Props:** Must be serializable(no functions, classes, Date objects)
 
-**Example: Passing Server Component to Client**
-```tsx
+  ** Example: Passing Server Component to Client **
+    ```tsx
 // ✅ Correct
 'use client';
 
@@ -678,9 +738,9 @@ export default function Page() {
 
 ---
 
-## 6. Data Fetching {#data-fetching}
+## 6. Data Fetching { #data - fetching }
 
-### Server Components (Recommended)
+### Server Components(Recommended)
 Fetch data directly in Server Components:
 
 ```tsx
@@ -709,24 +769,24 @@ export default async function PostsPage() {
 
 ### Fetch Options
 
-#### 1. Static Data (SSG)
-```tsx
+#### 1. Static Data(SSG)
+  ```tsx
 // Cached forever, built at build time
 const res = await fetch('https://api.example.com/posts', {
   cache: 'force-cache', // Default
 });
 ```
 
-#### 2. Dynamic Data (SSR)
-```tsx
+#### 2. Dynamic Data(SSR)
+  ```tsx
 // Fetched on every request
 const res = await fetch('https://api.example.com/posts', {
   cache: 'no-store',
 });
 ```
 
-#### 3. Revalidated Data (ISR)
-```tsx
+#### 3. Revalidated Data(ISR)
+  ```tsx
 // Cached, revalidated every 60 seconds
 const res = await fetch('https://api.example.com/posts', {
   next: { revalidate: 60 },
@@ -734,7 +794,7 @@ const res = await fetch('https://api.example.com/posts', {
 ```
 
 ### Parallel Data Fetching
-```tsx
+  ```tsx
 async function getUser() {
   const res = await fetch('https://api.example.com/user');
   return res.json();
@@ -764,7 +824,7 @@ export default async function Dashboard() {
 ```
 
 ### Sequential Data Fetching
-```tsx
+  ```tsx
 export default async function ProfilePage({ params }) {
   // Wait for user first
   const user = await getUser(params.id);
@@ -784,13 +844,13 @@ export default async function ProfilePage({ params }) {
 ```
 
 ### Database Queries
-```tsx
+  ```tsx
 // lib/db.ts
 import { sql } from '@vercel/postgres';
 
 export async function getPosts() {
   const { rows } = await sql`
-    SELECT * FROM posts 
+SELECT * FROM posts 
     ORDER BY created_at DESC
   `;
   return rows;
@@ -814,8 +874,8 @@ export default async function BlogPage() {
 }
 ```
 
-### Client-Side Fetching
-When you need client-side data fetching:
+### Client - Side Fetching
+When you need client - side data fetching:
 
 ```tsx
 'use client';
@@ -845,15 +905,70 @@ export default function ClientPosts() {
     </div>
   );
 }
-```
+### Using SWR (Recommended for Client-Side Fetching)
+SWR (Stale-While-Revalidate) is a React Hooks library for data fetching. It handles caching, revalidation, focus tracking, and more.
 
-### Using SWR (Recommended for Client)
 ```tsx
 'use client';
 
 import useSWR from 'swr';
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+// 1. Define a fetcher function (can use fetch or axios)
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+export default function Profile() {
+  // 2. Use the hook
+  const { data, error, isLoading } = useSWR('/api/user/123', fetcher);
+
+  if (error) return <div>Failed to load</div>;
+  if (isLoading) return <div>Loading...</div>;
+
+  return <div>Hello {data.name}!</div>;
+}
+```
+
+#### Global Configuration
+You can provide global configuration using the `SWRConfig` provider in your layout.
+
+```tsx
+// app/layout.tsx
+import { SWRConfig } from 'swr';
+
+export default function RootLayout({ children }) {
+  return (
+    <SWRConfig
+      value={{
+        fetcher: (resource, init) => fetch(resource, init).then(res => res.json()),
+        revalidateOnFocus: false, // Optional: Disable auto-refresh on window focus
+        dedupingInterval: 5000,   // Optional: De-duplicate requests within 5s
+      }}
+    >
+      {children}
+    </SWRConfig>
+  );
+}
+```
+
+#### Optimistic UI Updates
+SWR allows you to update the UI instantly before the server responds.
+
+```tsx
+const { data, mutate } = useSWR('/api/user', fetcher);
+
+async function updateName(newName) {
+  // Update local data immediately, but don't revalidate yet
+  mutate({ ...data, name: newName }, false);
+
+  // Send request to server
+  await fetch('/api/user', {
+    method: 'POST',
+    body: JSON.stringify({ name: newName })
+  });
+
+  // Revalidate to ensure local data matches server
+  mutate();
+}
+```
 
 export default function Posts() {
   const { data, error, isLoading } = useSWR('/api/posts', fetcher);
@@ -873,10 +988,10 @@ export default function Posts() {
 
 ---
 
-## 7. Data Mutation & Actions {#data-mutation}
+## 7. Data Mutation & Actions { #data - mutation }
 
 ### Server Actions
-Server-side mutations without API routes:
+Server - side mutations without API routes:
 
 ```tsx
 // app/posts/create/page.tsx
@@ -940,7 +1055,7 @@ export default function CreatePostForm() {
 }
 ```
 
-```tsx
+  ```tsx
 // app/posts/create/actions.ts
 'use server';
 
@@ -952,6 +1067,10 @@ const schema = z.object({
 });
 
 export async function createPost(prevState: any, formData: FormData) {
+  // safeParse() is a Zod method that validates data without throwing an error.
+  // Instead of a try/catch block, it returns an object:
+  // - If successful: { success: true, data: validatedData }
+  // - If failed: { success: false, error: ZodError }
   const validatedFields = schema.safeParse({
     title: formData.get('title'),
     content: formData.get('content'),
@@ -1051,7 +1170,7 @@ export default function TodoList({ todos }) {
 }
 ```
 
-### Route Handlers (API Routes)
+### Route Handlers(API Routes)
 Alternative to Server Actions:
 
 ```tsx
@@ -1076,7 +1195,7 @@ export async function POST(request: Request) {
 
 ---
 
-## 8. Caching & Revalidation {#caching}
+## 8. Caching & Revalidation { #caching }
 
 Next.js has multiple caching layers:
 
@@ -1135,7 +1254,7 @@ export default async function BlogPage() {
 ```
 
 ### 4. Router Cache
-Client-side cache of visited routes (30 seconds default):
+Client - side cache of visited routes(30 seconds default ):
 
 ```tsx
 // Prefetched links are cached
@@ -1144,16 +1263,21 @@ Client-side cache of visited routes (30 seconds default):
 
 ### Revalidation Strategies
 
-#### 1. Time-based Revalidation
-```tsx
+#### 1. Time - based Revalidation
+  ```tsx
 // Revalidate every 60 seconds
 const res = await fetch('https://api.example.com/posts', {
   next: { revalidate: 60 },
 });
 ```
 
-#### 2. On-Demand Revalidation
-```tsx
+#### 2. On - Demand Revalidation
+On - demand revalidation basically means "bhai, jab data change ho, tabhi cache update karo." Instead of waiting for a timer(ISR), you manually tell Next.js to dump the old cache.
+
+- ** revalidatePath **: Yeh poore route ka cache clear kar deta hai.Agar tumne `/blog` pe kuch naya post dala, toh`revalidatePath('/blog')` karne se Next.js blog page ko piche(background) mein rebuild kar lega.
+- ** revalidateTag **: Yeh zyada powerful hai.Tum fetch requests ko 'tags' de sakte ho.Jab tum `revalidateTag('posts')` bolte ho, toh jahan jahan 'posts' tag wala data use ho raha hai, woh sab ek saath update ho jata hai.
+
+  ```tsx
 // app/actions.ts
 'use server';
 
@@ -1171,8 +1295,8 @@ export async function createPost() {
 }
 ```
 
-#### 3. Tag-based Revalidation
-```tsx
+#### 3. Tag - based Revalidation
+  ```tsx
 // Fetch with tags
 const res = await fetch('https://api.example.com/posts', {
   next: { tags: ['posts'] },
@@ -1208,7 +1332,7 @@ export default async function BlogPage() {
 ```
 
 ### Opting Out of Cache
-```tsx
+  ```tsx
 // Option 1: Using cache option
 fetch('https://api.example.com/data', { cache: 'no-store' });
 
@@ -1228,7 +1352,7 @@ export default async function Page() {
 ```
 
 ### generateStaticParams
-Pre-generate dynamic routes at build time:
+Pre - generate dynamic routes at build time:
 
 ```tsx
 // app/blog/[slug]/page.tsx
@@ -1255,7 +1379,7 @@ export default async function BlogPost({ params }) {
 
 ---
 
-## 9. Error Handling {#error-handling}
+## 9. Error Handling { #error - handling }
 
 ### error.tsx
 Catch errors in route segments:
@@ -1280,13 +1404,13 @@ export default function Error({
 }
 ```
 
-**How it works:**
-- Wraps route segment in React Error Boundary
-- Catches errors in Server Components, Client Components, and data fetching
-- `reset()` function re-renders the segment
+  ** How it works:**
+    - Wraps route segment in React Error Boundary
+      - Catches errors in Server Components, Client Components, and data fetching
+        - `reset()` function re-renders the segment
 
 ### Error Boundary Hierarchy
-```
+  ```
 app/
 ├── error.tsx              → Catches errors in root layout
 ├── blog/
@@ -1296,8 +1420,8 @@ app/
 │       └── page.tsx
 ```
 
-**Example: Blog Error Handler**
-```tsx
+  ** Example: Blog Error Handler **
+    ```tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -1324,7 +1448,7 @@ export default function BlogError({
 }
 ```
 
-### global-error.tsx
+### global - error.tsx
 Catch errors in root layout:
 
 ```tsx
@@ -1348,9 +1472,9 @@ export default function GlobalError({
 }
 ```
 
-**Note:** Must define `<html>` and `<body>` tags since it replaces root layout.
+  ** Note:** Must define `<html>` and `<body>` tags since it replaces root layout.
 
-### not-found.tsx
+### not - found.tsx
 Handle 404 errors:
 
 ```tsx
@@ -1368,8 +1492,8 @@ export default function NotFound() {
 }
 ```
 
-**Trigger manually:**
-```tsx
+  ** Trigger manually:**
+    ```tsx
 import { notFound } from 'next/navigation';
 
 async function getPost(slug: string) {
@@ -1388,8 +1512,8 @@ export default async function BlogPost({ params }) {
 }
 ```
 
-### Nested not-found.tsx
-```
+### Nested not - found.tsx
+  ```
 app/
 ├── not-found.tsx           → Root 404
 └── blog/
@@ -1399,7 +1523,7 @@ app/
 ```
 
 ### Error Handling in Server Actions
-```tsx
+  ```tsx
 'use server';
 
 export async function createPost(formData: FormData) {
@@ -1423,7 +1547,7 @@ export async function createPost(formData: FormData) {
 ```
 
 ### Error Handling in Route Handlers
-```tsx
+  ```tsx
 // app/api/posts/route.ts
 import { NextResponse } from 'next/server';
 
@@ -1441,7 +1565,7 @@ export async function GET() {
 ```
 
 ### Loading States with Suspense
-```tsx
+  ```tsx
 // app/blog/page.tsx
 import { Suspense } from 'react';
 
@@ -1483,8 +1607,8 @@ export default function Loading() {
 }
 ```
 
-**Wraps page in Suspense automatically:**
-```tsx
+  ** Wraps page in Suspense automatically:**
+    ```tsx
 <Suspense fallback={<Loading />}>
   <Page />
 </Suspense>
@@ -1528,7 +1652,7 @@ export default function Dashboard() {
 
 ---
 
-## 10. Styling (CSS) {#styling}
+## 10. Styling(CSS) { #styling }
 
 ### 1. CSS Modules
 Scoped CSS files:
@@ -1547,7 +1671,7 @@ Scoped CSS files:
 }
 ```
 
-```tsx
+  ```tsx
 // app/components/Button.tsx
 import styles from './Button.module.css';
 
@@ -1561,7 +1685,7 @@ export default function Button({ children }) {
 ```
 
 ### 2. Global CSS
-```css
+  ```css
 /* app/globals.css */
 * {
   margin: 0;
@@ -1575,7 +1699,7 @@ body {
 }
 ```
 
-```tsx
+  ```tsx
 // app/layout.tsx
 import './globals.css';
 
@@ -1596,7 +1720,7 @@ npm install -D tailwindcss postcss autoprefixer
 npx tailwindcss init -p
 ```
 
-```js
+  ```js
 // tailwind.config.js
 module.exports = {
   content: [
@@ -1614,14 +1738,14 @@ module.exports = {
 };
 ```
 
-```css
+  ```css
 /* app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 ```
 
-```tsx
+  ```tsx
 // Usage
 export default function Button() {
   return (
@@ -1632,10 +1756,10 @@ export default function Button() {
 }
 ```
 
-### 4. CSS-in-JS (styled-components, emotion)
+### 4. CSS -in-JS (styled-components, emotion)
 
-**styled-components:**
-```tsx
+  ** styled - components:**
+    ```tsx
 // app/registry.tsx
 'use client';
 
@@ -1666,7 +1790,7 @@ export default function StyledComponentsRegistry({
 }
 ```
 
-```tsx
+      ```tsx
 // app/layout.tsx
 import StyledComponentsRegistry from './registry';
 
@@ -1683,21 +1807,21 @@ export default function RootLayout({ children }) {
 }
 ```
 
-```tsx
+      ```tsx
 // app/components/Button.tsx
 'use client';
 
 import styled from 'styled-components';
 
 const StyledButton = styled.button`
-  background: blue;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 4px;
+background: blue;
+color: white;
+padding: 10px 20px;
+border - radius: 4px;
   
   &:hover {
-    background: darkblue;
-  }
+  background: darkblue;
+}
 `;
 
 export default function Button({ children }) {
@@ -1705,12 +1829,12 @@ export default function Button({ children }) {
 }
 ```
 
-### 5. Sass/SCSS
-```bash
+### 5. Sass / SCSS
+  ```bash
 npm install sass
 ```
 
-```scss
+  ```scss
 // app/styles/theme.scss
 $primary-color: #3b82f6;
 $secondary-color: #64748b;
@@ -1728,7 +1852,7 @@ $secondary-color: #64748b;
 }
 ```
 
-```tsx
+  ```tsx
 import './styles/theme.scss';
 
 export default function Button() {
@@ -1737,7 +1861,7 @@ export default function Button() {
 ```
 
 ### 6. CSS Variables
-```css
+  ```css
 /* app/globals.css */
 :root {
   --primary: #3b82f6;
@@ -1751,7 +1875,7 @@ export default function Button() {
 }
 ```
 
-```tsx
+  ```tsx
 export default function Button() {
   return (
     <button style={{ 
@@ -1766,9 +1890,9 @@ export default function Button() {
 
 ---
 
-## 11. Image Optimization {#images}
+## 11. Image Optimization { #images }
 
-### next/image Component
+### next / image Component
 Automatic image optimization:
 
 ```tsx
@@ -1799,7 +1923,7 @@ export default function ProfilePage() {
 
 ### Image Props
 
-```tsx
+  ```tsx
 <Image
   src="/hero.jpg"
   alt="Hero image"
@@ -1832,7 +1956,7 @@ export default function ProfilePage() {
 ```
 
 ### Fill Container Pattern
-```tsx
+  ```tsx
 <div style={{ position: 'relative', width: '100%', height: '400px' }}>
   <Image
     src="/hero.jpg"
@@ -1845,7 +1969,7 @@ export default function ProfilePage() {
 ```
 
 ### Responsive Images
-```tsx
+  ```tsx
 <Image
   src="/hero.jpg"
   alt="Hero"
@@ -1880,8 +2004,8 @@ module.exports = {
 };
 ```
 
-### Static Import (Automatic size detection)
-```tsx
+### Static Import(Automatic size detection)
+  ```tsx
 import profilePic from './profile.jpg';
 import Image from 'next/image';
 
@@ -1898,10 +2022,10 @@ export default function Profile() {
 ```
 
 ### Dynamic Images from API
-```tsx
+  ```tsx
 async function getPost(slug: string) {
   const res = await fetch(`https://api.example.com/posts/${slug}`);
-  return res.json();
+return res.json();
 }
 
 export default async function BlogPost({ params }) {
@@ -1945,7 +2069,7 @@ export default function cloudinaryLoader({ src, width, quality }) {
 
 ### Background Images
 ```tsx
-<div className="relative h-screen">
+  < div className = "relative h-screen" >
   <Image
     src="/background.jpg"
     alt="Background"
@@ -1956,8 +2080,8 @@ export default function cloudinaryLoader({ src, width, quality }) {
   <div className="relative z-10">
     <h1>Content on top</h1>
   </div>
-</div>
-```
+</div >
+  ```
 
 ---
 
@@ -1994,12 +2118,12 @@ export default function RootLayout({ children }) {
 ```tsx
 import { Inter, Playfair_Display } from 'next/font/google';
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
 });
 
-const playfair = Playfair_Display({ 
+const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair',
 });
@@ -2014,13 +2138,13 @@ export default function RootLayout({ children }) {
 ```
 
 ```css
-/* globals.css */
-.font-sans {
-  font-family: var(--font-inter);
+  /* globals.css */
+  .font - sans {
+  font - family: var(--font - inter);
 }
 
-.font-serif {
-  font-family: var(--font-playfair);
+.font - serif {
+  font - family: var(--font - playfair);
 }
 ```
 
@@ -2126,7 +2250,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  
+
   await db.posts.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }
@@ -2217,7 +2341,7 @@ return NextResponse.json({ data: 'value' });
 // With status and headers
 return NextResponse.json(
   { error: 'Not found' },
-  { 
+  {
     status: 404,
     headers: {
       'Content-Type': 'application/json',
@@ -2328,7 +2452,7 @@ export const GET = withAuth(handler);
 export const runtime = 'edge';
 
 export async function GET(request: Request) {
-  return NextResponse.json({ 
+  return NextResponse.json({
     message: 'Running on edge',
     region: process.env.VERCEL_REGION,
   });
@@ -2350,13 +2474,13 @@ module.exports = {
         source: '/blog/:slug',
         destination: '/news/:slug',
       },
-      
+
       // API proxy
       {
         source: '/api/:path*',
         destination: 'https://api.example.com/:path*',
       },
-      
+
       // Multiple rewrites
       {
         source: '/old-blog/:slug',
@@ -2379,21 +2503,21 @@ module.exports = {
         destination: '/new-page',
         permanent: true,
       },
-      
+
       // Temporary redirect (307)
       {
         source: '/temporary',
         destination: '/temp-destination',
         permanent: false,
       },
-      
+
       // Wildcard redirect
       {
         source: '/blog/:slug*',
         destination: '/news/:slug*',
         permanent: true,
       },
-      
+
       // Regex redirect
       {
         source: '/post/:slug(\\d{1,})',
@@ -2460,7 +2584,7 @@ export function middleware(request: NextRequest) {
   // Add custom headers
   const response = NextResponse.next();
   response.headers.set('X-Custom-Header', 'value');
-  
+
   return response;
 }
 
@@ -2476,24 +2600,24 @@ export const config = {
 ### Vercel (Recommended)
 ```bash
 # Install Vercel CLI
-npm i -g vercel
+npm i - g vercel
 
 # Deploy
 vercel
 
 # Production deployment
-vercel --prod
-```
+vercel--prod
+  ```
 
 **vercel.json:**
 ```json
 {
   "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": ["iad1"],
-  "env": {
+    "devCommand": "npm run dev",
+      "installCommand": "npm install",
+        "framework": "nextjs",
+          "regions": ["iad1"],
+            "env": {
     "DATABASE_URL": "@database-url"
   }
 }
@@ -2502,36 +2626,36 @@ vercel --prod
 ### Docker
 ```dockerfile
 # Dockerfile
-FROM node:18-alpine AS base
+FROM node: 18 - alpine AS base
 
 # Dependencies
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
+RUN apk add--no - cache libc6 - compat
+WORKDIR / app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json package - lock.json./
+  RUN npm ci
 
 # Builder
 FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+WORKDIR / app
+COPY--from = deps / app / node_modules./ node_modules
+COPY. .
 
 RUN npm run build
 
 # Runner
 FROM base AS runner
-WORKDIR /app
+WORKDIR / app
 
 ENV NODE_ENV production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup--system--gid 1001 nodejs
+RUN adduser--system--uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY--from = builder / app / public./ public
+COPY--from = builder--chown = nextjs: nodejs / app /.next / standalone./
+  COPY--from = builder--chown = nextjs: nodejs / app /.next / static./.next / static
 
 USER nextjs
 
@@ -2540,8 +2664,8 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
-```
+CMD["node", "server.js"]
+  ```
 
 ```js
 // next.config.js
@@ -2564,7 +2688,7 @@ module.exports = {
 ```bash
 npm run build
 # Output in /out directory
-```
+  ```
 
 **Limitations:**
 - No Server Components
@@ -2582,17 +2706,17 @@ npm run build
 npm start
 
 # Custom port
-PORT=8080 npm start
-```
+PORT = 8080 npm start
+  ```
 
 ### Environment Variables
 ```bash
-# .env.local (not committed)
-DATABASE_URL=postgresql://...
-API_KEY=secret123
+#.env.local(not committed)
+DATABASE_URL = postgresql://...
+API_KEY = secret123
 
-# .env.production
-NEXT_PUBLIC_API_URL=https://api.production.com
+#.env.production
+NEXT_PUBLIC_API_URL = https://api.production.com
 ```
 
 ```tsx
@@ -2609,13 +2733,13 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 module.exports = {
   // Compress responses
   compress: true,
-  
+
   // Generate ETags
   generateEtags: true,
-  
+
   // Power by header
   poweredByHeader: false,
-  
+
   // Experimental features
   experimental: {
     optimizeCss: true,
@@ -2631,17 +2755,17 @@ module.exports = {
 ### Check Current Version
 ```bash
 npm list next
-```
+  ```
 
 ### Upgrade to Latest
 ```bash
-npm install next@latest react@latest react-dom@latest
-```
+npm install next @latest react @latest react - dom@latest
+  ```
 
 ### Upgrade Specific Version
 ```bash
-npm install next@14.0.0
-```
+npm install next @14.0.0
+  ```
 
 ### Codemods (Automated Migration)
 ```bash
@@ -2656,21 +2780,21 @@ npx @next/codemod@latest new-link
 
 # Image imports
 npx @next/codemod@latest next-image-to-legacy-image
-```
+  ```
 
 ### Breaking Changes Checklist
 
 #### Next.js 13 → 14
 - Minimum Node.js version: 18.17
-- `ImageResponse` moved from `next/server` to `next/og`
+- `ImageResponse` moved from `next / server` to `next / og`
 - Turbopack improvements
 
 #### Next.js 12 → 13 (App Router)
-- New `app/` directory
+- New `app / ` directory
 - Server Components by default
 - New routing system
-- `next/link` no longer needs `<a>` tag
-- `next/image` uses native lazy loading
+- `next / link` no longer needs ` < a > ` tag
+- `next / image` uses native lazy loading
 
 ### Migration Example: Pages → App Router
 
@@ -2724,11 +2848,11 @@ export default function Article() {
         <h1>Article Title</h1>
         <time dateTime="2024-01-01">January 1, 2024</time>
       </header>
-      
+
       <main>
         <p>Article content...</p>
       </main>
-      
+
       <footer>
         <nav aria-label="Article navigation">
           <a href="/prev">Previous</a>
@@ -2759,7 +2883,7 @@ export default function Dropdown() {
       >
         Menu
       </button>
-      
+
       {isOpen && (
         <ul
           id="dropdown-menu"
@@ -2786,8 +2910,8 @@ export default function Dropdown() {
 import { useRef, useEffect } from 'react';
 
 export default function Modal({ isOpen, onClose, children }) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const modalRef = useRef < HTMLDivElement > (null);
+  const previousFocusRef = useRef < HTMLElement | null > (null);
 
   useEffect(() => {
     if (isOpen) {
@@ -2872,13 +2996,13 @@ export default function RootLayout({ children }) {
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        
+
         <header>Navigation</header>
-        
+
         <main id="main-content">
           {children}
         </main>
-        
+
         <footer>Footer</footer>
       </body>
     </html>
@@ -2887,17 +3011,17 @@ export default function RootLayout({ children }) {
 ```
 
 ```css
-.skip-link {
+  .skip - link {
   position: absolute;
   top: -40px;
   left: 0;
   background: #000;
   color: white;
   padding: 8px;
-  z-index: 100;
+  z - index: 100;
 }
 
-.skip-link:focus {
+.skip - link:focus {
   top: 0;
 }
 ```
@@ -2979,8 +3103,8 @@ export default function ContactForm() {
 
 ### Color Contrast
 ```css
-/* Ensure 4.5:1 contrast ratio for normal text */
-.text {
+  /* Ensure 4.5:1 contrast ratio for normal text */
+  .text {
   color: #333;
   background: #fff;
 }
@@ -2989,13 +3113,13 @@ export default function ContactForm() {
 .heading {
   color: #666;
   background: #fff;
-  font-size: 24px;
+  font - size: 24px;
 }
 
 /* Don't rely on color alone */
 .error {
   color: #d32f2f;
-  border-left: 4px solid #d32f2f; /* Visual indicator */
+  border - left: 4px solid #d32f2f; /* Visual indicator */
 }
 
 .error::before {
@@ -3069,9 +3193,9 @@ export default () => {
 // ✅ Good: Component-scoped helper
 function Counter() {
   const [count, setCount] = useState(0);
-  
+
   const formatCount = (n: number) => `Count: ${n}`;
-  
+
   return <div>{formatCount(count)}</div>;
 }
 
@@ -3091,7 +3215,7 @@ Fast Refresh automatically recovers from errors:
 export default function Component() {
   // ❌ This will show error overlay
   throw new Error('Oops!');
-  
+
   return <div>Hello</div>;
 }
 
@@ -3140,11 +3264,11 @@ function App() {
 
 **Next.js:**
 ```tsx
-// File-system routing - no configuration needed
-// app/page.tsx → /
-// app/about/page.tsx → /about
-// app/blog/[slug]/page.tsx → /blog/:slug
-```
+  // File-system routing - no configuration needed
+  // app/page.tsx → /
+  // app/about/page.tsx → /about
+  // app/blog/[slug]/page.tsx → /blog/:slug
+  ```
 
 #### 2. **Server-Side Rendering (SSR)**
 **React:**
@@ -3206,26 +3330,26 @@ const posts = await res.json();
 #### 4. **Image Optimization**
 **React:**
 ```tsx
-// Manual optimization
-<img src="/large-image.jpg" alt="Photo" />
-// Need to:
-// - Manually resize images
-// - Create multiple sizes
-// - Implement lazy loading
-// - Handle different formats
-```
+  // Manual optimization
+  < img src = "/large-image.jpg" alt = "Photo" />
+    // Need to:
+    // - Manually resize images
+    // - Create multiple sizes
+    // - Implement lazy loading
+    // - Handle different formats
+    ```
 
 **Next.js:**
 ```tsx
-// Automatic optimization
-<Image
-  src="/large-image.jpg"
-  alt="Photo"
-  width={800}
-  height={600}
+  // Automatic optimization
+  < Image
+src = "/large-image.jpg"
+alt = "Photo"
+width = { 800}
+height = { 600}
   // Auto: resizing, lazy loading, WebP/AVIF, responsive
-/>
-```
+  />
+  ```
 
 #### 5. **Code Splitting**
 **React:**
@@ -3244,26 +3368,26 @@ function App() {
 
 **Next.js:**
 ```tsx
-// Automatic code splitting per route
-// Each page automatically code-split
-// app/heavy/page.tsx is only loaded when visited
-```
+  // Automatic code splitting per route
+  // Each page automatically code-split
+  // app/heavy/page.tsx is only loaded when visited
+  ```
 
 #### 6. **SEO**
 **React (SPA):**
 ```html
-<!-- Crawlers see empty div -->
+  < !--Crawlers see empty div-- >
 <div id="root"></div>
 <script src="/bundle.js"></script>
 ```
 
 **Next.js:**
 ```html
-<!-- Crawlers see full HTML -->
-<div id="root">
-  <h1>My Page Title</h1>
-  <p>Actual content visible to crawlers</p>
-</div>
+  < !--Crawlers see full HTML-- >
+    <div id="root">
+      <h1>My Page Title</h1>
+      <p>Actual content visible to crawlers</p>
+    </div>
 ```
 
 #### 7. **Data Fetching**
@@ -3313,78 +3437,78 @@ async function Posts() {
 #### 9. **Developer Experience**
 **Next.js:**
 ```bash
-npx create-next-app@latest
+npx create - next - app@latest
 npm run dev
 # Everything works out of the box:
 # - Routing
 # - Fast Refresh
 # - TypeScript
-# - CSS/Sass
+# - CSS / Sass
 # - Environment variables
-```
+  ```
 
 **React:**
 ```bash
-npx create-react-app my-app
+npx create - react - app my - app
 # Then manually add:
-# - Routing (react-router-dom)
+# - Routing(react - router - dom)
 # - API layer
 # - SSR setup
 # - Image optimization
 # - SEO tools
-```
+  ```
 
 ### When React is Better Than Next.js
 
 #### 1. **Purely Client-Side Apps**
 If you need **only** client-side rendering:
 ```tsx
-// React is simpler for pure SPAs
-// No need for server concepts
-// Easier to deploy (static hosting)
-```
+  // React is simpler for pure SPAs
+  // No need for server concepts
+  // Easier to deploy (static hosting)
+  ```
 
 #### 2. **Mobile Apps (React Native)**
 ```tsx
-// React Native uses React
-// Next.js is web-only
-```
+  // React Native uses React
+  // Next.js is web-only
+  ```
 
 #### 3. **Embedding in Existing Sites**
 ```tsx
-// React can be embedded in any page
-<div id="react-widget"></div>
-<script>
-  ReactDOM.render(<Widget />, document.getElementById('react-widget'));
-</script>
+  // React can be embedded in any page
+  < div id = "react-widget" ></div >
+    <script>
+      ReactDOM.render(<Widget />, document.getElementById('react-widget'));
+    </script>
 
 // Next.js is full-page framework
 ```
 
 #### 4. **Maximum Flexibility**
 ```tsx
-// React gives you complete control
-// Next.js has conventions you must follow
-// (file-based routing, folder structure, etc.)
-```
+  // React gives you complete control
+  // Next.js has conventions you must follow
+  // (file-based routing, folder structure, etc.)
+  ```
 
 #### 5. **Learning Curve**
 ```tsx
-// React: Learn one thing (React)
-// Next.js: Learn React + Next.js concepts
-// (Server Components, App Router, etc.)
-```
+  // React: Learn one thing (React)
+  // Next.js: Learn React + Next.js concepts
+  // (Server Components, App Router, etc.)
+  ```
 
 #### 6. **Non-Web Targets**
 ```tsx
-// React can render to:
-// - Canvas (react-three-fiber)
-// - PDF (react-pdf)
-// - Native (React Native)
-// - VR (React 360)
+  // React can render to:
+  // - Canvas (react-three-fiber)
+  // - PDF (react-pdf)
+  // - Native (React Native)
+  // - VR (React 360)
 
-// Next.js is web-focused
-```
+  // Next.js is web-focused
+  ```
 
 ### Comparison Table
 
@@ -3417,7 +3541,7 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   // Authentication
   const token = request.cookies.get('token');
-  
+
   if (!token && request.nextUrl.pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
@@ -3462,7 +3586,7 @@ function getLocale(request: NextRequest): string {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   const pathnameHasLocale = locales.some(
     locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
@@ -3484,7 +3608,7 @@ const dictionaries = {
 
 export default async function Page({ params: { lang } }) {
   const dict = await dictionaries[lang]();
-  
+
   return (
     <div>
       <h1>{dict.welcome}</h1>
@@ -3520,7 +3644,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = {
   reactStrictMode: true,
-  
+
   // Production only
   ...(isProd && {
     compiler: {
@@ -3529,7 +3653,7 @@ module.exports = {
       },
     },
   }),
-  
+
   // Development only
   ...(!isProd && {
     logging: {
@@ -3555,7 +3679,7 @@ const handle = app.getRequestHandler();
 app.prepare().then(() => {
   createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
-    
+
     // Custom handling
     if (parsedUrl.pathname === '/custom') {
       res.end('Custom handler');
@@ -3572,14 +3696,44 @@ app.prepare().then(() => {
 
 **Note:** Custom servers disable many Next.js optimizations. Use sparingly.
 
+## 10. SWR (Stale-While-Revalidate)
+
+SWR is a React Hooks library for data fetching. The name "SWR" is derived from `stale -while-revalidate`, a HTTP cache invalidation strategy.
+
+### Basic Usage
+```tsx
+import useSWR from 'swr';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
+
+function Profile() {
+  const { data, error, isLoading } = useSWR('/api/user', fetcher);
+
+  if (error) return <div>failed to load</div>;
+  if (isLoading) return <div>loading...</div>;
+
+  return <div>hello {data.name}!</div>;
+}
+```
+
+### Key Features
+1. **Real-time Revalidation**: Re-fetches data when you refocus the tab.
+2. **Interval Fetching**: Polling data every X seconds.
+3. **Optimistic UI (Mutate)**: Update the local UI immediately while the server request is pending.
+
+### Hinglish (Hindi) Oral Explanation
+- **Concept**: SWR ka funda simple hai—pehle "stale" (purana) data dikhao cache se, fir piche background mein "revalidate" (naya fetch) karo, aur jaise hi naya data mile UI update kar do.
+- **Focus Revalidation**: Users jab doosre tab se wapas aate hain, SWR automatically API call maar deta hai taaki latest data dikhe.
+- **Mutate**: Agar tumne naya comment dala, toh SWR se bina server reply ke screen pe dikha sakte ho (`optimistic updates`). Agar server fail hua, toh SWR khud wapas purane state pe aa jayega.
+
 ---
 
 ## 21. Best Practices Summary
 
 ### Performance
 - ✅ Use Server Components by default
-- ✅ Use `next/image` for all images
-- ✅ Use `next/font` for fonts
+- ✅ Use `next / image` for all images
+- ✅ Use `next / font` for fonts
 - ✅ Implement proper caching strategies
 - ✅ Use streaming with Suspense
 - ✅ Minimize client-side JavaScript
@@ -3603,27 +3757,27 @@ app.prepare().then(() => {
 
 ### Code Organization
 ```
-app/
-├── (auth)/              # Route group
-│   ├── login/
-│   └── register/
-├── (marketing)/
-│   ├── about/
-│   └── pricing/
-├── dashboard/
+app /
+├── (auth) /              # Route group
+│   ├── login /
+│   └── register /
+├── (marketing) /
+│   ├── about /
+│   └── pricing /
+├── dashboard /
 │   ├── layout.tsx
 │   └── page.tsx
-├── api/
-│   └── posts/
+├── api /
+│   └── posts /
 │       └── route.ts
-└── components/          # Shared components
-    ├── ui/              # UI components
-    └── forms/           # Form components
-lib/                     # Utilities
+└── components /          # Shared components
+    ├── ui /              # UI components
+    └── forms /           # Form components
+lib /                     # Utilities
 ├── db.ts
 ├── auth.ts
 └── utils.ts
-```
+  ```
 
 ### Testing
 ```tsx

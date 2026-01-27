@@ -277,6 +277,8 @@ Pagination strategies in Express.js include: Offset-based (simple, but degrades)
 
 **Answer:**
 
+Choosing between offset and cursor pagination is a **trade-off between navigation flexibility and system scalability**. While offset-based pagination is easier to implement and allows users to jump to any page, cursor-based pagination is superior for massive datasets and infinite scroll interfaces where performance and consistency are paramount.
+
 **Offset-Based Pagination:**
 
 ```javascript
@@ -371,6 +373,10 @@ Cursor-Based:
 ### Q2: How would you implement pagination for a real-time feed that needs to handle new items being added?
 
 **Answer:**
+
+**Answer:**
+
+Implementing pagination for a real-time feed requires a **stable reference point that remains valid even as new data is inserted**. By using a cursor based on a high-precision timestamp and a unique ID for tie-breaking, you ensure that the user's view remains consistent, preventing the common "shifting items" problem that occurs with traditional offset-based methods.
 
 **Problem:** New items added while user is paginating can cause duplicates or skipped items.
 

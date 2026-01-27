@@ -2,11 +2,20 @@
 
 Streams enable efficient processing of large datasets by processing data in chunks. Understanding backpressure is crucial for production applications.
 
-## What are Streams?
+## What are Streams?   --- IMP
 
 **Streams** are objects that let you read/write data continuously in chunks rather than loading everything into memory.
 
 ### Stream Types
+
+Node.js provides four fundamental types of streams, each serving a different purpose in the data lifecycle:
+
+1.  **Readable**: Source streams that allow you to read data from a source (e.g., `fs.createReadStream`, `http.IncomingMessage`). Data flows **out** of a readable stream.
+2.  **Writable**: Destination streams that allow you to write data to a destination (e.g., `fs.createWriteStream`, `http.ServerResponse`). Data flows **into** a writable stream.
+3.  **Duplex**: Streams that are both Readable and Writable (e.g., `net.Socket`). The read and write channels are independent of each other.
+4.  **Transform**: A special type of Duplex stream where the output is computed based on the input. It "transforms" the data as it passes through (e.g., `zlib.createGzip`, `crypto.createCipher`).
+
+---
 
 ```javascript
 const { Readable, Writable, Transform, Duplex } = require('stream');

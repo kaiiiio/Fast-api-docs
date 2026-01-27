@@ -307,6 +307,8 @@ const results = await users.aggregate(pipeline).toArray();
 
 ### Pattern 1: Faceted Search
 
+**Faceted Search** (also known as "navigation categories") allows users to filter data through multiple independent dimensions (facets) simultaneously. In MongoDB, this is achieved using the **$facet** stage, which executes multiple aggregation pipelines in parallel within a single query, returning a document with fields for each facet's results (e.g., categories, price ranges, and total count).
+
 ```javascript
 // Faceted search with multiple aggregations
 const pipeline = [
@@ -399,6 +401,8 @@ MongoDB aggregation pipeline processes documents through multiple stages, enabli
 
 **Answer:**
 
+The primary difference lies in the **execution environment and native optimization**. The Aggregation Pipeline is the modern, highly optimized standard that runs entirely within the MongoDB engine using C++, whereas MapReduce is a legacy system that relies on a much slower JavaScript execution model.
+
 ```
 Aggregation Pipeline:
 ├─ Runs inside the MongoDB engine
@@ -424,6 +428,8 @@ MapReduce:              map() → shuffle → reduce() → finalize()
 ### Q2: How do you optimize aggregation pipelines for large datasets?
 
 **Answer:**
+
+Optimizing aggregations for large-scale production relies on the **"Filter Early, Project Often"** mantra. By reducing the number of documents and the size of each document as early as possible in the pipeline, you minimize RAM usage and CPU cycles consumed by later stages.
 
 1. **Filter Early:** Place `$match` as the first stage so fewer documents flow downstream.
 2. **Project Fields:** Use `$project` or `$unset` to remove unused fields and reduce document size.

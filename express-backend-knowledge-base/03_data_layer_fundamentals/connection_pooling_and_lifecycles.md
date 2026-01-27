@@ -459,7 +459,7 @@ app.get('/users/:id', async (req, res) => {
 // Time: 1000 * 100ms = 100 seconds
 ```
 
-**With Connection Pooling:**
+**With Connection Pooling:**  --- IMP
 
 ```javascript
 // ✅ Solution: Reuse connections
@@ -689,7 +689,7 @@ app.get('/users/:id', async (req, res) => {
 
 ---
 
-### Q3: Explain database connection lifecycle in Express.js. How do you manage connections from startup to shutdown?
+### Q3: Explain database connection lifecycle in Express.js. How do you manage connections from startup to shutdown?  --- VIMP
 
 **Answer:**
 

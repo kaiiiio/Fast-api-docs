@@ -39,7 +39,7 @@ const user = await User.findByPk(1, {
 console.log(user.Profile.bio);
 ```
 
-**Explanation:**
+**Explanation:**  --- IMP
 One-to-one relationships use a unique foreign key. Each user has exactly one profile, and each profile belongs to exactly one user.
 
 ### 2. One-to-Many

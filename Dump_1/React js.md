@@ -1,61 +1,61 @@
-// https://www.geeksforgeeks.org/interview-experiences/frontend-development-machine-coding-interview-questions/    ***
+https://www.geeksforgeeks.org/interview-experiences/frontend-development-machine-coding-interview-questions/    ***
 
 
 
-// Absolutely! Let's go **one by one** with clear **low-level design (LLD) answers** for each of your React.js interview questions. I'll provide implementation strategies, code snippets (where applicable), and edge-case handling.
+Absolutely! Let's go **one by one** with clear **low-level design (LLD) answers** for each of your React.js interview questions. I'll provide implementation strategies, code snippets (where applicable), and edge-case handling.
 
-// ---
+---
 
-// ### **1. Infinite Scrolling in React**
+## 1. Infinite Scrolling in React
 
-// **Implementation:**
+**Implementation:**
 
-// * Maintain state for `items`, `page`, `loading`, and `hasMore`.
-// * Fetch next page when user scrolls near the bottom.
-// * Strategies:
+* Maintain state for `items`, `page`, `loading`, and `hasMore`.
+* Fetch next page when user scrolls near the bottom.
+* Strategies:
 
-//   * **Scroll events**: attach a `window.onscroll` listener.
-//   * **Intersection Observer**: observe a sentinel element at the bottom.
+* **Scroll events**: attach a `window.onscroll` listener.
+* **Intersection Observer**: observe a sentinel element at the bottom.
 
-// **Example (Intersection Observer):**
+**Example (Intersection Observer):**
 
-// res.json() -> returns a Promise that resolves to the parsed JSON. On line 27, await waits for that. Why await is needed:
-// Without await, data would be a Promise object, not the actual data.
-// With await, data is the parsed JSON object.
-// res.json().then(data => {
-//   setItems(prev => [...prev, ...data.items]);
-//   setHasMore(data.hasMore);
-// });
+res.json() -> returns a Promise that resolves to the parsed JSON. On line 27, await waits for that. Why await is needed:
+Without await, data would be a Promise object, not the actual data.
+With await, data is the parsed JSON object.
+res.json().then(data => {
+setItems(prev => [...prev, ...data.items]);
+setHasMore(data.hasMore);
+});
 
-// threshold is the percent of the observed element that must be visible before the callback runs.
-// This means:
-// 1 = 100%
-// The callback fires only when 100% of the element is visible in the viewport
+threshold is the percent of the observed element that must be visible before the callback runs.
+This means:
+1 = 100%
+The callback fires only when 100% of the element is visible in the viewport
 
-// Viewport (what you see on screen)
-// ┌─────────────────────────┐
-// │                         │
-// │      Content            │
-// │                         │
-// │  ┌─────────┐            │ ← Loader element starts entering
-// │  │ Loader  │            │
-// │  └─────────┘            │
-// │                         │
-// └─────────────────────────┘
+Viewport (what you see on screen)
+┌─────────────────────────┐
+│                         │
+│      Content            │
+│                         │
+│  ┌─────────┐            │ ← Loader element starts entering
+│  │ Loader  │            │
+│  └─────────┘            │
+│                         │
+└─────────────────────────┘
 
-// With threshold: 1
-// Callback fires only when loader is 100% visible ↓
+With threshold: 1
+Callback fires only when loader is 100% visible ↓
 
-// ┌─────────────────────────┐
-// │      Content            │
-// │  ┌─────────────────┐    │ ← Loader is 100% visible
-// │  │     Loader      │    │    Callback fires NOW!
-// │  └─────────────────┘    │    (Loads more data)
-// │                         │
-// └─────────────────────────┘
+┌─────────────────────────┐
+│      Content            │
+│  ┌─────────────────┐    │ ← Loader is 100% visible
+│  │     Loader      │    │    Callback fires NOW!
+│  └─────────────────┘    │    (Loads more data)
+│                         │
+└─────────────────────────┘
 
 
-// `observer.observe(loader.current)` starts watching the loader element for visibility; when it becomes fully visible (`threshold: 1`), the callback runs and loads more data. The `return () => observer.disconnect()` cleanup stops watching when the component unmounts or dependencies change (`hasMore`), preventing leaks and unnecessary work. This is React's standard cleanup pattern in `useEffect`.
+`observer.observe(loader.current)` starts watching the loader element for visibility; when it becomes fully visible (`threshold: 1`), the callback runs and loads more data. The `return () => observer.disconnect()` cleanup stops watching when the component unmounts or dependencies change (`hasMore`), preventing leaks and unnecessary work. This is React's standard cleanup pattern in `useEffect`.
 
 
 
@@ -147,82 +147,81 @@ const InfiniteScroll = () => {
 };
 ```
 
-// **Edge Cases Handled:**
+**Edge Cases Handled:**
 
-// * ✅ Debounce scroll events to reduce rapid fire calls (100ms debounce)
-// * ✅ Prevent duplicate API calls using loading state
-// * ✅ Handle API errors (network errors, HTTP errors, JSON parsing errors)
-// * ✅ Show loading indicators to improve UX
-// * ✅ Cleanup debounce timer and observer on unmount to prevent memory leaks
-// * ✅ Only trigger fetch when not already loading, has more data, and element is visible
+* ✅ Debounce scroll events to reduce rapid fire calls (100ms debounce)
+* ✅ Prevent duplicate API calls using loading state
+* ✅ Handle API errors (network errors, HTTP errors, JSON parsing errors)
+* ✅ Show loading indicators to improve UX
+* ✅ Cleanup debounce timer and observer on unmount to prevent memory leaks
+* ✅ Only trigger fetch when not already loading, has more data, and element is visible
 
-// ---
+---
 
-// ### **2. Debounced Search Input**
+## 2. Debounced Search Input
 
-// **Implementation:**
+**Implementation:**
 
-// * Use `useEffect` or `useDebounce` hook to delay API call.
-// * Track request token to prevent **race conditions**.
-// * Optionally, cache previous search results.
-////////////////////
-// AbortController cancels ongoing fetch requests when they're no longer needed.
-// Why it's used here
-// In a search that updates as the user types:
-// A new query can start while a previous request is still pending.
-// Without cancellation, older results might overwrite newer ones (race condition).
-// Unnecessary network calls continue.
+* Use `useEffect` or `useDebounce` hook to delay API call.
+* Track request token to prevent **race conditions**.
+* Optionally, cache previous search results.
+AbortController cancels ongoing fetch requests when they're no longer needed.
+Why it's used here
+In a search that updates as the user types:
+A new query can start while a previous request is still pending.
+Without cancellation, older results might overwrite newer ones (race condition).
+Unnecessary network calls continue.
 
-// const controller = new AbortController();
-// Creates a new controller to manage request cancellation
+const controller = new AbortController();
+Creates a new controller to manage request cancellation
 
-// fetch(`/api/search?q=${debouncedQuery}`, { signal: controller.signal })
-// Passes the signal to fetch - this links the request to the controller
+fetch(`/api/search?q=${debouncedQuery}`, { signal: controller.signal })
+Passes the signal to fetch - this links the request to the controller
 
-// return () => controller.abort();
-// Cleanup function: cancels the request when component unmounts 
-// OR when debouncedQuery changes (before new request starts)
+return () => controller.abort();
+Cleanup function: cancels the request when component unmounts 
+OR when debouncedQuery changes (before new request starts)
 
-// User types "a" → Request 1 starts
-// User types "ab" → Request 1 is CANCELLED, Request 2 starts
-// User types "abc" → Request 2 is CANCELLED, Request 3 starts
-// User stops typing → Request 3 completes, shows results
+User types "a" → Request 1 starts
+User types "ab" → Request 1 is CANCELLED, Request 2 starts
+User types "abc" → Request 2 is CANCELLED, Request 3 starts
+User stops typing → Request 3 completes, shows results
 
 
-// Benefits
-// Prevents race conditions by canceling stale requests.
-// Reduces unnecessary network traffic.
-// Improves performance by stopping work that's no longer needed.
-// Avoids memory leaks via cleanup on unmount.
+Benefits
+Prevents race conditions by canceling stale requests.
+Reduces unnecessary network traffic.
+Improves performance by stopping work that's no longer needed.
+Avoids memory leaks via cleanup on unmount.
 
-// Without AbortController:
-// Request 1 (a) ──────────────────> [Results for "a"] ❌ Wrong!
-// Request 2 (ab) ─────────> [Results for "ab"] ✅
-// Request 3 (abc) ─> [Results for "abc"] ✅
+Without AbortController:
+Request 1 (a) ──────────────────> [Results for "a"] ❌ Wrong!
+Request 2 (ab) ─────────> [Results for "ab"] ✅
+Request 3 (abc) ─> [Results for "abc"] ✅
 
-// With AbortController:
-// Request 1 (a) ──X (cancelled)
-// Request 2 (ab) ──X (cancelled)
-// Request 3 (abc) ─────────> [Results for "abc"] ✅ Correct!
+With AbortController:
+Request 1 (a) ──X (cancelled)
+Request 2 (ab) ──X (cancelled)
+Request 3 (abc) ─────────> [Results for "abc"] ✅ Correct!
 
-// signal*** is the communication channel between AbortController and fetch. When you call controller.abort(), the signal notifies fetch to cancel the request.
+signal*** is the communication channel between AbortController and fetch. When you call controller.abort(), the signal notifies fetch to cancel the request.
 
-// AbortController = Remote Control
-// controller.signal = The signal/channel that TV (fetch) listens to
-// controller.abort() = Pressing OFF button on remote
+AbortController = Remote Control
+controller.signal = The signal/channel that TV (fetch) listens to
+controller.abort() = Pressing OFF button on remote
 
-// Remote Control (Controller)
-//     ↓ signal
-// TV (fetch) listens to signal
-//     ↓ abort() pressed
-// TV (fetch) turns OFF (request cancelled)
+Remote Control (Controller)
+↓ signal
+TV (fetch) listens to signal
+↓ abort() pressed
+TV (fetch) turns OFF (request cancelled)
 
-// In simple terms
-// signal is a way for fetch to know when to cancel
-// controller.abort() marks the signal as cancelled
-// fetch checks the signal and stops if it's cancelled
-// Without signal: fetch cannot be cancelled
-// With signal: fetch can be cancelled by calling controller.abort()
+In simple terms
+signal is a way for fetch to know when to cancel
+controller.abort() marks the signal as cancelled
+fetch checks the signal and stops if it's cancelled
+Without signal: fetch cannot be cancelled
+With signal: fetch can be cancelled by calling controller.abort()
 
 ```jsx
 const useDebounce = (value, delay) => {
@@ -262,32 +261,32 @@ const Search = () => {
 };
 ```
 
-// ---
+---
 
-// ### **3. Virtualized List Component**
+## 3. Virtualized List Component
 
-// **Implementation:**
-// * Render only visible items using **windowing** (like `react-window` or `react-virtualized`).
-// * Handle:
-//   * **Fixed height**: easy calculations.
-//   * **Dynamic height**: need `ResizeObserver` or caching height per item.
-// * Maintain scroll position using `scrollTop`.
+**Implementation:**
+* Render only visible items using **windowing** (like `react-window` or `react-virtualized`).
+* Handle:
+* **Fixed height**: easy calculations.
+* **Dynamic height**: need `ResizeObserver` or caching height per item.
+* Maintain scroll position using `scrollTop`.
 
-///////////////////////////////
+/
 
-// Problem it solves:
-// Without react-window: If you have 10,000 items, React renders all 10,000 DOM elements → slow and heavy.
-// With react-window: Renders only the visible items (e.g., 10–20) → fast and lightweight.
-// How it works:
-// // Instead of rendering ALL items:
-// {items.map(item => <div>{item.name}</div>)} // ❌ Slow for 10,000 items
+Problem it solves:
+Without react-window: If you have 10,000 items, React renders all 10,000 DOM elements → slow and heavy.
+With react-window: Renders only the visible items (e.g., 10–20) → fast and lightweight.
+How it works:
+Instead of rendering ALL items:
+{items.map(item => <div>{item.name}</div>)} // ❌ Slow for 10,000 items
 
-// // react-window renders only VISIBLE items:
-// <List itemCount={10000} itemSize={50}>      // ✅ Fast - only ~10-20 items rendered
-//   {({ index }) => <div>{items[index].name}</div>}
-// </List>
+react-window renders only VISIBLE items:
+<List itemCount={10000} itemSize={50}>      // ✅ Fast - only ~10-20 items rendered
+{({ index }) => <div>{items[index].name}</div>}
+</List>
 
-// Only renders what you see, not everything in the list. Improves performance and memory usage for large datasets.
+Only renders what you see, not everything in the list. Improves performance and memory usage for large datasets.
 
 ```jsx
 // pseudo code with react-window
@@ -302,23 +301,22 @@ import { FixedSizeList as List } from 'react-window';
 </List>
 ```
 
-// ---
+---
 
-// ### **4. Custom Data Fetch Hook with Caching**
+## 4. Custom Data Fetch Hook with Caching
 
-// **Features:**
+**Features:**
 
-// * Deduplicate requests by key.
-// * Cache responses.
-// * Background refetching & optimistic updates.
+* Deduplicate requests by key.
+* Cache responses.
+* Background refetching & optimistic updates.
 
-//////////////////////////////////
 
-// **How it works:**
-// * Cache stores responses by URL key to avoid duplicate API calls
-// * If data exists in cache, return cached data immediately (no fetch)
-// * If not cached, fetch data and store in cache for future use
-// * `ignore` flag prevents state updates if component unmounts during fetch (race condition prevention)
+**How it works:**
+* Cache stores responses by URL key to avoid duplicate API calls
+* If data exists in cache, return cached data immediately (no fetch)
+* If not cached, fetch data and store in cache for future use
+* `ignore` flag prevents state updates if component unmounts during fetch (race condition prevention)
 
 ```jsx
 const useFetch = (url, options) => {
@@ -349,25 +347,25 @@ const useFetch = (url, options) => {
 };
 ```
 
-// **Benefits:**
-// * Reduces API calls by caching responses
-// * Prevents memory leaks by ignoring stale updates
-// * Improves performance by returning cached data instantly
+**Benefits:**
+* Reduces API calls by caching responses
+* Prevents memory leaks by ignoring stale updates
+* Improves performance by returning cached data instantly
 
 ---
 
-### **5. Modal Component (Accessibility)**
+## 5. Modal Component (Accessibility)
 
-// **Features:**
-// * Handle **Escape key** to close modal (accessibility requirement)
-// * Handle backdrop clicks to close modal (UX pattern)
-// * Prevent body scroll using `overflow: hidden` (prevents background scrolling)
-// * Focus trap (keep focus within modal - can be added with additional logic)
+**Features:**
+* Handle **Escape key** to close modal (accessibility requirement)
+* Handle backdrop clicks to close modal (UX pattern)
+* Prevent body scroll using `overflow: hidden` (prevents background scrolling)
+* Focus trap (keep focus within modal - can be added with additional logic)
 
-// **How it works:**
-// * When modal opens, add Escape key listener and lock body scroll
-// * When modal closes, remove event listener and restore body scroll
-// * Backdrop click closes modal, but clicking inside modal content prevents closing (stopPropagation)
+**How it works:**
+* When modal opens, add Escape key listener and lock body scroll
+* When modal closes, remove event listener and restore body scroll
+* Backdrop click closes modal, but clicking inside modal content prevents closing (stopPropagation)
 
 ```jsx
 const Modal = ({ open, onClose, children }) => {
@@ -397,26 +395,26 @@ const Modal = ({ open, onClose, children }) => {
 };
 ```
 
-// **Benefits:**
-// * Improves accessibility with keyboard navigation
-// * Better UX by preventing background scroll
-// * Prevents accidental modal closes when clicking content
+**Benefits:**
+* Improves accessibility with keyboard navigation
+* Better UX by preventing background scroll
+* Prevents accidental modal closes when clicking content
 
-// ---
+---
 
-### **6. Global State Management (Context + useReducer)**
+## 6. Global State Management (Context + useReducer)
 
-// **How it works:**
-// * useReducer manages complex state logic with actions (like Redux pattern)
-// * Context provides global state access to all child components
-// * Provider wraps app to share state and dispatch function
-// * Components can access state via useContext hook
+**How it works:**
+* useReducer manages complex state logic with actions (like Redux pattern)
+* Context provides global state access to all child components
+* Provider wraps app to share state and dispatch function
+* Components can access state via useContext hook
 
-// **Benefits:**
-// * Centralized state management (single source of truth)
-// * Predictable state updates through actions
-// * Avoids prop drilling (passing props through multiple levels)
-// * Can add middleware (logging, persistence) by wrapping dispatch
+**Benefits:**
+* Centralized state management (single source of truth)
+* Predictable state updates through actions
+* Avoids prop drilling (passing props through multiple levels)
+* Can add middleware (logging, persistence) by wrapping dispatch
 
 **Generic Solution (No Library):**
 
@@ -529,29 +527,29 @@ const ThemeToggle = () => {
 };
 ```
 
-// **Edge Cases Handled:**
-// * Error handling if hook used outside Provider
-// * Memoized context value prevents unnecessary re-renders
-// * Multiple action types in reducer (LOGIN, LOGOUT, SET_THEME, etc.)
-// * Immutable state updates (spread operator, array methods)
-// * Middleware support (logging, persistence)
-// * Type-safe action structure (type + payload)
+**Edge Cases Handled:**
+* Error handling if hook used outside Provider
+* Memoized context value prevents unnecessary re-renders
+* Multiple action types in reducer (LOGIN, LOGOUT, SET_THEME, etc.)
+* Immutable state updates (spread operator, array methods)
+* Middleware support (logging, persistence)
+* Type-safe action structure (type + payload)
 
 ---
 
-### **7. Form Validation System**
+## 7. Form Validation System
 
-// **How it works:**
-// * Define validation rules as an object where each key is a field name
-// * Each rule is a function that returns null (valid) or error message (invalid)
-// * Validate function iterates through all rules and collects errors
-// * Conditional fields can be handled by checking visibility flags or schema conditions
+**How it works:**
+* Define validation rules as an object where each key is a field name
+* Each rule is a function that returns null (valid) or error message (invalid)
+* Validate function iterates through all rules and collects errors
+* Conditional fields can be handled by checking visibility flags or schema conditions
 
-// **Benefits:**
-// * Centralized validation logic (easy to maintain)
-// * Reusable validation functions
-// * Can validate multiple fields at once
-// * Returns object with field names as keys and error messages as values
+**Benefits:**
+* Centralized validation logic (easy to maintain)
+* Reusable validation functions
+* Can validate multiple fields at once
+* Returns object with field names as keys and error messages as values
 
 **Generic Solution (No Library):**
 
@@ -792,40 +790,40 @@ const RegistrationForm = ({ onSubmit }) => {
 <RegistrationForm onSubmit={(data) => console.log('Form submitted:', data)} />
 ```
 
-// **Edge Cases Handled:**
-// * Required field validation (shows error if empty)
-// * Real-time validation on change (only after field is touched)
-// * Validation on blur (when user leaves field)
-// * Dependent field validation (confirmPassword checks password field)
-// * Multiple validation rules per field (length, pattern, range)
-// * Type validation (number, email format)
-// * Form-level validation on submit
-// * Error messages displayed below each field
-// * Tracks touched fields (prevents showing errors before user interacts)
-// * Form reset functionality
+**Edge Cases Handled:**
+* Required field validation (shows error if empty)
+* Real-time validation on change (only after field is touched)
+* Validation on blur (when user leaves field)
+* Dependent field validation (confirmPassword checks password field)
+* Multiple validation rules per field (length, pattern, range)
+* Type validation (number, email format)
+* Form-level validation on submit
+* Error messages displayed below each field
+* Tracks touched fields (prevents showing errors before user interacts)
+* Form reset functionality
 
 ---
 
-### **8. Drag and Drop Interface**
+## 8. Drag and Drop Interface
 
-// **How it works:**
-// * Use libraries like `react-dnd` (React DnD) or `sortablejs` for drag and drop functionality
-// * Provide visual feedback using CSS classes (drag over, dragging states)
-// * Touch support via `react-dnd-touch-backend` for mobile devices
-// * Handle drag start, drag over, and drop events
+**How it works:**
+* Use libraries like `react-dnd` (React DnD) or `sortablejs` for drag and drop functionality
+* Provide visual feedback using CSS classes (drag over, dragging states)
+* Touch support via `react-dnd-touch-backend` for mobile devices
+* Handle drag start, drag over, and drop events
 
-// **Benefits:**
-// * Better UX with intuitive drag and drop interactions
-// * Reorderable lists and items
-// * Works on both desktop and mobile devices
-// * Can provide visual feedback during drag operations
+**Benefits:**
+* Better UX with intuitive drag and drop interactions
+* Reorderable lists and items
+* Works on both desktop and mobile devices
+* Can provide visual feedback during drag operations
 
-// **Edge Cases:**
-// * Use `react-dnd` or `sortablejs` for robust drag and drop
-// * Provide visual feedback using CSS classes (dragging, drag-over states)
-// * Touch support via `react-dnd-touch-backend` for mobile devices
-// * Handle drag start, drag over, drop, and drag end events
-// * Prevent default browser behavior during drag operations
+**Edge Cases:**
+* Use `react-dnd` or `sortablejs` for robust drag and drop
+* Provide visual feedback using CSS classes (dragging, drag-over states)
+* Touch support via `react-dnd-touch-backend` for mobile devices
+* Handle drag start, drag over, drop, and drag end events
+* Prevent default browser behavior during drag operations
 
 **Generic Solution (No Library):**
 
@@ -917,42 +915,42 @@ const items = [
 <DraggableList items={items} />
 ```
 
-// **Edge Cases Handled:**
-// * Handles variable height items (native API handles layout)
-// * Prevents default browser drag behavior (e.preventDefault)
-// * Provides visual feedback during drag (background color change)
-// * Cleans up refs on drag end to prevent memory leaks
-// * Works with any data structure (objects, strings, etc.)
-// * Preserves other item properties during reorder
+**Edge Cases Handled:**
+* Handles variable height items (native API handles layout)
+* Prevents default browser drag behavior (e.preventDefault)
+* Provides visual feedback during drag (background color change)
+* Cleans up refs on drag end to prevent memory leaks
+* Works with any data structure (objects, strings, etc.)
+* Preserves other item properties during reorder
 
-// **Touch Support (Mobile):**
-// * Native HTML5 drag and drop works on touch devices
-// * For better mobile UX, can add touch event handlers (touchstart, touchmove, touchend)
-// * Alternative: Use pointer events API for unified touch/mouse support
+**Touch Support (Mobile):**
+* Native HTML5 drag and drop works on touch devices
+* For better mobile UX, can add touch event handlers (touchstart, touchmove, touchend)
+* Alternative: Use pointer events API for unified touch/mouse support
 
 ---
 
-### **9. Notification/Toast System**
+## 9. Notification/Toast System
 
-// **How it works:**
-// * Maintain queue in state (array of notifications)
-// * Lifecycle management using `setTimeout` to auto-remove notifications
-// * Support priorities by sorting queue (high priority first)
-// * Display notifications with different types (success, error, warning, info)
+**How it works:**
+* Maintain queue in state (array of notifications)
+* Lifecycle management using `setTimeout` to auto-remove notifications
+* Support priorities by sorting queue (high priority first)
+* Display notifications with different types (success, error, warning, info)
 
-// **Benefits:**
-// * Non-intrusive user feedback
-// * Auto-dismiss after timeout
-// * Queue management prevents notification overload
-// * Priority system ensures important notifications are shown first
+**Benefits:**
+* Non-intrusive user feedback
+* Auto-dismiss after timeout
+* Queue management prevents notification overload
+* Priority system ensures important notifications are shown first
 
-// **Edge Cases:**
-// * Maintain queue in state (array of notification objects)
-// * Lifecycle management using `setTimeout` to auto-remove after duration
-// * Support priorities by sorting queue (high priority notifications first)
-// * Handle maximum number of visible notifications
-// * Remove notification on manual close click
-// * Prevent duplicate notifications (same message, same type)
+**Edge Cases:**
+* Maintain queue in state (array of notification objects)
+* Lifecycle management using `setTimeout` to auto-remove after duration
+* Support priorities by sorting queue (high priority notifications first)
+* Handle maximum number of visible notifications
+* Remove notification on manual close click
+* Prevent duplicate notifications (same message, same type)
 
 **Generic Solution (No Library):**
 
@@ -1080,39 +1078,39 @@ const NotificationContainer = () => {
 <NotificationContainer />
 ```
 
-// **Edge Cases Handled:**
-// * Auto-remove notifications after duration using setTimeout
-// * Manual close button removes notification immediately
-// * Priority-based sorting (high priority notifications first)
-// * Maximum visible notifications limit (prevents screen clutter)
-// * Unique IDs prevent duplicate notifications
-// * Cleanup timeouts on unmount (prevent memory leaks)
-// * Different styles for different notification types
+**Edge Cases Handled:**
+* Auto-remove notifications after duration using setTimeout
+* Manual close button removes notification immediately
+* Priority-based sorting (high priority notifications first)
+* Maximum visible notifications limit (prevents screen clutter)
+* Unique IDs prevent duplicate notifications
+* Cleanup timeouts on unmount (prevent memory leaks)
+* Different styles for different notification types
 
 ---
 
-### **10. Multi-Step Form Wizard**
+## 10. Multi-Step Form Wizard
 
-// **How it works:**
-// * Keep state for all steps in a single object (formData with all fields)
-// * Save progress in `localStorage` or backend (auto-save functionality)
-// * Navigation controlled via current step index (step counter)
-// * Validate current step before allowing navigation to next step
+**How it works:**
+* Keep state for all steps in a single object (formData with all fields)
+* Save progress in `localStorage` or backend (auto-save functionality)
+* Navigation controlled via current step index (step counter)
+* Validate current step before allowing navigation to next step
 
-// **Benefits:**
-// * Better UX for long forms (breaks into manageable steps)
-// * Progress saving prevents data loss
-// * Clear progress indication for users
-// * Can validate each step before proceeding
+**Benefits:**
+* Better UX for long forms (breaks into manageable steps)
+* Progress saving prevents data loss
+* Clear progress indication for users
+* Can validate each step before proceeding
 
-// **Edge Cases:**
-// * Keep state for all steps in a single object (formData)
-// * Save progress in `localStorage` or backend (persist form data)
-// * Navigation controlled via current step index (step state)
-// * Validate current step before allowing next step
-// * Handle step navigation (next, previous, jump to specific step)
-// * Show progress indicator (step 1 of 3)
-// * Handle form submission on final step
+**Edge Cases:**
+* Keep state for all steps in a single object (formData)
+* Save progress in `localStorage` or backend (persist form data)
+* Navigation controlled via current step index (step state)
+* Validate current step before allowing next step
+* Handle step navigation (next, previous, jump to specific step)
+* Show progress indicator (step 1 of 3)
+* Handle form submission on final step
 
 **Generic Solution (No Library):**
 
@@ -1325,39 +1323,39 @@ const steps = [
 <FormWizard steps={steps} onSubmit={(data) => console.log('Form submitted:', data)} />
 ```
 
-// **Edge Cases Handled:**
-// * Persists form data to localStorage (survives page refresh)
-// * Validates each step before allowing navigation
-// * Prevents skipping ahead if current step has errors
-// * Shows progress indicator (step X of Y)
-// * Handles step navigation (next, previous, jump to step)
-// * Supports custom validation functions per field
-// * Cleans up localStorage on form reset
-// * Shows field-level error messages
+**Edge Cases Handled:**
+* Persists form data to localStorage (survives page refresh)
+* Validates each step before allowing navigation
+* Prevents skipping ahead if current step has errors
+* Shows progress indicator (step X of Y)
+* Handles step navigation (next, previous, jump to step)
+* Supports custom validation functions per field
+* Cleans up localStorage on form reset
+* Shows field-level error messages
 
 ---
 
-### **11. Optimizing Component Rendering Thousands of Items**
+## 11. Optimizing Component Rendering Thousands of Items
 
-// **How it works:**
-// * Virtualization (react-window/react-virtualized) - render only visible items
-// * Code splitting: `React.lazy` + `Suspense` - load components on demand
-// * Use `useMemo`/`React.memo` for expensive components - prevent unnecessary re-renders
-// * Profile with React DevTools Profiler - identify performance bottlenecks
+**How it works:**
+* Virtualization (react-window/react-virtualized) - render only visible items
+* Code splitting: `React.lazy` + `Suspense` - load components on demand
+* Use `useMemo`/`React.memo` for expensive components - prevent unnecessary re-renders
+* Profile with React DevTools Profiler - identify performance bottlenecks
 
-// **Benefits:**
-// * Improved performance for large datasets
-// * Reduced memory usage
-// * Faster initial page load
-// * Better user experience
+**Benefits:**
+* Improved performance for large datasets
+* Reduced memory usage
+* Faster initial page load
+* Better user experience
 
-// **Edge Cases:**
-// * Virtualization (react-window/react-virtualized) - render only visible DOM elements
-// * Code splitting: `React.lazy` + `Suspense` - lazy load components
-// * Use `useMemo`/`React.memo` for expensive components - memoize expensive calculations
-// * Profile with React DevTools Profiler - identify slow components
-// * Use `useCallback` for event handlers to prevent re-renders
-// * Debounce/throttle expensive operations
+**Edge Cases:**
+* Virtualization (react-window/react-virtualized) - render only visible DOM elements
+* Code splitting: `React.lazy` + `Suspense` - lazy load components
+* Use `useMemo`/`React.memo` for expensive components - memoize expensive calculations
+* Profile with React DevTools Profiler - identify slow components
+* Use `useCallback` for event handlers to prevent re-renders
+* Debounce/throttle expensive operations
 
 **Generic Solution (No Library):**
 
@@ -1441,38 +1439,38 @@ const items = Array.from({ length: 10000 }, (_, i) => ({
 <VirtualizedList items={items} itemHeight={50} containerHeight={400} />
 ```
 
-// **Edge Cases Handled:**
-// * Renders only visible items (dramatically reduces DOM nodes)
-// * Calculates visible window based on scrollTop
-// * Maintains scrollbar height with spacer div
-// * Uses useMemo to prevent recalculating visible items on every render
-// * Handles variable item heights (can be extended)
-// * Debounces scroll handler for better performance
-// * Works with any data structure
+**Edge Cases Handled:**
+* Renders only visible items (dramatically reduces DOM nodes)
+* Calculates visible window based on scrollTop
+* Maintains scrollbar height with spacer div
+* Uses useMemo to prevent recalculating visible items on every render
+* Handles variable item heights (can be extended)
+* Debounces scroll handler for better performance
+* Works with any data structure
 
 ---
 
-### **12. Image Lazy Loading with Placeholder**
+## 12. Image Lazy Loading with Placeholder
 
-// **How it works:**
-// * Detect viewport via `IntersectionObserver` - check if image is visible
-// * Placeholders: skeleton, blur, or solid color - show while loading
-// * Retry failed loads using onError handler - fallback to error image
-// * Native `loading="lazy"` attribute for browser-level lazy loading
+**How it works:**
+* Detect viewport via `IntersectionObserver` - check if image is visible
+* Placeholders: skeleton, blur, or solid color - show while loading
+* Retry failed loads using onError handler - fallback to error image
+* Native `loading="lazy"` attribute for browser-level lazy loading
 
-// **Benefits:**
-// * Improved page load performance
-// * Reduced bandwidth usage (only load visible images)
-// * Better user experience with placeholders
-// * Handles image load failures gracefully
+**Benefits:**
+* Improved page load performance
+* Reduced bandwidth usage (only load visible images)
+* Better user experience with placeholders
+* Handles image load failures gracefully
 
-// **Edge Cases:**
-// * Detect viewport via `IntersectionObserver` - observe when image enters viewport
-// * Placeholders: skeleton, blur, or solid color - show loading state
-// * Retry failed loads using onError handler - fallback image on error
-// * Handle image load states (loading, loaded, error)
-// * Support responsive images (srcset, sizes)
-// * Handle image aspect ratio to prevent layout shift
+**Edge Cases:**
+* Detect viewport via `IntersectionObserver` - observe when image enters viewport
+* Placeholders: skeleton, blur, or solid color - show loading state
+* Retry failed loads using onError handler - fallback image on error
+* Handle image load states (loading, loaded, error)
+* Support responsive images (srcset, sizes)
+* Handle image aspect ratio to prevent layout shift
 
 ```jsx
 // Edge case: Native lazy loading with fallback on error
@@ -1578,41 +1576,41 @@ const SkeletonImage = ({ src, alt }) => (
 );
 ```
 
-// **Edge Cases Handled:**
-// * Uses IntersectionObserver to detect when image enters viewport
-// * Shows placeholder while image is loading
-// * Handles image load errors with fallback image
-// * Fades in image when loaded (smooth transition)
-// * Cleans up IntersectionObserver on unmount (prevents memory leaks)
-// * Works with native loading="lazy" as backup
-// * Supports custom placeholders and fallbacks
+**Edge Cases Handled:**
+* Uses IntersectionObserver to detect when image enters viewport
+* Shows placeholder while image is loading
+* Handles image load errors with fallback image
+* Fades in image when loaded (smooth transition)
+* Cleans up IntersectionObserver on unmount (prevents memory leaks)
+* Works with native loading="lazy" as backup
+* Supports custom placeholders and fallbacks
 
 ---
 
-### **13. Data Table with Sorting, Filtering, Pagination**
+## 13. Data Table with Sorting, Filtering, Pagination
 
-// **How it works:**
-// * Server-side for large datasets - fetch data from API with query params (page, sort, filter)
-// * Client-side for small datasets - sort/filter/paginate data in memory
-// * Optimize re-renders using memoization and `useCallback` - prevent unnecessary re-renders
-// * Dynamic columns via config object - flexible column configuration
+**How it works:**
+* Server-side for large datasets - fetch data from API with query params (page, sort, filter)
+* Client-side for small datasets - sort/filter/paginate data in memory
+* Optimize re-renders using memoization and `useCallback` - prevent unnecessary re-renders
+* Dynamic columns via config object - flexible column configuration
 
-// **Benefits:**
-// * Efficient handling of large datasets (server-side pagination)
-// * Fast operations for small datasets (client-side processing)
-// * Better performance with memoization
-// * Flexible table structure with dynamic columns
+**Benefits:**
+* Efficient handling of large datasets (server-side pagination)
+* Fast operations for small datasets (client-side processing)
+* Better performance with memoization
+* Flexible table structure with dynamic columns
 
-// **Edge Cases:**
-// * Server-side for large datasets - API calls with pagination, sorting, filtering params
-// * Client-side for small datasets - in-memory sorting, filtering, pagination
-// * Optimize re-renders using memoization and `useCallback` - memoize expensive operations
-// * Dynamic columns via config object - configure columns dynamically
-// * Handle sorting states (ascending, descending, none)
-// * Handle filter states (text search, dropdown filters, date range)
-// * Handle pagination (page number, page size, total pages)
-// * Show loading states during data fetching
-// * Handle empty states (no data, no results)
+**Edge Cases:**
+* Server-side for large datasets - API calls with pagination, sorting, filtering params
+* Client-side for small datasets - in-memory sorting, filtering, pagination
+* Optimize re-renders using memoization and `useCallback` - memoize expensive operations
+* Dynamic columns via config object - configure columns dynamically
+* Handle sorting states (ascending, descending, none)
+* Handle filter states (text search, dropdown filters, date range)
+* Handle pagination (page number, page size, total pages)
+* Show loading states during data fetching
+* Handle empty states (no data, no results)
 
 **Generic Solution (No Library):**
 
@@ -1801,16 +1799,16 @@ const columns = [
 <DataTable data={data} columns={columns} itemsPerPage={10} />
 ```
 
-// **Edge Cases Handled:**
-// * Client-side sorting (ascending/descending, click header to sort)
-// * Text filtering (case-insensitive search across columns)
-// * Pagination (page navigation, shows page X of Y)
-// * Memoized filtered/sorted data (prevents unnecessary recalculations)
-// * Handles empty states (no data, no results)
-// * Shows result count (X - Y of Z results)
-// * Disables pagination buttons at boundaries
-// * Resets to first page on sort/filter change
-// * Dynamic columns via config object
+**Edge Cases Handled:**
+* Client-side sorting (ascending/descending, click header to sort)
+* Text filtering (case-insensitive search across columns)
+* Pagination (page navigation, shows page X of Y)
+* Memoized filtered/sorted data (prevents unnecessary recalculations)
+* Handles empty states (no data, no results)
+* Shows result count (X - Y of Z results)
+* Disables pagination buttons at boundaries
+* Resets to first page on sort/filter change
+* Dynamic columns via config object
 
 ---
 
@@ -1826,19 +1824,19 @@ Absolutely! Let's tackle these **React.js low-level design tasks** one by one wi
 
 ## **1. Nested Comments**
 
-// **Goal:** Display deeply nested comment structures dynamically.
+**Goal:** Display deeply nested comment structures dynamically.
 
-// **How it works:**
-// * Recursive component renders itself for nested replies
-// * Level-based margin provides visual indentation (20px per level)
-// * Optional chaining (?.) safely handles missing replies
-// * Component calls itself recursively for each reply
+**How it works:**
+* Recursive component renders itself for nested replies
+* Level-based margin provides visual indentation (20px per level)
+* Optional chaining (?.) safely handles missing replies
+* Component calls itself recursively for each reply
 
-// **Benefits:**
-// * Handles arbitrary nesting depth (no limit)
-// * Clean, simple recursive structure
-// * Visual indentation shows comment hierarchy
-// * Works with any nested data structure
+**Benefits:**
+* Handles arbitrary nesting depth (no limit)
+* Clean, simple recursive structure
+* Visual indentation shows comment hierarchy
+* Works with any nested data structure
 
 ```jsx
 // CommentComponent.jsx
@@ -1868,30 +1866,30 @@ const comments = [
 <Comment comment={{ ...comments[0], level: 0 }} /> {/* Edge case: Start with level 0 for root comment */}
 ```
 
-// **Edge Cases:**
-// * Recursive rendering handles arbitrary depth (no depth limit)
-// * Level-based margin provides indentation (20px per level)
-// * Optional chaining (?.) safely handles missing replies property
-// * Handles empty replies array (no nested comments)
-// * Each comment must have unique key prop (reply.id)
+**Edge Cases:**
+* Recursive rendering handles arbitrary depth (no depth limit)
+* Level-based margin provides indentation (20px per level)
+* Optional chaining (?.) safely handles missing replies property
+* Handles empty replies array (no nested comments)
+* Each comment must have unique key prop (reply.id)
 
 ---
 
 ## **2. Pagination Component**
 
-// **Goal:** Reusable system for large datasets.
+**Goal:** Reusable system for large datasets.
 
-// **How it works:**
-// * Generate page numbers array from total pages
-// * Display page buttons with current page disabled
-// * Calculate current page items using slice (start index, end index)
-// * Update page state when page button is clicked
+**How it works:**
+* Generate page numbers array from total pages
+* Display page buttons with current page disabled
+* Calculate current page items using slice (start index, end index)
+* Update page state when page button is clicked
 
-// **Benefits:**
-// * Reusable pagination component
-// * Simple client-side pagination for small datasets
-// * Clear page navigation for users
-// * Can be extended for server-side pagination
+**Benefits:**
+* Reusable pagination component
+* Simple client-side pagination for small datasets
+* Clear page navigation for users
+* Can be extended for server-side pagination
 
 ```jsx
 const Pagination = ({ current, total, onPageChange }) => {
@@ -1929,32 +1927,32 @@ const PaginatedList = ({ itemsPerPage, data }) => {
 };
 ```
 
-// **Edge Cases:**
-// * Works for client-side pagination (small datasets in memory)
-// * For large datasets, implement server-side pagination (fetch data from API)
-// * Handle edge case when data.length is 0 (no pages)
-// * Handle edge case when page number exceeds total pages
-// * Can add "Previous" and "Next" buttons for better navigation
-// * Can add ellipsis (...) for large page counts
+**Edge Cases:**
+* Works for client-side pagination (small datasets in memory)
+* For large datasets, implement server-side pagination (fetch data from API)
+* Handle edge case when data.length is 0 (no pages)
+* Handle edge case when page number exceeds total pages
+* Can add "Previous" and "Next" buttons for better navigation
+* Can add ellipsis (...) for large page counts
 
 ---
 
 ## **3. OTP Input Component**
 
-// **Goal:** OTP verification with validation.
+**Goal:** OTP verification with validation.
 
-// **How it works:**
-// * Create array of empty input fields (default length 6)
-// * Each input accepts only single digit (maxLength={1})
-// * Auto-focus next input when digit is entered
-// * Trigger onComplete callback when all inputs are filled
-// * Filter out non-digit characters using regex (/\D/)
+**How it works:**
+* Create array of empty input fields (default length 6)
+* Each input accepts only single digit (maxLength={1})
+* Auto-focus next input when digit is entered
+* Trigger onComplete callback when all inputs are filled
+* Filter out non-digit characters using regex (/\D/)
 
-// **Benefits:**
-// * Better UX with auto-focus navigation
-// * Prevents invalid characters (only digits)
-// * Triggers callback when OTP is complete
-// * Clean, reusable component
+**Benefits:**
+* Better UX with auto-focus navigation
+* Prevents invalid characters (only digits)
+* Triggers callback when OTP is complete
+* Clean, reusable component
 
 ```jsx
 const OTPInput = ({ length = 6, onComplete }) => {
@@ -1997,32 +1995,32 @@ const OTPInput = ({ length = 6, onComplete }) => {
 };
 ```
 
-// **Edge Cases:**
-// * Handles single-digit inputs (maxLength={1})
-// * Auto-focuses next input when digit is entered (better UX)
-// * Triggers `onComplete` callback when all inputs are filled
-// * Filters out non-digit characters using regex (/\D/)
-// * Handles backspace/delete to clear input and focus previous
-// * Can add paste support to fill all inputs at once
+**Edge Cases:**
+* Handles single-digit inputs (maxLength={1})
+* Auto-focuses next input when digit is entered (better UX)
+* Triggers `onComplete` callback when all inputs are filled
+* Filters out non-digit characters using regex (/\D/)
+* Handles backspace/delete to clear input and focus previous
+* Can add paste support to fill all inputs at once
 
 ---
 
 ## **4. `useThrottle` and `useDebounce` Hooks**
 
-// **Debounce:** Delay execution until after inactivity (wait for user to stop typing)
-// **Throttle:** Limit execution frequency (execute at most once per time period)
+**Debounce:** Delay execution until after inactivity (wait for user to stop typing)
+**Throttle:** Limit execution frequency (execute at most once per time period)
 
-// **How it works:**
-// * useDebounce: Waits for user to stop typing before updating value (delays execution)
-// * useThrottle: Limits how often value updates (executes at most once per limit period)
-// * Both use setTimeout to control execution timing
-// * Cleanup functions clear timers to prevent memory leaks
+**How it works:**
+* useDebounce: Waits for user to stop typing before updating value (delays execution)
+* useThrottle: Limits how often value updates (executes at most once per limit period)
+* Both use setTimeout to control execution timing
+* Cleanup functions clear timers to prevent memory leaks
 
-// **Benefits:**
-// * Reduces API calls (debounce for search inputs)
-// * Improves performance (throttle for scroll/resize events)
-// * Better user experience (less flickering, smoother interactions)
-// * Reusable custom hooks
+**Benefits:**
+* Reduces API calls (debounce for search inputs)
+* Improves performance (throttle for scroll/resize events)
+* Better user experience (less flickering, smoother interactions)
+* Reusable custom hooks
 
 ```jsx
 import { useState, useEffect, useRef } from 'react';
@@ -2060,36 +2058,36 @@ export const useThrottle = (value, limit) => {
 };
 ```
 
-// **Use Cases:**
-// * API search (debounce) - wait for user to stop typing before searching
-// * Window resize (throttle) - limit resize handler execution frequency
-// * Scroll events (throttle) - limit scroll handler execution frequency
-// * Input validation (debounce) - validate after user stops typing
+**Use Cases:**
+* API search (debounce) - wait for user to stop typing before searching
+* Window resize (throttle) - limit resize handler execution frequency
+* Scroll events (throttle) - limit scroll handler execution frequency
+* Input validation (debounce) - validate after user stops typing
 
-// **Edge Cases:**
-// * Debounce: Cancels previous timer if value changes before delay completes
-// * Throttle: Only executes if enough time has passed since last execution
-// * Both: Cleanup timers on unmount to prevent memory leaks
-// * Both: Handle rapid value changes gracefully
+**Edge Cases:**
+* Debounce: Cancels previous timer if value changes before delay completes
+* Throttle: Only executes if enough time has passed since last execution
+* Both: Cleanup timers on unmount to prevent memory leaks
+* Both: Handle rapid value changes gracefully
 
 ---
 
 ## **5. Context API**
 
-// **Goal:** Global state management without external libraries (built-in React).
+**Goal:** Global state management without external libraries (built-in React).
 
-// **How it works:**
-// * createContext creates a context object for sharing state
-// * useReducer manages state with reducer function (predictable state updates)
-// * Provider wraps app to share state and dispatch function
-// * useContext hook accesses context value in child components
-// * Custom hook (useAppContext) provides cleaner API
+**How it works:**
+* createContext creates a context object for sharing state
+* useReducer manages state with reducer function (predictable state updates)
+* Provider wraps app to share state and dispatch function
+* useContext hook accesses context value in child components
+* Custom hook (useAppContext) provides cleaner API
 
-// **Benefits:**
-// * Built-in React solution (no external dependencies)
-// * Avoids prop drilling (passing props through multiple levels)
-// * Centralized state management (single source of truth)
-// * Predictable state updates through actions
+**Benefits:**
+* Built-in React solution (no external dependencies)
+* Avoids prop drilling (passing props through multiple levels)
+* Centralized state management (single source of truth)
+* Predictable state updates through actions
 
 ```jsx
 // AppContext.jsx
@@ -2118,7 +2116,7 @@ export const AppProvider = ({ children }) => {
 };
 ```
 
-// **Usage:**
+**Usage:**
 
 ```jsx
 const UserProfile = () => {
@@ -2129,29 +2127,29 @@ const UserProfile = () => {
 };
 ```
 
-// **Edge Cases:**
-// * Context value must be provided by Provider (components outside Provider will error)
-// * Multiple contexts can be nested for different state slices
-// * Context re-renders all consumers when value changes (can cause performance issues)
-// * Use useMemo/useCallback to optimize context value if needed
+**Edge Cases:**
+* Context value must be provided by Provider (components outside Provider will error)
+* Multiple contexts can be nested for different state slices
+* Context re-renders all consumers when value changes (can cause performance issues)
+* Use useMemo/useCallback to optimize context value if needed
 
 ---
 
 ## **6. Password Generator**
 
-// **Goal:** Secure, customizable passwords.
+**Goal:** Secure, customizable passwords.
 
-// **How it works:**
-// * Build character set string based on selected options (lowercase, uppercase, numbers, symbols)
-// * Use Array.from to generate array of desired length
-// * For each position, pick random character from character set
-// * Join characters into final password string
+**How it works:**
+* Build character set string based on selected options (lowercase, uppercase, numbers, symbols)
+* Use Array.from to generate array of desired length
+* For each position, pick random character from character set
+* Join characters into final password string
 
-// **Benefits:**
-// * Configurable length and character types
-// * Simple reusable helper function
-// * No external dependencies required
-// * Works for both UI and backend utilities
+**Benefits:**
+* Configurable length and character types
+* Simple reusable helper function
+* No external dependencies required
+* Works for both UI and backend utilities
 
 ```jsx
 const generatePassword = ({ length = 12, upper = true, numbers = true, symbols = true }) => {
@@ -2167,29 +2165,29 @@ const generatePassword = ({ length = 12, upper = true, numbers = true, symbols =
 generatePassword({ length: 16, symbols: false });
 ```
 
-// **Edge Cases:**
-// * Ensure at least one character type enabled (otherwise chars string empty)
-// * Math.random() not cryptographically secure (use crypto APIs for high security)
-// * Avoid predictable seeds to keep randomness strong
+**Edge Cases:**
+* Ensure at least one character type enabled (otherwise chars string empty)
+* Math.random() not cryptographically secure (use crypto APIs for high security)
+* Avoid predictable seeds to keep randomness strong
 
 ---
 
 ## **7. Tic-Tac-Toe Game**
 
-// **Goal:** Interactive two-player game with clean logic.
+**Goal:** Interactive two-player game with clean logic.
 
-// **How it works:**
-// * Maintain board state as array of 9 cells (null, 'X', 'O')
-// * Track current player's turn in state
-// * checkWinner loops through winning line combinations to find winner
-// * handleClick updates board and switches turn if move valid
-// * Render 3x3 grid of buttons with current cell value
+**How it works:**
+* Maintain board state as array of 9 cells (null, 'X', 'O')
+* Track current player's turn in state
+* checkWinner loops through winning line combinations to find winner
+* handleClick updates board and switches turn if move valid
+* Render 3x3 grid of buttons with current cell value
 
-// **Benefits:**
-// * Simple state management with useState
-// * Reusable winner-checking logic (separate function)
-// * Prevents overwriting moves or playing after win
-// * Easy to extend (reset, score tracking, AI)
+**Benefits:**
+* Simple state management with useState
+* Reusable winner-checking logic (separate function)
+* Prevents overwriting moves or playing after win
+* Easy to extend (reset, score tracking, AI)
 
 ```jsx
 const TicTacToe = () => {
@@ -2235,11 +2233,11 @@ const TicTacToe = () => {
 };
 ```
 
-// **Edge Cases:**
-// * Prevent moves on occupied squares or after winner determined
-// * Optionally handle draw (no winner and board filled)
-// * Add reset button to restart game
-// * Could highlight winning line for better UX
+**Edge Cases:**
+* Prevent moves on occupied squares or after winner determined
+* Optionally handle draw (no winner and board filled)
+* Add reset button to restart game
+* Could highlight winning line for better UX
 
 ---
 
@@ -2293,11 +2291,11 @@ const useInfiniteScroll = (initialData = [], fetchPage) => {
 };
 ```
 
-// **Features / Edge Cases:**
-// * SSR compatibility by passing initialData
-// * Cache prevents redundant API calls and network chatter
-// * Works with IntersectionObserver for automatic load triggers
-// * Can expose reset method to rehydrate when filters change
+**Features / Edge Cases:**
+* SSR compatibility by passing initialData
+* Cache prevents redundant API calls and network chatter
+* Works with IntersectionObserver for automatic load triggers
+* Can expose reset method to rehydrate when filters change
 
 ---
 
@@ -2331,11 +2329,11 @@ const useOptimisticUpdate = (initialItems) => {
 };
 ```
 
-// **Use Cases / Edge Cases:**
-// * Comments, likes, to-do apps where immediate feedback matters
-// * Rollback handles network errors or validation failures
-// * Consider showing toast/error when rollback happens
-// * Merge newData carefully to avoid mutating nested structures
+**Use Cases / Edge Cases:**
+* Comments, likes, to-do apps where immediate feedback matters
+* Rollback handles network errors or validation failures
+* Consider showing toast/error when rollback happens
+* Merge newData carefully to avoid mutating nested structures
 
 ---
 
@@ -2381,11 +2379,11 @@ const DraggableList = ({ items }) => {
 };
 ```
 
-// **Notes / Edge Cases:**
-// * Handles variable height items because layout handled by browser
-// * Add onDragOver handler (preventDefault) if needed to allow dropping
-// * Can be extended to support touch via pointer events
-// * Consider accessibility (keyboard controls, aria attributes)
+**Notes / Edge Cases:**
+* Handles variable height items because layout handled by browser
+* Add onDragOver handler (preventDefault) if needed to allow dropping
+* Can be extended to support touch via pointer events
+* Consider accessibility (keyboard controls, aria attributes)
 
 ---
 
@@ -2423,11 +2421,11 @@ const VirtualTable = ({ data }) => {
 };
 ```
 
-// **Edge Cases / Tips:**
-// * Debounce onScroll handler for heavy calculations
-// * For variable row heights, track cumulative heights or use libraries like react-virtualized
-// * Combine with server-side filtering/sorting when dataset huge
-// * Use placeholder rows/skeleton for loading additional data
+**Edge Cases / Tips:**
+* Debounce onScroll handler for heavy calculations
+* For variable row heights, track cumulative heights or use libraries like react-virtualized
+* Combine with server-side filtering/sorting when dataset huge
+* Use placeholder rows/skeleton for loading additional data
 
 ---
 
@@ -2455,12 +2453,12 @@ const useFormWizard = (steps) => {
 };
 ```
 
-// **Tips / Edge Cases:**
-// * Use `yup` or custom validators for schema-driven rules
-// * Handle conditional fields by checking step metadata before validating
-// * Include `prev` function to navigate backwards
-// * Persist progress in localStorage to recover from refresh
-// * Show inline errors for async validation (username/email uniqueness)
+**Tips / Edge Cases:**
+* Use `yup` or custom validators for schema-driven rules
+* Handle conditional fields by checking step metadata before validating
+* Include `prev` function to navigate backwards
+* Persist progress in localStorage to recover from refresh
+* Show inline errors for async validation (username/email uniqueness)
 
 ---
 
@@ -2490,11 +2488,11 @@ const useFetchOnce = (url) => {
 };
 ```
 
-// **Edge Cases:**
-// * Clear cache entries when data should be refetched (e.g., invalidation)
-// * Handle fetch errors (catch and reject promise to avoid hanging state)
-// * Support different request options by including options key in cache
-// * Consider using WeakMap or Map for complex cache keys
+**Edge Cases:**
+* Clear cache entries when data should be refetched (e.g., invalidation)
+* Handle fetch errors (catch and reject promise to avoid hanging state)
+* Support different request options by including options key in cache
+* Consider using WeakMap or Map for complex cache keys
 
 ---
 
@@ -2520,11 +2518,11 @@ const useCursors = (docId, userId) => {
 };
 ```
 
-// **Edge Cases / Tips:**
-// * Send heartbeat/presence updates so stale cursors get removed
-// * Include userId to avoid rendering own cursor twice
-// * Debounce cursor moves to reduce network chatter
-// * Secure WebSocket connection (auth token in headers/query)
+**Edge Cases / Tips:**
+* Send heartbeat/presence updates so stale cursors get removed
+* Include userId to avoid rendering own cursor twice
+* Debounce cursor moves to reduce network chatter
+* Secure WebSocket connection (auth token in headers/query)
 
 ---
 
@@ -2570,11 +2568,11 @@ const useUndo = (initial) => {
 };
 ```
 
-// **Edge Cases / Tips:**
-// * Consider bounding stack size to avoid memory growth
-// * Use immer or deep clones when state is nested
-// * Expose canUndo/canRedo booleans for disabling buttons
-// * Persist history if user should recover after refresh
+**Edge Cases / Tips:**
+* Consider bounding stack size to avoid memory growth
+* Use immer or deep clones when state is nested
+* Expose canUndo/canRedo booleans for disabling buttons
+* Persist history if user should recover after refresh
 
 ---
 
@@ -2748,7 +2746,8 @@ const Parent = () => {
 };
 ```
 
-**Edge Case:**
+> [!NOTE]
+> ****Edge Case:****
 
 * Functions change reference if dependencies change. Always include deps carefully.
 
@@ -3892,7 +3891,7 @@ Let's dive in.
 
 ---
 
-### **1. Implement `Promise.all()` from scratch**
+## 1. Implement `Promise.all()` from scratch
 
 **Question:**
 Implement a function `myPromiseAll(promises)` that takes an array of promises or values, waits for all to resolve, and returns a new Promise that resolves with an array of results. If any promise rejects, it should reject immediately.
@@ -3940,7 +3939,7 @@ myPromiseAll([p1, p2, p3]).then(console.log); // [1, 2, 3]
 
 ---
 
-### **2. Implement `Promise.race()` from scratch**
+## 2. Implement `Promise.race()` from scratch
 
 **Question:**
 Return a promise that resolves/rejects as soon as any of the input promises resolves/rejects.
@@ -3972,7 +3971,7 @@ myPromiseRace([a, b]).then(console.log); // "b"
 
 ---
 
-### **3. Implement `sleep(ms)`**
+## 3. Implement `sleep(ms)`
 
 ```javascript
 // **How it works:**
@@ -3999,7 +3998,7 @@ demo();
 
 ---
 
-### **4. Implement `Promise.finally()`**
+## 4. Implement `Promise.finally()`
 
 ```javascript
 // **How it works:**
@@ -4027,7 +4026,7 @@ Promise.resolve(42)
 
 ---
 
-### **5. Concurrency Limiter (Run N async at a time)**
+## 5. Concurrency Limiter (Run N async at a time)
 
 ```javascript
 // **How it works:**
@@ -4068,7 +4067,7 @@ limitConcurrency(tasks, 2).then(console.log); // [1,2,3]
 
 ---
 
-### **6. Retry function M times**
+## 6. Retry function M times
 
 ```javascript
 // **How it works:**
@@ -4100,7 +4099,7 @@ retry(() => Promise.reject("fail"), 3, 100).catch(console.log);
 
 ---
 
-### **7. AsyncMap Class**
+## 7. AsyncMap Class
 
 ```javascript
 // **How it works:**
@@ -4133,7 +4132,7 @@ amap.set("x", Promise.resolve(42)).then(() => console.log(amap.get("x"))); // 42
 
 ---
 
-### **8. Fetch wrapper with timeout**
+## 8. Fetch wrapper with timeout
 
 ```javascript
 // **How it works:**
@@ -4162,7 +4161,7 @@ async function fetchWithTimeout(url, options, timeout = 3000) {
 
 ---
 
-### **9. In-memory key-value cache with TTL**
+## 9. In-memory key-value cache with TTL
 
 ```javascript
 // **How it works:**
@@ -4204,7 +4203,7 @@ console.log(cache.get("a")); // 123
 
 ---
 
-### **10. Custom setTimeout with while loop (conceptual)**
+## 10. Custom setTimeout with while loop (conceptual)
 
 ```javascript
 // **How it works:**
@@ -4250,7 +4249,7 @@ Perfect! Let's continue with the **next 10 Pure JavaScript Machine Coding proble
 
 ---
 
-### **11. Implement `debounce` with leading/trailing edge**
+## 11. Implement `debounce` with leading/trailing edge
 
 **Question:**
 Create a function `debounce(func, wait, options)` that delays function execution until after `wait` ms have elapsed since the last call. Support **leading** (call at the start) and **trailing** (call at the end) edge execution.
@@ -4294,7 +4293,7 @@ log("World"); // ignored if within 500ms
 
 ---
 
-### **12. Implement `throttle` with leading/trailing**
+## 12. Implement `throttle` with leading/trailing
 
 **Question:**
 Ensure a function is called **at most once per interval**, optionally supporting **leading/trailing** execution.
@@ -4345,7 +4344,7 @@ window.addEventListener("scroll", throttle(() => console.log("scrolling"), 1000)
 
 ---
 
-### **13. Implement `Function.prototype.bind()`**
+## 13. Implement `Function.prototype.bind()`
 
 ```javascript
 // **How it works:**
@@ -4376,7 +4375,7 @@ bound("Nikita"); // "Hello, Nikita"
 
 ---
 
-### **14. Implement `Function.prototype.call()`**
+## 14. Implement `Function.prototype.call()`
 
 ```javascript
 // **How it works:**
@@ -4407,7 +4406,7 @@ console.log(greet.myCall(obj, "Hello")); // "Hello Nikita"
 
 ---
 
-### **15. Implement `deepClone` with circular references**
+## 15. Implement `deepClone` with circular references
 
 ```javascript
 // **How it works:**
@@ -4444,7 +4443,7 @@ console.log(cloned);
 
 ---
 
-### **16. Implement `partial` function**
+## 16. Implement `partial` function
 
 **Question:**
 Partial applies some arguments to a function upfront.
@@ -4468,7 +4467,7 @@ console.log(doubleAndTriple(4)); // 2*3*4 = 24
 
 ---
 
-### **17. Implement `curry` function**
+## 17. Implement `curry` function
 
 ```javascript
 function curry(fn) {
@@ -4492,7 +4491,7 @@ console.log(curriedSum(1,2)(3)); // 6
 
 ---
 
-### **18. Implement `Array.prototype.flat()`**
+## 18. Implement `Array.prototype.flat()`
 
 ```javascript
 function flatten(arr, depth = 1) {
@@ -4513,7 +4512,7 @@ console.log(flatten(arr, 2)); // [1, 2, 3, [4]]
 
 ---
 
-### **19. Deep Object Merge (`_.merge` style)**
+## 19. Deep Object Merge (`_.merge` style)
 
 ```javascript
 function deepMerge(target, ...sources) {
@@ -4545,7 +4544,7 @@ console.log(deepMerge({}, obj1, obj2)); // {a:1, b:{x:2,y:3}, c:4}
 
 ---
 
-### **20. Implement `pipe` or `compose`**
+## 20. Implement `pipe` or `compose`
 
 ```javascript
 // pipe: left-to-right
@@ -4607,7 +4606,7 @@ Perfect! Let's dive into the **final 10 Pure JavaScript Machine Coding problems 
 
 ---
 
-### **21. Implement `EventEmitter` class**
+## 21. Implement `EventEmitter` class
 
 **Question:**
 Create an `EventEmitter` supporting `on`, `emit`, and `off` methods.
@@ -4654,7 +4653,7 @@ emitter.off("sayHello", greet);
 
 ---
 
-### **22. Implement custom `Map`**
+## 22. Implement custom `Map`
 
 **Question:**
 Implement a simple `Map` using an object as storage.
@@ -4695,7 +4694,7 @@ console.log(map.get({x:1})); // "value"
 
 ---
 
-### **23. Implement Queue (FIFO)**
+## 23. Implement Queue (FIFO)
 
 ```javascript
 class Queue {
@@ -4734,7 +4733,7 @@ console.log(q.dequeue()); // 1
 
 ---
 
-### **24. Implement Stack (LIFO)**
+## 24. Implement Stack (LIFO)
 
 ```javascript
 class Stack {
@@ -4773,7 +4772,7 @@ console.log(s.pop()); // 20
 
 ---
 
-### **25. Simple Immutable State Manager**
+## 25. Simple Immutable State Manager
 
 ```javascript
 class StateManager {
@@ -4803,7 +4802,7 @@ console.log(state.getState()); // { count: 1 }
 
 ---
 
-### **26. Implement custom `new` operator**
+## 26. Implement custom `new` operator
 
 ```javascript
 function myNew(Constructor, ...args) {
@@ -4825,7 +4824,7 @@ console.log(p.name); // "Nikita"
 
 ---
 
-### **27. Priority Queue (Min-Heap)**
+## 27. Priority Queue (Min-Heap)
 
 ```javascript
 class PriorityQueue {
@@ -4885,7 +4884,7 @@ console.log(pq.extractMin()); // 1
 
 ---
 
-### **28. LRU Cache**
+## 28. LRU Cache
 
 ```javascript
 class LRUCache {
@@ -4928,7 +4927,7 @@ console.log(lru.get("b")); // -1
 
 ---
 
-### **29. Generator for N-ary Tree Pre-order Traversal**
+## 29. Generator for N-ary Tree Pre-order Traversal
 
 ```javascript
 function* preOrder(node) {
@@ -4951,7 +4950,7 @@ for (let val of preOrder(tree)) console.log(val); // 1 2 3
 
 ---
 
-### **30. Simple Validation Engine**
+## 30. Simple Validation Engine
 
 ```javascript
 function validate(schema, obj) {
@@ -5021,7 +5020,7 @@ We will cover them **in three sections**, just like your list:
 
 ---
 
-### **31. Accessible Modal/Dialog Component**
+## 31. Accessible Modal/Dialog Component
 
 ```jsx
 import { useEffect } from "react";
@@ -5068,7 +5067,7 @@ export default function Modal({ isOpen, onClose, children }) {
 
 ---
 
-### **32. Tabs Component**
+## 32. Tabs Component
 
 ```jsx
 import { useState } from "react";
@@ -5108,7 +5107,7 @@ export default function Tabs({ children }) {
 
 ---
 
-### **33. Accordion Component**
+## 33. Accordion Component
 
 ```jsx
 import { useState } from "react";
@@ -5146,7 +5145,7 @@ export default function Accordion({ items, multi = false }) {
 
 ---
 
-### **34. Multi-Select Dropdown**
+## 34. Multi-Select Dropdown
 
 ```jsx
 import { useState } from "react";
@@ -5200,7 +5199,7 @@ export default function MultiSelect({ options }) {
 
 ---
 
-### **35. Toggle/Switch Component**
+## 35. Toggle/Switch Component
 
 ```jsx
 import { useState } from "react";
@@ -5232,7 +5231,7 @@ export default function Toggle({ initial = false, onChange }) {
 
 ---
 
-### **36. Tooltip/Popover Component**
+## 36. Tooltip/Popover Component
 
 ```jsx
 import { useState } from "react";
@@ -5262,7 +5261,7 @@ export default function Tooltip({ content, children }) {
 
 ---
 
-### **37. Dynamic Form Generator**
+## 37. Dynamic Form Generator
 
 ```jsx
 export default function DynamicForm({ schema, onSubmit }) {
@@ -5311,7 +5310,7 @@ const schema = [
 
 ---
 
-### **38. Star Rating Component**
+## 38. Star Rating Component
 
 ```jsx
 import { useState } from "react";
@@ -5345,7 +5344,7 @@ export default function StarRating({ max = 5, onChange }) {
 
 ---
 
-### **39. Pagination Component**
+## 39. Pagination Component
 
 ```jsx
 export default function Pagination({ total, page, setPage, pageSize = 5 }) {
@@ -5375,7 +5374,7 @@ export default function Pagination({ total, page, setPage, pageSize = 5 }) {
 
 ---
 
-### **40. Controlled Carousel/Slider**
+## 40. Controlled Carousel/Slider
 
 ```jsx
 import { useState, useEffect } from "react";
@@ -5422,7 +5421,7 @@ Perfect! Let's continue with **Section II: Hooks, State & Performance (41–50)*
 
 ---
 
-### **41. Custom `useFetch` Hook**
+## 41. Custom `useFetch` Hook
 
 ```jsx
 import { useState, useEffect } from "react";
@@ -5461,7 +5460,7 @@ const { data, loading, error } = useFetch("https://jsonplaceholder.typicode.com/
 
 ---
 
-### **42. `useLocalStorage` Hook**
+## 42. `useLocalStorage` Hook
 
 ```jsx
 import { useState, useEffect } from "react";
@@ -5497,7 +5496,7 @@ const [name, setName] = useLocalStorage("name", "");
 
 ---
 
-### **43. `useWhyDidYouUpdate` Hook**
+## 43. `useWhyDidYouUpdate` Hook
 
 ```jsx
 import { useEffect, useRef } from "react";
@@ -5528,7 +5527,7 @@ export function useWhyDidYouUpdate(name, props) {
 
 ---
 
-### **44. `useInterval` Hook**
+## 44. `useInterval` Hook
 
 ```jsx
 import { useRef, useEffect } from "react";
@@ -5560,7 +5559,7 @@ useInterval(() => console.log("tick"), 1000);
 
 ---
 
-### **45. Debounced Input with `useDebounce` Hook**
+## 45. Debounced Input with `useDebounce` Hook
 
 ```jsx
 import { useState, useEffect } from "react";
@@ -5592,7 +5591,7 @@ useEffect(() => { if(debouncedQuery) fetchData(debouncedQuery); }, [debouncedQue
 
 ---
 
-### **46. Virtualized List Component**
+## 46. Virtualized List Component
 
 ```jsx
 import { useState, useRef, useEffect } from "react";
@@ -5634,7 +5633,7 @@ export default function VirtualizedList({ items, itemHeight = 30, height = 300 }
 
 ---
 
-### **47. `memo` + `useCallback` Example**
+## 47. `memo` + `useCallback` Example
 
 ```jsx
 import { useState, memo, useCallback } from "react";
@@ -5659,7 +5658,7 @@ export default function Parent() {
 
 ---
 
-### **48. `useUndoRedo` Hook**
+## 48. `useUndoRedo` Hook
 
 ```jsx
 import { useState } from "react";
@@ -5693,7 +5692,7 @@ const [val, setVal, {undo, redo}] = useUndoRedo(0);
 
 ---
 
-### **49. `useOnlineStatus` Hook**
+## 49. `useOnlineStatus` Hook
 
 ```jsx
 import { useState, useEffect } from "react";
@@ -5728,7 +5727,7 @@ const online = useOnlineStatus();
 
 ---
 
-### **50. Shopping Cart with `useReducer`**
+## 50. Shopping Cart with `useReducer`
 
 ```jsx
 import { useReducer } from "react";
@@ -5794,7 +5793,7 @@ Perfect! Let's finish with **Section III: Browser APIs & Advanced Integration (5
 
 ---
 
-### **51. Infinite Scroll with Intersection Observer**
+## 51. Infinite Scroll with Intersection Observer
 
 ```jsx
 import { useState, useRef, useEffect } from "react";
@@ -5837,7 +5836,7 @@ export default function InfiniteScroll({ fetchMore, items }) {
 
 ---
 
-### **52. Draggable/Sortable List**
+## 52. Draggable/Sortable List
 
 ```jsx
 import { useState } from "react";
@@ -5882,7 +5881,7 @@ export default function DraggableList({ initialItems }) {
 
 ---
 
-### **53. Text-to-Speech (Web Speech API)**
+## 53. Text-to-Speech (Web Speech API)
 
 ```jsx
 import { useState } from "react";
@@ -5911,7 +5910,7 @@ export default function TextToSpeech() {
 
 ---
 
-### **54. Resizable Panel Component**
+## 54. Resizable Panel Component
 
 ```jsx
 import { useState } from "react";
@@ -5950,7 +5949,7 @@ export default function ResizablePanel() {
 
 ---
 
-### **55. Recursive Tree Component (File Explorer)**
+## 55. Recursive Tree Component (File Explorer)
 
 ```jsx
 import { useState } from "react";
@@ -5987,7 +5986,7 @@ function Node({ node }) {
 
 ---
 
-### **56. Track Mouse Coordinates**
+## 56. Track Mouse Coordinates
 
 ```jsx
 import { useState, useEffect } from "react";
@@ -6012,7 +6011,7 @@ export default function MouseTracker() {
 
 ---
 
-### **57. File Upload with Progress Bar**
+## 57. File Upload with Progress Bar
 
 ```jsx
 import { useState } from "react";
@@ -6047,7 +6046,7 @@ export default function FileUpload() {
 
 ---
 
-### **58. Global State with Context API**
+## 58. Global State with Context API
 
 ```jsx
 import { createContext, useContext, useState } from "react";
@@ -6075,7 +6074,7 @@ const { theme, setTheme } = useTheme();
 
 ---
 
-### **59. Track Component Performance with Profiler Hook**
+## 59. Track Component Performance with Profiler Hook
 
 ```jsx
 import { Profiler } from "react";
@@ -6104,7 +6103,7 @@ function HeavyComponent() {
 
 ---
 
-### **60. Canvas Drawing Component**
+## 60. Canvas Drawing Component
 
 ```jsx
 import { useRef, useEffect, useState } from "react";
@@ -6236,8 +6235,8 @@ Do you want me to do that?
       <div id="liveSearch_list"></div>
     </div>
     <pre>// Implementation (below in script)
-// generate items, attach single input listener on parent container,
-// use data attributes and event delegation to identify clicks if needed.</pre>
+generate items, attach single input listener on parent container,
+use data attributes and event delegation to identify clicks if needed.</pre>
   </section>
 
   <!-- 2 -->
@@ -6637,14 +6636,14 @@ Do you want me to do that?
   (function liveSearch(){
     const input = document.getElementById('liveSearch_input');
     const list = document.getElementById('liveSearch_list');
-    // build dynamic list of 100 items
+build dynamic list of 100 items
     const items = Array.from({length:100}).map((_,i)=>({id:i, label:`Item ${i+1}`}));
     const ul = document.createElement('ul');
     ul.style.padding = '6px';
     ul.style.maxHeight = '160px';
     ul.style.overflow = 'auto';
     list.appendChild(ul);
-    // render
+render
     function render(filter='') {
       ul.innerHTML = '';
       const frag = document.createDocumentFragment();
@@ -6656,9 +6655,9 @@ Do you want me to do that?
       });
       ul.appendChild(frag);
     }
-    // Single listener approach on the parent container: keyup on input (could be delegated)
+Single listener approach on the parent container: keyup on input (could be delegated)
     input.addEventListener('input', e => render(e.target.value));
-    // event delegation: handle clicks on <ul> children with one listener
+event delegation: handle clicks on <ul> children with one listener
     ul.addEventListener('click', e => {
       const li = e.target.closest('li');
       if (!li) return;
@@ -6674,7 +6673,7 @@ Do you want me to do that?
     const src = document.getElementById('batch_src');
     const dst = document.getElementById('batch_dst');
     const btn = document.getElementById('btn_move_1000');
-    // populate source with 1000 items
+populate source with 1000 items
     (function populate(){
       const frag = document.createDocumentFragment();
       for(let i=1;i<=1000;i++){
@@ -6685,11 +6684,11 @@ Do you want me to do that?
       src.appendChild(frag);
     })();
     btn.addEventListener('click', ()=>{
-      // Move all children from src to dst using DocumentFragment to avoid repeated reflow
+Move all children from src to dst using DocumentFragment to avoid repeated reflow
       const frag = document.createDocumentFragment();
-      // append all nodes into fragment (this will remove them from src)
+append all nodes into fragment (this will remove them from src)
       while(src.firstChild) frag.appendChild(src.firstChild);
-      // single append => single reflow/repaint
+single append => single reflow/repaint
       dst.appendChild(frag);
       btn.disabled = true;
       btn.textContent = 'Moved';
@@ -6704,13 +6703,13 @@ Do you want me to do that?
     const out = document.getElementById('tmpl_out');
     document.getElementById('tmpl_render').addEventListener('click', ()=>{
       const tpl = tplInput.value.trim();
-      // sample data array
+sample data array
       const data = [
         {name:'Nikita', age:24},
         {name:'Rohit', age:31},
         {name:'Asha', age:29}
       ];
-      // compile simple template: replace {{key}} with prop
+compile simple template: replace {{key}} with prop
       function renderTemplate(str, obj) {
         return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, key) => {
           return (key.split('.').reduce((acc, k) => acc && acc[k], obj)) ?? '';
@@ -6732,7 +6731,7 @@ Do you want me to do that?
    ******************************/
   (function lazyImages(){
     const container = document.getElementById('lazy_container');
-    // create several low-res placeholders with data-src for hi-res
+create several low-res placeholders with data-src for hi-res
     const imgs = [];
     for(let i=1;i<=6;i++){
       const wrapper = document.createElement('div');
@@ -6741,15 +6740,15 @@ Do you want me to do that?
       img.style.width = '100%';
       img.style.maxWidth = '480px';
       img.style.opacity = '0.6';
-      // low-res placeholder
+low-res placeholder
       img.src = 'https://picsum.photos/seed/lo'+i+'/300/180';
-      // hi-res in data attribute
+hi-res in data attribute
       img.dataset.src = 'https://picsum.photos/seed/hi'+i+'/900/540';
       wrapper.appendChild(img);
       container.appendChild(wrapper);
       imgs.push(img);
     }
-    // IntersectionObserver setup
+IntersectionObserver setup
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver((entries, obs) => {
         entries.forEach(ent=>{
@@ -6767,7 +6766,7 @@ Do you want me to do that?
       }, { root: container, rootMargin: '100px' });
       imgs.forEach(i => io.observe(i));
     } else {
-      // fallback: load immediately
+fallback: load immediately
       imgs.forEach(i => { i.src = i.dataset.src; delete i.dataset.src; i.style.opacity='1'; });
     }
   })();
@@ -6787,9 +6786,9 @@ Do you want me to do that?
         btn.style.border = 'none';
         btn.style.background = 'var(--cb-bg,#2b8aef)';
         btn.style.color = 'white';
-        // slot support
+slot support
         const slot = document.createElement('slot');
-        // small style in shadow
+small style in shadow
         const style = document.createElement('style');
         style.textContent = `
           :host { display:inline-block; font-family:inherit; }
@@ -6798,7 +6797,7 @@ Do you want me to do that?
         `;
         shadow.appendChild(style);
         shadow.appendChild(btn);
-        // keep internal label updated when slotted content changes
+keep internal label updated when slotted content changes
         const observer = new MutationObserver(()=> btn.textContent = this.textContent || 'Custom');
         observer.observe(this, {childList:true});
       }
@@ -6812,7 +6811,7 @@ Do you want me to do that?
   (function closestPolyfill(){
     function getParent(el, selector){
       if (!el) return null;
-      // if native closest available use it
+if native closest available use it
       if (el.closest) return el.closest(selector);
       let node = el;
       while(node){
@@ -6836,7 +6835,7 @@ Do you want me to do that?
     const todo = document.getElementById('kanban_todo');
     const doing = document.getElementById('kanban_doing');
     const done = document.getElementById('kanban_done');
-    // helper to create card
+helper to create card
     function createCard(text) {
       const c = document.createElement('div');
       c.textContent = text;
@@ -6854,12 +6853,12 @@ Do you want me to do that?
       c.addEventListener('dragend', e => c.classList.remove('dragging'));
       return c;
     }
-    // init cards
+init cards
     todo.appendChild(createCard('Task A'));
     todo.appendChild(createCard('Task B'));
     doing.appendChild(createCard('Task C'));
     done.appendChild(createCard('Task D'));
-    // allow drop on columns
+allow drop on columns
     [todo, doing, done].forEach(col=>{
       col.addEventListener('dragover', e => {
         e.preventDefault();
@@ -6868,12 +6867,12 @@ Do you want me to do that?
       col.addEventListener('drop', e => {
         e.preventDefault();
         const text = e.dataTransfer.getData('text/plain');
-        // try to move the dragging element if present
+try to move the dragging element if present
         const dragging = document.querySelector('.dragging');
         if (dragging) {
           col.appendChild(dragging);
         } else {
-          // fallback: create new card
+fallback: create new card
           col.appendChild(createCard(text));
         }
       });
@@ -6938,12 +6937,12 @@ Do you want me to do that?
     const log = document.getElementById('pub_log');
     const send = document.getElementById('pub_send');
     const reg = document.getElementById('sub_register');
-    // publish function
+publish function
     function publish(topic, detail) {
       const ev = new CustomEvent(topic, { detail, bubbles: false, cancelable: false });
       window.dispatchEvent(ev);
     }
-    // subscribe wrapper
+subscribe wrapper
     function subscribe(topic, handler) {
       const h = (e)=> handler(e.detail);
       window.addEventListener(topic, h);
@@ -6958,7 +6957,7 @@ Do you want me to do that?
         log.textContent += 'Subscriber received ping at ' + new Date(payload.time).toLocaleTimeString() + '\n';
       });
       log.textContent += 'Subscriber registered\n';
-      // auto-unsubscribe after 30s for demo
+auto-unsubscribe after 30s for demo
       setTimeout(()=>{unsub(); log.textContent += 'Subscriber auto-unsubscribed\n';},30000);
     });
   })();
@@ -6968,7 +6967,7 @@ Do you want me to do that?
    ******************************/
   (function colorPicker(){
     const picker = document.getElementById('color_picker');
-    // set initial CSS variable
+set initial CSS variable
     document.documentElement.style.setProperty('--primary-color', picker.value);
     picker.addEventListener('input', (e)=> {
       document.documentElement.style.setProperty('--primary-color', e.target.value);
@@ -7017,7 +7016,7 @@ Do you want me to do that?
         ticking = true;
       }
     }, { passive: true });
-    // initial
+initial
     update();
   })();
 
@@ -7073,7 +7072,7 @@ Do you want me to do that?
       return function(...args){ clearTimeout(t); t = setTimeout(()=> fn.apply(this,args), wait); };
     }
     window.addEventListener('resize', debounce(recalc, 200));
-    // initial measure
+initial measure
     recalc();
   })();
 
@@ -7098,7 +7097,7 @@ Do you want me to do that?
     const out = document.getElementById('val_out');
     form.addEventListener('submit', (e)=>{
       e.preventDefault();
-      // reportValidity will focus invalid field and show browser UI
+reportValidity will focus invalid field and show browser UI
       if (!form.reportValidity()) {
         out.textContent = 'Form invalid — browser UI shown';
         return;
@@ -7120,7 +7119,7 @@ Do you want me to do that?
           if (!sheet.cssRules) continue;
           total += sheet.cssRules.length;
         } catch(err) {
-          // cross-origin stylesheet -> SecurityError; skip gracefully
+cross-origin stylesheet -> SecurityError; skip gracefully
           console.warn('Skipping stylesheet due to CORS', sheet.href);
         }
       }
@@ -7138,7 +7137,7 @@ Do you want me to do that?
       const target = e.target;
       out.textContent = `Changed: ${target.name || target.tagName} => ${target.value}`;
     });
-    // also listen for change events (select/radio)
+also listen for change events (select/radio)
     form.addEventListener('change', (e)=>{
       const t = e.target;
       out.textContent = `Changed (change): ${t.name || t.tagName} => ${t.value}`;
@@ -7155,7 +7154,7 @@ Do you want me to do that?
     let start = {x:0,y:0};
     let pos = {x:0,y:0};
     let scale = 1;
-    // pointerdown begins pan
+pointerdown begins pan
     wrap.addEventListener('pointerdown', (e)=>{
       wrap.setPointerCapture(e.pointerId);
       isDown = true;
@@ -7173,7 +7172,7 @@ Do you want me to do that?
       isDown = false;
       try { wrap.releasePointerCapture(e.pointerId); } catch(_) {}
     });
-    // wheel to zoom (ctrl+wheel avoided)
+wheel to zoom (ctrl+wheel avoided)
     wrap.addEventListener('wheel', (e)=>{
       e.preventDefault();
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -7248,7 +7247,7 @@ Do you want me to do that?
     const out = document.getElementById('spa_out');
     const navs = document.querySelectorAll('.spa_nav');
     function render(route){
-      // simple templates
+simple templates
       if (route === 'home') return '<h3>Home</h3><p>Welcome home.</p>';
       if (route === 'about') return '<h3>About</h3><p>About page.</p>';
       if (route === 'contact') return '<h3>Contact</h3><p>Contact us at example@example.com</p>';
@@ -7263,7 +7262,7 @@ Do you want me to do that?
       const route = (e.state && e.state.route) || 'home';
       out.innerHTML = render(route);
     });
-    // initial
+initial
     const params = new URLSearchParams(location.search);
     navigate(params.get('r') || 'home', false);
   })();
@@ -7287,7 +7286,7 @@ Do you want me to do that?
     ch.onmessage = (ev) => {
       log.textContent += 'Received: ' + ev.data.text + '\n';
     };
-    // cleanup on unload
+cleanup on unload
     window.addEventListener('beforeunload', ()=> ch.close());
   })();
 
@@ -7299,7 +7298,7 @@ Do you want me to do that?
     const target = document.getElementById('pos_target');
     const out = document.getElementById('pos_out');
     btn.addEventListener('click', ()=>{
-      // Call getBoundingClientRect once and reuse values
+Call getBoundingClientRect once and reuse values
       const r = target.getBoundingClientRect();
       out.textContent = `left: ${r.left.toFixed(2)}, top: ${r.top.toFixed(2)}, width: ${r.width.toFixed(2)}, height: ${r.height.toFixed(2)}`;
     });
@@ -7344,14 +7343,14 @@ Do you want me to do that?
     const area = document.getElementById('pl_area');
     const btn = document.getElementById('pl_btn');
     const cursor = document.getElementById('pl_cursor');
-    // on movement, update cursor position
+on movement, update cursor position
     function onMove(e) {
-      // movementX/Y provide delta movement since last event
+movementX/Y provide delta movement since last event
       const x = (parseFloat(cursor.style.left || '50%') || 50) + e.movementX;
       const y = (parseFloat(cursor.style.top || '50%') || 50) + e.movementY;
-      // clamp to area bounds
+clamp to area bounds
       const rect = area.getBoundingClientRect();
-      // convert absolute pixels to percent
+convert absolute pixels to percent
       const px = Math.max(0, Math.min(rect.width, (rect.width/2) + (x - rect.width/2)));
       const py = Math.max(0, Math.min(rect.height, (rect.height/2) + (y - rect.height/2)));
       cursor.style.left = px + 'px';
@@ -7382,7 +7381,7 @@ Do you want me to do that?
     const div = document.getElementById('res_div');
     const container = document.getElementById('res_container');
     const key = 'resizable-left-width';
-    // restore width
+restore width
     const w = localStorage.getItem(key);
     if (w) left.style.width = w + 'px';
     let dragging = false;
@@ -7790,7 +7789,7 @@ Would you like me to continue this format with **next-level React hook challenge
 
 
 
-///////////////////////////////////////////Claude ***
+/Claude ***
 # 50 React & JavaScript Coding Questions with Solutions
 
 ## Beginner Level (1-10)

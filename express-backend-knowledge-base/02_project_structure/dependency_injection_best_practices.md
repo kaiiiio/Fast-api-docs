@@ -502,6 +502,8 @@ Dependency injection in Express.js is achieved through constructor injection, fa
 
 **Answer:**
 
+Dependency Injection (DI) is an **architectural pattern for inversion of control**, moving the responsibility of creating and managing dependencies away from a service and into a dedicated provider or container. This shift in responsibility is what enables individual components to remain loosely coupled, drastically simplifying the process of unit testing and allowing for flexible implementation swaps as an application's requirements evolve.
+
 **Dependency Injection (DI)** means **passing dependencies** to functions/classes instead of creating them inside. This makes code **testable**, **flexible**, and **maintainable**.
 
 **Without DI (Tight Coupling):**
@@ -581,6 +583,8 @@ With DI:
 ### Q2: What are the different ways to implement Dependency Injection in Express.js? Compare them.   --- IMP
 
 **Answer:**
+
+Choosing the right dependency injection implementation depends on the **scale and complexity of your application's dependency graph**. While constructor injection is often sufficient for small projects, larger systems benefit from factory functions for complex configuration or dedicated DI containers that automate the cumbersome process of manually wiring up service instances and singletons.
 
 **Three Main Approaches:**
 
@@ -701,6 +705,8 @@ const userService = container.get('userService');
 ### Q3: How do you test code that uses Dependency Injection? Provide examples.   --- IMP
 
 **Answer:**
+
+The primary strength of dependency injection is its **native support for isolated unit testing**. By designing your services to receive their dependencies from the outside, you can easily inject mocked or stubbed versions of databases and external APIs, allowing you to test complex business logic without the need for an expensive or slow infrastructure setup.
 
 **DI makes testing easy** by allowing **mock dependencies**.
 

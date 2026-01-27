@@ -384,6 +384,8 @@ JWT implementation in Express.js requires: Installing dependencies (jsonwebtoken
 
 **Answer:**
 
+A JSON Web Token (JWT) is fundamentally a **cryptographic container for claims**, designed to be completely self-sufficient. Its stateless nature means that the server can trust the information inside the token simply by verifying its digital signature, eliminating the need for expensive database lookups or shared session storage across a cluster of Express servers.
+
 **JWT Architecture:**
 
 A JWT is a **self-contained token** that encodes claims (user data) in a JSON format, signed to ensure integrity. It consists of three parts separated by dots: `header.payload.signature`.
@@ -457,6 +459,10 @@ Client → Server2: Session ID → Lookup Redis → Process Request
 
 **Answer:**
 
+**Answer:**
+
+The dual-token strategy is a **security-in-depth pattern** designed to balance session longevity with the risk of token theft. Access tokens act as short-lived keys for immediate API consumption, while refresh tokens reside in more secure storage to handle session renewal without requiring the user to repeatedly re-authenticate.
+
 **Access Token**: Short-lived token (e.g., 15 minutes) used for API requests. Contains user identity and permissions.
 
 **Refresh Token**: Long-lived token (e.g., 7 days) used to obtain new access tokens. Stored securely (HTTP-only cookie) and not sent with every request.
@@ -528,6 +534,8 @@ Client → Server2: Session ID → Lookup Redis → Process Request
 
 **Answer:**
 
+Signature verification is the **trust mechanism that guarantees the integrity** of a JWT. By recalculating the cryptographic hash of the token's content using a private secret, the server can instantly detect if even a single character in the payload has been altered, ensuring that the user's identity and permissions haven't been maliciously escalated.
+
 **JWT Signature Verification:**
 
 The signature is created by hashing the header and payload with a secret key. When verifying, the server recalculates the signature and compares it with the signature in the token. If they match, the token is authentic; if not, it has been tampered with.
@@ -598,6 +606,8 @@ HMACSHA256(header + "." + modified_payload, secret) ≠ old_signature
 ### Q4: What are the security vulnerabilities of JWTs, and how would you mitigate them in a production Express.js application? Discuss token storage, XSS attacks, and token revocation.
 
 **Answer:**
+
+Securing JWTs in production requires a **multi-pronged defense strategy** against common web vulnerabilities. This involves moving beyond basic token issuance to address persistent threats like Cross-Site Scripting (XSS), Man-in-the-Middle (MITM) attacks, and the inherent difficulty of revoking stateless credentials before they expire.
 
 **Common JWT Vulnerabilities:**
 
@@ -730,6 +740,8 @@ async function authenticateToken(req, res, next) {
 ### Q5: Explain the concept of "JWT claims" and how you would implement role-based access control (RBAC) using JWT claims in an Express.js application. What are the trade-offs of embedding permissions in tokens vs. looking them up from a database?
 
 **Answer:**
+
+JWT claims are the **building blocks of identity-aware APIs**, allowing you to embed authorization logic directly within the credential itself. Using these claims for Role-Based Access Control (RBAC) allows Express middleware to make instantaneous, high-performance security decisions without the latency of a database round-trip.
 
 **JWT Claims:**
 

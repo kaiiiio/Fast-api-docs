@@ -453,7 +453,9 @@ Repository pattern in Express.js requires: Creating base repository for common C
 
 **Answer:**
 
-**Repository Pattern** = Abstraction layer between business logic and data access. It hides database implementation details.
+The Repository Pattern acts as a **mediator between the domain and data mapping layers**, acting like an in-memory collection of domain objects. In an Express.js context, it provides a clean, decoupled architecture where your services can perform complex data operations without being tied to the specific syntax or quirks of an underlying ORM or database driver.
+
+**Repository Pattern** = Abstraction layer between business logic and data access. It hides database implementation details.  --- IMP
 
 **Without Repository:**
 
@@ -545,6 +547,8 @@ class UserRepository extends BaseRepository {
 
 **Answer:**
 
+Encapsulating pagination logic within a repository ensures that your **data retrieval strategies are consistently applied** across the entire application. Whether you choose the simplicity of offset-based pagination or the high-performance stability of cursor-based methods, the repository pattern ensures that the complexities of limit, offset, and cursor calculations are hidden from the service layer.
+
 **Offset-Based Pagination:**
 
 ```javascript
@@ -627,6 +631,12 @@ app.get('/users', async (req, res) => {
 ### Q3: How do you handle transactions with the Repository Pattern?
 
 **Answer:**
+
+The key to handling transactions with the Repository Pattern is to **pass the transaction object as part of an options argument** from the Service layer to the Repository layer. This allows the Service to control the transaction lifecycle (BEGIN, COMMIT, ROLLBACK) while the Repositories simply execute queries within that context.
+
+*   **Service Layer**: Manages the transaction (starts, commits, or rolls back).
+*   **Repository Layer**: Stays "dumb" and unaware of the transaction's business goal; it just accepts an optional `transaction` object and passes it to the ORM methods.
+*   **Separation of Concerns**: The Repository shouldn't start its own transaction because a single business operation might involve multiple repositories.
 
 **Transaction Support:**
 

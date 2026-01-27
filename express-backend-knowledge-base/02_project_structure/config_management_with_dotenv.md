@@ -322,6 +322,8 @@ Effective configuration management in Express.js requires: Using dotenv for envi
 
 **Answer:**
 
+Effective environment variable management is the **primary line of defense for application secrets**, ensuring that sensitive data like API keys and database credentials never reside within your codebase. By leveraging a structured configuration object and strictly isolating environment files from version control, you create a security boundary that protects your production environment from accidental exposure and credential leakage.
+
 **Environment Variables** store **sensitive configuration** outside code. Never commit secrets to git.
 
 **Basic Setup:** --- IMP
@@ -414,6 +416,10 @@ JWT_SECRET=$(openssl rand -base64 32) // Strong, random
 ### Q2: How would you design a configuration system that supports multiple environments (dev, staging, production)?
 
 **Answer:**
+
+**Answer:**
+
+A robust multi-environment configuration system is designed to **accommodate the varying infrastructure needs** of development, test, and production stages without requiring code changes. Using a hierarchical merging strategy—where environment-specific overrides are applied to a base set of defaults—ensures that your application remains portable and behaves predictably across every stage of the software delivery pipeline.
 
 Design a **hierarchical configuration system** with environment-specific overrides.
 
@@ -516,6 +522,10 @@ if (!validEnvs.includes(env)) {
 ### Q3: Explain the difference between configuration and secrets. How do you handle each?
 
 **Answer:**
+
+**Answer:**
+
+The distinction between configuration and secrets is a **critical categorization for security and compliance**, defining how data is stored, shared, and audited. While general configuration settings like timeouts and feature flags can safely reside in version-controlled files, secrets demand high-security handling via specialized environment variables or encrypted secrets managers to prevent unauthorized access and maintain strict data privacy.
 
 **Configuration** = Non-sensitive settings (ports, timeouts, feature flags)  
 **Secrets** = Sensitive data (passwords, API keys, tokens)

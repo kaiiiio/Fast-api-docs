@@ -16,20 +16,20 @@ This knowledge base focuses on Node.js-specific topics:
 
 ## Topics
 
-1. **Node Core** - Module system, event loop, streams, buffers
+1. **[Node Core](01_node_core_backend_fundamentals/)** - [Module system](01_node_core_backend_fundamentals/node_module_system.md), [Event loop](01_node_core_backend_fundamentals/event_loop_libuv.md), [Streams](01_node_core_backend_fundamentals/streams_backpressure.md), [Buffers](01_node_core_backend_fundamentals/buffers_binary_data.md)
 2. **Backend Frameworks** - Express, Fastify, NestJS, GraphQL
 3. **Databases** - SQL, NoSQL, ORMs, caching
-4. **File Storage** - Uploads, S3, media processing
-5. **Background Jobs** - Message brokers, queues, workers
-6. **WebSockets** - Real-time communication
-7. **Streams** - Data processing, pipelines
-8. **Security** - Authentication, authorization, best practices
+4. **[File Storage](04_file_storage_media/uploads_s3_processing.md)** - Uploads, S3, media processing
+5. **[Background Jobs](05_background_jobs_queues/message_brokers_workers.md)** - Message brokers, queues, workers
+6. **[WebSockets](06_websockets_real_time/socket_io_basics.md)** - Real-time communication
+7. **[Advanced Streams](07_streams_pipelines_advanced/data_processing_pipelines.md)** - Data processing, pipelines
+8. **[Security](08_security_best_practices/auth_validation_security.md)** - Authentication, authorization, best practices
 9. **Testing** - Unit, integration, load testing
 10. **Observability** - Logging, metrics, tracing
 11. **Performance** - Optimization, profiling
 12. **DevOps** - Docker, Kubernetes, deployment
 13. **API Design** - REST, GraphQL, versioning
-14. **Patterns** - Architecture, design patterns
+14. **[Patterns](14_architectural_design_patterns/clean_architecture_patterns.md)** - Architecture, design patterns
 15. **And more...**
 
 ## Usage

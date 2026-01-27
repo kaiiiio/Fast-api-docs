@@ -2,7 +2,7 @@
 
 Buffers provide a way to work with binary data in Node.js. Understanding buffers is essential for file handling, network protocols, and data processing.
 
-## What are Buffers?
+## What are Buffers? --- IMP
 
 **Buffers** are fixed-size chunks of memory that store binary data. They're similar to arrays but work with raw binary data.
 
@@ -53,7 +53,7 @@ buf.writeUInt32BE(12345, 5);
 
 ## Real-World Examples
 
-### Example 1: File Processing
+### Example 1: File Processing   --- IMP
 
 ```javascript
 const fs = require('fs');

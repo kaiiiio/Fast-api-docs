@@ -3,6 +3,7 @@
 A detailed comparison between Prisma and TypeORM for both SQL and NoSQL databases, covering syntax differences, use cases, and interview preparation.
 
 ## Table of Contents
+0. [The Foundation: Raw SQL](#0-the-foundation-raw-sql-no-orm)
 1. [Overview](#overview)
 2. [SQL Database Support](#sql-database-support)
 3. [NoSQL Database Support](#nosql-database-support)
@@ -12,6 +13,43 @@ A detailed comparison between Prisma and TypeORM for both SQL and NoSQL database
 7. [Migration Systems](#migration-systems)
 8. [When to Use Which](#when-to-use-which)
 9. [Interview Questions](#interview-questions)
+
+---
+
+## 0. The Foundation: Raw SQL (No ORM)  --- IMP
+
+Before using modern ORMs, it's essential to understand the bare-metal database drivers. This approach provides the highest performance and full control over every query, though it requires manual mapping and lacks high-level abstractions.
+
+### Database Connection & GET Query (PostgreSQL - `pg`)
+
+```javascript
+const { Pool } = require('pg');
+
+// 1. Connection Pool Setup
+const pool = new Pool({
+    user: 'dbuser',
+    host: 'database.server.com',
+    database: 'mydb',
+    password: 'secretpassword',
+    port: 5432,
+});
+
+// 2. Simple GET Query in Express
+app.get('/users/:id', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+```
 
 ---
 
@@ -284,6 +322,19 @@ const stats = await userRepository.aggregate([
 ## Syntax Comparison
 
 ### 1. Database Connection
+
+#### Raw SQL (`pg`)
+```javascript
+const { Pool } = require('pg');
+
+const pool = new Pool({
+    user: 'dbuser',
+    host: 'database.server.com',
+    database: 'mydb',
+    password: 'secretpassword',
+    port: 5432,
+});
+```
 
 #### Prisma
 
@@ -1110,7 +1161,7 @@ npx typeorm migration:run
 
 ---
 
-### Q3: Compare Prisma and TypeORM for MongoDB. Which is better and why?
+### Q3: Compare Prisma and TypeORM for MongoDB. Which is better and why?  --- IMP
 
 **Answer:**
 

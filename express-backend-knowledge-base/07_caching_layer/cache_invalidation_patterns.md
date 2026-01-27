@@ -315,6 +315,8 @@ Cache invalidation keeps cached data fresh by removing or updating cache when so
 
 **Answer:**
 
+Cache invalidation is famously difficult because it creates a **distributed state problem**. You must decide when to "break" the existing link between the cached copy and the source of truth, balancing the risk of serving stale data against the performance cost of frequent re-computation.
+
 Cache invalidation is hard because you must keep **fast but stale-prone** data (cache) in sync with the **source of truth** (DB) without over-complicating logic or hurting performance.
 
 **Key Strategies (Theory):**
@@ -335,6 +337,8 @@ Cache invalidation is hard because you must keep **fast but stale-prone** data (
 ### Q2: How do you reason about consistency levels with caching?
 
 **Answer:**
+
+Choosing a consistency level is a **design trade-off between speed and accuracy**. In high-throughput Express applications, you rarely need perfect consistency for every field; identifying which data points can afford "eventual" freshness allows for a much more scalable caching architecture.
 
 Think in terms of **“how fresh does this data need to be?”** rather than always requiring perfect consistency:
 

@@ -4,7 +4,21 @@ Understanding Node.js internals helps optimize applications and build native add
 
 ## Event Emitters
 
-**EventEmitter** is the foundation of Node.js's event-driven architecture.
+**EventEmitter** is the foundation of Node.js's event-driven architecture. Most of Node's core modules (like `HTTP`, `File System`, `Streams`) inherit from it.
+
+### Internal Mechanism: How it works
+1. **Synchronous Execution**: By default, `EventEmitter` executes all listeners **synchronously** in the order they were registered. This is critical to ensure proper sequencing and avoid race conditions.
+2. **Listener Storage**: Internally, an emitter maintains an object where keys are event names and values are either a single function or an array of functions.
+3. **Execution Order**: If multiple listeners are registered for the same event, they are called in the **exact order** they were added.
+4. **Error Handling**: If an emitter emits an `'error'` event and there are no listeners registered for it, the Node.js process will crash and print a stack trace.
+
+> [!TIP]
+> **Async in Listeners**: While the *call* to the listener is synchronous, the listener itself can contain asynchronous code (e.g., `setTimeout`, `Promises`). However, the emitter won't wait for them to finish before calling the next listener.
+
+### Memory Management & Best Practices
+- **Memory Leaks**: Every time you call `.on()`, you add a reference to a function. If you don't remove it when it's no longer needed (especially in React components or long-running servers), you'll cause a memory leak.
+- **Max Listeners**: Node warns if you add more than 10 listeners to a single event to help catch leaks. Use `setMaxListeners(n)` if you genuinely need more.
+- **Cleanup**: Always use `.removeListener(event, handler)` or `.off(event, handler)` during cleanup.
 
 ### Basic EventEmitter
 
@@ -76,8 +90,8 @@ class Database extends EventEmitter {
     }
 }
 
-// Use
-const db = new Database();
+// Use  --- IMP
+const db = new Database();   
 
 db.on('connected', () => {
     console.log('Database connected');

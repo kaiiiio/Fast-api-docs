@@ -4,7 +4,28 @@ The event loop is the core of Node.js's asynchronous, non-blocking I/O model. Un
 
 ## What is the Event Loop?
 
-**Event Loop** is a single-threaded loop that manages asynchronous operations by checking for completed I/O and executing callbacks.
+**Event Loop** is a single-threaded loop that manages asynchronous operations by checking for completed I/O and executing callbacks. It bridges the gap between the synchronous JavaScript execution and the underlying asynchronous system APIs (via libuv).
+
+### Memory & Execution: Heap vs Stack
+- **Heap (Memory Storage)**: A large, unstructured region where objects, arrays, and complex data structures are stored. It is used for dynamic memory allocation.
+- **Stack (Execution)**: A **LIFO (Last-In-First-Out)** structure where primitive values and function call frames are stored. When a function is called, it’s "pushed" to the stack; when it returns, it’s "popped."
+
+### Task Queues: Microtasks vs Macrotasks
+Asynchronous code doesn't go straight to the stack. It waits in queues.
+
+| Task Type | Examples | Priority | Structure |
+| :--- | :--- | :--- | :--- |
+| **Call Stack** | Synchronous code | **Highest (1st)** | LIFO |
+| **Microtasks** | `process.nextTick`, `Promise.then` | **High (2nd)** | FIFO |
+| **Macrotasks** | `setTimeout`, `setImmediate`, I/O | **Low (3rd)** | FIFO |
+
+> [!IMPORTANT]
+> **Priority Rule**: The stack must be empty before the Event Loop checks the Microtask queue. The Microtask queue must be empty before the Event Loop moves to the next phase of Macrotasks (Timers, Poll, etc.).
+
+### Interaction with External APIs (Browser/Node)
+1. **Delegation**: When you call `setTimeout` or `fs.readFile`, Node/Browser delegates it to **Web APIs** (in browser) or **libuv Thread Pool/OS** (in Node).
+2. **Completion**: Once finished, the external system pushes the callback into the appropriate **Queue** (Macrotask/Macrotask).
+3. **Execution**: The Event Loop constantly monitors the Stack. If empty, it pulls from the Queues and pushes them back onto the Stack for execution.
 
 ### Event Loop Phases
 
@@ -173,7 +194,7 @@ app.get('/slow', (req, res) => {
 
 ## Summary
 
-**Event Loop in Node.js:**
+**Event Loop in Node.js:**  --- IMP
 
 1. **Phases**: Timers, pending, poll, check, close
 2. **libuv**: Thread pool for blocking operations

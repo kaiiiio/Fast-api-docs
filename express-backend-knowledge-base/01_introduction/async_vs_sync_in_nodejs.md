@@ -298,6 +298,8 @@ Async operations in Express.js are essential for: High performance (handle thous
 
 **Answer:**
 
+The distinction between blocking and non-blocking I/O is the **core architectural foundation of Node.js**. While blocking operations halt the event loop and prevent it from serving other users, non-blocking I/O allows the server to delegate heavy lifting to the background, enabling a single thread to manage thousands of concurrent requests with minimal overhead.
+
 **Blocking I/O** stops execution until the operation completes. **Non-blocking I/O** allows the event loop to handle other operations while waiting.
 
 **Blocking Example:**
@@ -378,6 +380,8 @@ Non-blocking I/O:
 ### Q2: When should you use synchronous operations in Express.js? What are the exceptions?
 
 **Answer:**
+
+While the rule in Node.js is to "never block the event loop," there are **narrow, intentional exceptions** for synchronous operations, primarily during application initialization. Understanding when a synchronous call is a harmless startup task versus a performance-killing request-time operation is key to maintaining a responsive Express server.
 
 **Generally, avoid synchronous operations** in Express.js. However, there are **rare exceptions**:
 
@@ -463,6 +467,8 @@ Use Async If:
 ### Q3: Explain Promise chains vs async/await. When would you use each?  --- IMP
 
 **Answer:**
+
+The evolution from Promise chains to async/await represents a **major leap in code maintainability and readability**. While both patterns are built on the same underlying Promise architecture, async/await provides a cleaner, "pseudo-synchronous" syntax that significantly reduces the mental overhead of managing complex, nested asynchronous workflows.
 
 Both handle asynchronous operations, but with different syntax and use cases.
 
@@ -576,6 +582,10 @@ const [user, posts] = await Promise.all([
 ### Q4: How do you handle errors in async Express.js route handlers? What are common pitfalls?
 
 **Answer:**
+
+Effective error handling in asynchronous Express routes is a **defensive programming necessity** that prevents silent failures and server crashes. Since errors in async functions don't propagate to the standard Express error handler automatically in older versions, using explicit try-catch blocks or specialized wrapper functions is essential for ensuring every failure is appropriately logged and reported.
+
+Handling errors in an asynchronous environment requires a different mindset than synchronous `try-catch` blocks because errors often occur **after the initial function has already returned**. In Express, this means you must explicitly pass errors to the `next()` function to ensure the centralized error-handling middleware can catch them.
 
 **Common Pitfall: Unhandled Promise Rejections**  --- IMP
 
@@ -699,6 +709,8 @@ app.get('/users/:id', (req, res) => {
 
 **Answer:**
 
+The Node.js event loop is a **high-efficiency coordinator** that orchestrates concurrency without the overhead of traditional multi-threading. By breaking down high-latency I/O operations into non-blocking phases, the event loop can pause and resume tasks as data becomes available, allowing the server to maintain incredible throughput even under heavy load.
+
 Node.js uses an **event loop** to handle concurrent async operations with a **single thread**.
 
 **Event Loop Architecture:**   --- IMP
@@ -764,6 +776,8 @@ Event Loop:
 ### Q6: What happens if you block the event loop in Express.js? How do you identify and fix it?
 
 **Answer:**
+
+A blocked event loop is a **critical performance failure** that effectively freezes your entire Express application for every user. Because Node.js relies on a single thread for all non-blocking tasks, any long-running synchronous code—such as heavy math or large file parsing—will prevent the server from accepting new connections or responding to existing ones until the task is complete.
 
 **Blocking the event loop** prevents Node.js from handling other requests, causing **timeouts and poor performance**.
 

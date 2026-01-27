@@ -358,6 +358,8 @@ Bull queue mastery requires: Setting up Redis-backed queues, defining job proces
 
 **Answer:**
 
+Bull functions as a **robust bridge between your synchronous API and asynchronous processing units**. It ensures that high-latency tasks don't degrade the user experience while providing a reliable persistence layer using Redis to track every job's lifecycle.
+
 Bull sits between your **HTTP layer** (Express) and **background workers** as a **Redis-backed job queue**:
 
 ```
@@ -377,6 +379,8 @@ It solves:
 ### Q2: From a design perspective, what are the key things you must get right when using Bull in production?
 
 **Answer (theory‑first):**
+
+Transitioning Bull to production requires moving beyond simple job enqueueing to a **holistic job-lifecycle strategy**. This involves defining clear boundaries for your job data, ensuring failures are handled gracefully with retries, and maintaining visibility into queue health via real-time monitoring.
 
 - **Job Contract:**
   - Define a **clear payload schema** (what fields a job expects) and version it when evolving.

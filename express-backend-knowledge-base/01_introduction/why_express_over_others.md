@@ -282,6 +282,10 @@ Express.js apps deploy easily to:
 --- IMP
 **Answer:**
 
+**Answer:**
+
+Choosing between Express.js, NestJS, and FastAPI is a **decision between architectural philosophy and ecosystem alignment**. While Express.js offers the ultimate in flexibility and low overhead for rapid iteration, NestJS provides the structured, enterprise-grade discipline of an opinionated framework, and FastAPI leverages the Python ecosystem to deliver high-performance results specifically tailored for data-heavy or AI-integrated applications.
+
 **Choose Express.js when:**
 - **Small to medium teams** (faster development, less boilerplate)
 - **Rapid prototyping** (unopinionated, flexible)
@@ -349,7 +353,12 @@ NestJS:
 
 **Answer:**
 
-Express.js leverages **Node.js event loop** for high concurrency. Unlike thread-based models, it uses a **single-threaded event loop** that efficiently handles I/O-bound operations.
+**Answer:**
+
+The high-concurrency performance of Express.js is a **direct result of the Node.js non-blocking I/O model**, which allows a single thread to maintain thousands of active connections without the RAM-heavy overhead of traditional thread-per-request systems. By yielding control back to the event loop during database and network waits, an Express application can achieve massive throughput on minimal hardware, provided the developer avoids blocking the loop with long-running synchronous tasks.
+
+Express.js leverages **Node.js event loop** for high concurrency.
+ Unlike thread-based models, it uses a **single-threaded event loop** that efficiently handles I/O-bound operations.
 
 **Performance Architecture:**
 
@@ -476,6 +485,10 @@ Total: 40,000 concurrent requests
 
 **Answer:**
 
+**Answer:**
+
+Comparing Express.js to Spring Boot is a **comparison between a lightweight, event-driven specialist and a heavyweight, multi-threaded generalist**. While Spring Boot excels at managing complex, CPU-bound enterprise logic through strict conventions and deep integration with the Java ecosystem, Express provides the speed and scalability for high-velocity, I/O-bound modern web services and real-time platforms.
+
 **Architecture Comparison:**
 
 ```
@@ -572,6 +585,10 @@ Choose Spring Boot if:
 ### Q4: What are the limitations of Express.js? When would you NOT use it?
 
 **Answer:**
+
+**Answer:**
+
+While Express.js is a powerhouse for I/O-bound web services, it has **fundamental architectural limitations that make it unsuitable for CPU-intensive data processing or trading systems**. Because it operates on a single-threaded event loop, any task that requires significant computation—such as image manipulation or complex mathematical analysis—will effectively freeze the server for every active user, requiring a shift to worker threads or a more specialized secondary service.
 
 **Limitations:**
 
@@ -692,6 +709,10 @@ No built-in validation  → express-validator, Zod
 ### Q5: How would you architect a system that needs both Express.js and Python services? What's the integration pattern?
 
 **Answer:**
+
+**Answer:**
+
+Architecting a hybrid system that bridges Express.js and Python is about **playing to the unique strengths of each ecosystem** while maintaining a clean, decoupled boundary between them. By using Express as a high-speed, authenticated gateway for handling user interactions and Python as a specialized worker for heavy lifting like machine learning, you create a robust polyglot architecture that scales both in terms of throughput and developer productivity.
 
 **Hybrid Architecture Pattern:**
 

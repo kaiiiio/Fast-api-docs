@@ -151,6 +151,8 @@ Securing database connections protects data in transit. Use SSL/TLS encryption f
 
 **Answer:**
 
+Encryption in transit via SSL/TLS is the **minimum baseline for database security** in any production environment. It ensures that the communication channel between your Express backend and the database cluster is shielded from network-level threats, preventing the exposure of sensitive credentials and payload data to malicious actors on the wire.
+
 **Why SSL/TLS is Critical:**
 
 Database connections transmit sensitive data (user credentials, PII, financial information) between the Express.js application and the database. Without encryption, this data travels in **plaintext** over the network, making it vulnerable to interception and tampering.
@@ -221,6 +223,8 @@ const pool = new Pool({
 ### Q2: Explain the different SSL modes in PostgreSQL (disable, allow, prefer, require, verify-ca, verify-full). When would you use each mode, and what are the security implications?
 
 **Answer:**
+
+The various SSL modes in PostgreSQL provide a **spectrum of security and verification levels**, allowing you to balance strictness against configuration overhead. While basic modes like `require` offer encryption, production environments typically demand `verify-ca` or `verify-full` to prevent man-in-the-middle attacks through rigorous certificate chain validation.
 
 **PostgreSQL SSL Modes:**
 
@@ -330,6 +334,8 @@ const prodConfig = {
 ### Q3: How would you securely manage database credentials (connection strings, passwords) in an Express.js application? Explain the security risks of hardcoding credentials and best practices for credential management.
 
 **Answer:**
+
+Secure credential management is about **removing sensitive secrets from the application's source code**. Hardcoding database passwords is a significant liability that can be mitigated through the use of environment-specific configuration and dedicated secret management vaults, ensuring that credentials are never accidentally exposed in version control or logs.
 
 **Security Risks of Hardcoding Credentials:**
 
@@ -488,6 +494,8 @@ const writePool = new Pool({
 
 **Answer:**
 
+Connection pool exhaustion is a **denial-of-service vulnerability** that can bring down even the most well-written Express application. Effective pool management requires setting strict resource limits and implementing robust monitoring to detect connection leaks early, ensuring that your application remains responsive under high load.
+
 **Connection Pooling Security:**
 
 Connection pooling manages a pool of database connections that are reused across requests. Security considerations include limiting pool size, preventing connection leaks, and monitoring pool health.
@@ -636,6 +644,8 @@ app.get('/health/database', async (req, res) => {
 ### Q5: How would you implement secure database connection handling with automatic retry and failover in a production Express.js application? Explain the trade-offs between different retry strategies and when to use each.
 
 **Answer:**
+
+Automated retry and failover strategies are the **pillars of database resilience** in a distributed Express architecture. By intelligently handling transient failures through patterns like exponential backoff and circuit breakers, you can ensure that your application recovers gracefully from database outages without overwhelming the upstream systems during a restart.
 
 **Secure Connection Handling:**
 

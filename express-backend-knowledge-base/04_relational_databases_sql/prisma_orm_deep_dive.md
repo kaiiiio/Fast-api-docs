@@ -355,7 +355,11 @@ const stats = await prisma.post.aggregate({
 
 ## Transactions
 
+Prisma provides two distinct models for atomicity: **Sequential Transactions** for simple batching and **Interactive Transactions** for complex business logic that requires state-checks between database operations.
+
 ### Sequential Operations
+
+Sequential transactions are the most performant way to execute multiple independent writes. By passing an array of Prisma promises, you allow the engine to bake these operations into a single database transaction, ensuring that either every record is updated or the entire set is rolled back, without the overhead of a long-running interactive session.
 
 ```javascript
 // Sequential operations in transaction
@@ -381,6 +385,8 @@ const result = await prisma.$transaction(async (tx) => {
 ```
 
 ### Interactive Transactions
+
+Interactive transactions are essential when your business logic requires **read-evaluate-write** cycles within a single atomic boundary. Unlike sequential operations, interactive transactions provide a transaction client (`tx`) that allows you to perform complex checks—such as verifying a user's wallet balance before processing a payment—while maintaining a database lock to prevent race conditions from concurrent requests.
 
 ```javascript
 // Interactive transaction with retries
@@ -608,6 +614,8 @@ Prisma is a modern ORM that provides type-safe database access with excellent de
 
 **Answer:**
 
+Prisma represents a **paradigm shift in database access**, moving away from the traditional, runtime-heavy ORM models like Sequelize and toward a compile-time, type-safe approach. By using a declarative schema as the single source of truth, Prisma eliminates the fragility of manual type definitions and provides a developer experience that is largely centered around auto-completion and proactive error catching, which is critical for maintaining velocity in large-scale TypeScript environments.
+
 **Prisma Advantages:**
 
 **1. Type Safety:**
@@ -700,6 +708,8 @@ Sequelize:
 ### Q2: How does Prisma handle connection pooling and transactions?
 
 **Answer:**
+
+Prisma streamlines database operations by **automating complex infrastructure concerns like connection pooling and atomic transactions** through a high-level, intuitive API. Its internal engine effectively multiplexes connections to optimize resource usage, while its flexible transaction model—supporting both simple array-based batches and complex interactive closures—ensures that developers can maintain strict data integrity without getting bogged down in low-level SQL transaction management.
 
 **Connection Pooling:**
 

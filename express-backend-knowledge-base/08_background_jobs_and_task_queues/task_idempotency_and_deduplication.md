@@ -248,6 +248,8 @@ Idempotency ensures tasks can be safely retried without side effects. Use idempo
 
 **Answer:**
 
+While often used interchangeably, idempotency and deduplication represent **different levels of the reliability stack**. Idempotency is an inherent design property of an operation that makes it safe to repeat, whereas deduplication is a tactical infrastructure check that physically prevents the second execution of a task, regardless of its underlying logic.
+
 **Idempotency** is a property of an operation: performing it multiple times produces the same result as performing it once. It's about **operation semantics**—the operation itself is designed to be safe to retry.
 
 **Deduplication** is a mechanism to prevent processing the same task multiple times. It's about **preventing duplicate execution**—ensuring a task runs only once even if it's submitted multiple times.
@@ -317,6 +319,8 @@ Submit 3: Skip (already processed) → No email
 ### Q2: Explain the "check-before-execute" pattern for implementing idempotency in Express.js background jobs. What race conditions can occur, and how would you prevent them?
 
 **Answer:**
+
+The "check-before-execute" pattern is a **logic-level guard** that attempts to verify the state of the system before committing to a non-reversible action. However, without additional synchronization like database constraints or distributed locks, it remains vulnerable to race conditions where two workers might simultaneously believe they are the first to execute the task.
 
 The **check-before-execute** pattern checks if an operation has already been performed before executing it. It's used when operations are not inherently idempotent (e.g., sending emails, charging payments).
 
@@ -443,6 +447,8 @@ Worker2:        CHECK → (no record) → EXECUTE → LOG
 ### Q3: How do idempotency keys work in payment processing systems? Explain the flow from HTTP request to background job completion, including how idempotency is maintained across retries.
 
 **Answer:**
+
+Idempotency keys act as a **unique transaction identifier** that shields the payment gateway and your internal ledgers from duplicate charges. They create a reliable handshake where the client can confidently retry a timed-out request, and the server can safely return the original result instead of initiating a new, duplicate financial transaction.
 
 **Idempotency keys** are unique identifiers provided by the client (or generated server-side) that ensure the same operation is not processed twice, even if the request is retried due to network failures or timeouts.
 
@@ -575,6 +581,8 @@ HTTP Request → Idempotency Check → Process Payment → Store Result → Retu
 
 **Answer:**
 
+The distinction between application and database-level idempotency is a **choice between architectural flexibility and absolute consistency**. Database-level enforcement leverages strong ACID guarantees to prevent duplicates at the point of persistence, while application-level logic allows for more complex, multi-system coordination that may be difficult to express through simple database constraints.
+
 **Application-Level Idempotency**: Application code checks and enforces idempotency (e.g., check-before-execute, idempotency keys)
 
 **Database-Level Idempotency**: Database constraints and operations ensure idempotency (e.g., unique constraints, upserts, transactions)
@@ -684,6 +692,8 @@ try {
 ### Q5: Explain how deduplication works in a distributed system with multiple Express.js workers processing jobs from the same queue. What are the challenges, and how would you solve them?
 
 **Answer:**
+
+Deduplication in a distributed environment is a **coordination challenge** that requires a shared, authoritative state across all worker nodes. By using a fast, atomic store like Redis or a unique field in a distributed database, workers can effectively signal their intent to process a job, ensuring that no two nodes simultaneously attempt the same work in a high-concurrency scenario.
 
 **Deduplication** ensures the same job is not processed multiple times, even when multiple workers pull jobs from the same queue concurrently. The challenge is preventing **race conditions** where multiple workers process the same job.
 

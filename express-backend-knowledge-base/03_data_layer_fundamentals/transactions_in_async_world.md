@@ -469,6 +469,8 @@ Transactions ensure data consistency by grouping multiple database operations in
 
 **Answer:**
 
+A database transaction is a **guarantee of data integrity** that ensures a sequence of operations is treated as a single, indivisible unit of work. In the asynchronous environment of Express.js, transactions are critical for preventing "partial success" scenarios where one part of a multi-step process (like taking payment) succeeds while another (like updating inventory) fails, leaving the system in an inconsistent state.
+
 **Transactions** group multiple database operations into a **single atomic unit** - all succeed or all fail.
 
 **Basic Transaction:**
@@ -528,6 +530,11 @@ BEGIN Transaction
 
 **Why Atomicity Matters:**
 
+*   **Prevents Inconsistent States**: Ensures that multi-step operations (like "Debit Account A" and "Credit Account B") either happen completely or not at all.
+*   **Automatic Error Recovery**: If an error occurs at step 4 of 5, the database automatically "undos" steps 1-3, so you don't have to write manual cleanup code.
+*   **Protects Against Crashes**: If the server crashes mid-process, the database notices the connection loss and rolls back the partial changes automatically.
+*   **Business Logic Safety**: Guarantees that related records (e.g., Order and Order Items) are always in sync, preventing "orphan" orders.
+
 ```javascript
 // ❌ Problem: Without transaction
 app.post('/transfer', async (req, res) => {
@@ -562,9 +569,11 @@ app.post('/transfer', async (req, res) => {
 
 ---
 
-### Q2: How do you handle distributed transactions across multiple services in a microservices architecture?
+### Q2: How do you handle distributed transactions across multiple services in a microservices architecture?   --- VIMP
 
 **Answer:**
+
+Managing transactions across independent services is a **fundamental challenge of distributed systems**, as the traditional ACID properties of a single database cannot be easily maintained over a network. The primary solution is to move from immediate consistency to "eventual consistency" using patterns like the Saga, which coordinates a series of local transactions with corresponding undo actions to ensure the system eventually reaches a valid state.
 
 **Distributed Transactions** = Transactions spanning multiple services (hard to implement with ACID).
 

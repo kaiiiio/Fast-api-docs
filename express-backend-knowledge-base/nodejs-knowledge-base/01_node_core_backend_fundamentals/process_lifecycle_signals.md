@@ -4,6 +4,22 @@ Understanding process lifecycle and signals is crucial for graceful shutdowns an
 
 ## Process Lifecycle
 
+The lifecycle of a Node.js process is managed by the V8 engine and libuv. It follows a predictable path from initial execution to termination.
+
+### Stages of the Process Lifecycle
+1.  **Initialize**: Node.js starts, loads the script, and initializes the execution environment (Globals, Modules).
+2.  **Execute Sync Code**: The main script is executed from top to bottom. Asynchronous calls are scheduled but not yet executed.
+3.  **Enter Event Loop**: Once the synchronous code finishes, the Event Loop takes over to handle scheduled tasks (Timers, I/O).
+4.  **Running State**: Node remains active as long as there are pending callbacks or active handles (e.g., an open HTTP server or database connection).
+5.  **Shutdown Initiation**: Triggered when the event loop has no more work, `process.exit()` is called, or a system signal (SIGINT/SIGTERM) is received.
+6.  **Exit**: The process releases memory and shuts down.
+
+### Core Lifecycle Events
+- **`beforeExit`**: Emitted when the event loop is empty and Node is about to exit. You can schedule more work here to keep the process alive.
+- **`exit`**: Emitted when the process is definitely shutting down. Only **synchronous** code can be executed here.
+- **`uncaughtException`**: Emitted when an error isn't caught. The process is in an undefined state and should usually be restarted.
+- **`unhandledRejection`**: Emitted when a Promise is rejected without a `.catch()`.
+
 ### Startup
 
 ```javascript

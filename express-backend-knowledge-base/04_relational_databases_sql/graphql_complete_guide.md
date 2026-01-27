@@ -972,6 +972,8 @@ export const resolvers = {
 
 ### 1. DataLoader (Solving N+1 Problem)
 
+The **N+1 problem** occurs when a single query for a list of items (1) triggers additional queries for related data for each item (N). DataLoader solves this through **batching and caching**: it collects multiple requests for related data in a single tick of the event loop and executes one bulk query instead of many individual ones.
+
 **Problem:**
 ```typescript
 // Without DataLoader - N+1 queries
@@ -1070,6 +1072,8 @@ export const resolvers = {
 ---
 
 ### 2. Subscriptions (Real-time Updates)
+
+#### Subscriptions enable **real-time, event-driven communication** from the server to the client. Unlike Queries and Mutations which are request-response based, Subscriptions maintain a long-lived connection (typically via WebSockets) and push data to clients whenever a specific event occurs on the server.
 
 **Setup:**
 ```bash
@@ -1242,6 +1246,8 @@ subscription OnCommentAdded {
 
 ### 3. Pagination
 
+#### Pagination is essential for **managing large result sets** and ensuring high performance and a smooth user experience. In GraphQL, two common patterns are used: Offset-based (simple but potentially slow for large offsets) and Cursor-based (Relay-style, more complex but highly performant and stable).
+
 **Offset-based Pagination:**
 ```graphql
 type Query {
@@ -1322,6 +1328,8 @@ posts: async (_parent: any, args: { first?: number; after?: string }) => {
 
 ### 4. Error Handling
 
+#### Professional error handling in GraphQL involves **returning structured error data** instead of generic messages. Using `GraphQLError` with a custom `extensions` field allows you to provide specific error codes and HTTP-like status hints, enabling the client to react appropriately to different failure scenarios.
+
 ```typescript
 import { GraphQLError } from 'graphql';
 
@@ -1371,6 +1379,8 @@ export const resolvers = {
 ---
 
 ### 5. Authentication & Authorization
+
+#### Securing a GraphQL API requires a **layered approach to access control**. Authentication identifies who the user is (typically via JWTs in the context), while Authorization determines what they are allowed to see or do, which can be handled directly in resolvers or more declaratively through schema directives.
 
 **Context with Authentication:**
 ```typescript
@@ -1498,6 +1508,8 @@ type Mutation {
 
 ### 1. Schema Design
 
+#### A well-designed schema is the **foundation of a great developer experience**. It should prioritize clarity, use strong typing with enums for fixed sets of values, and leverage input types to keep mutation arguments organized and scalable.
+
 **✅ Good:**
 ```graphql
 # Clear, descriptive names
@@ -1546,6 +1558,8 @@ type Mutation {
 ---
 
 ### 2. Resolver Performance
+
+#### High-performance resolvers depend on **minimizing database round-trips and data over-fetching**. This is achieved by using DataLoaders to batch relationship queries and using ORM projection features to fetch only the specific fields requested in the GraphQL query.
 
 **✅ Good:**
 ```typescript
@@ -1625,6 +1639,8 @@ throw error; // Might expose database details
 
 ### 4. Security
 
+#### Beyond authentication, GraphQL security requires **defending against malicious queries**. This includes implementing rate limiting to prevent brute-force attacks and setting depth or complexity limits to block deeply nested queries that could crash your server (Regular Expression Denial of Service/ReDoS).
+
 **✅ Good:**
 ```typescript
 // Rate limiting
@@ -1669,7 +1685,11 @@ const server = new ApolloServer({
   
 ### Q1: What is GraphQL and how does it differ from REST?
 
-**Answer:** GraphQL is a query language for APIs that allows clients to request exactly the data they need. Key differences from REST:
+**Answer:**
+
+The fundamental difference lies in the **shifting of power from the server to the client**. In REST, the server defines the structure of the data for each endpoint, whereas GraphQL allows the client to specify exactly which fields it needs, effectively solving the problems of over-fetching and under-fetching.
+
+GraphQL is a query language for APIs that allows clients to request exactly the data they need. Key differences from REST:
 
 1. **Single Endpoint:** GraphQL uses one endpoint (`/graphql`) vs REST's multiple endpoints
 2. **Flexible Data Fetching:** Clients specify exactly what data they need, eliminating over-fetching and under-fetching
@@ -1696,7 +1716,11 @@ GET /users/1/posts
 
 ### Q2: What is the N+1 problem in GraphQL and how do you solve it?
 
-**Answer:** The N+1 problem occurs when fetching a list of items (1 query) and then fetching related data for each item (N queries).
+**Answer:**
+
+The **N+1 problem** is a common performance bottleneck where a single request for a list of items triggers a separate database query for the related data of every item in that list. It is traditionally solved using **DataLoader**, which batches these multiple individual requests into a single, efficient bulk query.
+
+The N+1 problem occurs when fetching a list of items (1 query) and then fetching related data for each item (N queries).
 
 **Example:**
 ```typescript
@@ -1734,9 +1758,13 @@ User: {
 
 ### Q3: How do you implement authentication and authorization in GraphQL?
 
-**Answer:** Authentication and authorization are typically handled in the context function and resolvers:
+**Answer:**
 
-**Authentication (Context):**
+Securing a GraphQL API is typically a **two-stage process** involving the `context` object and resolver-level checks. Authentication is performed once at the beginning of the request to populate the context with user data, while authorization is enforced within individual resolvers or via schema directives to restrict access to specific fields or operations.
+
+Authentication and authorization are typically handled in the context function and resolvers:
+
+**Authentication (Context):
 ```typescript
 await startStandaloneServer(server, {
   context: async ({ req }) => {
@@ -1747,7 +1775,7 @@ await startStandaloneServer(server, {
 });
 ```
 
-**Authorization (Resolvers):**
+**Authorization (Resolvers):
 ```typescript
 Mutation: {
   createPost: async (_parent, args, context) => {
@@ -1774,7 +1802,11 @@ Mutation: {
 
 ### Q4: What are GraphQL subscriptions and when would you use them?
 
-**Answer:** Subscriptions enable real-time, event-based updates from server to client using WebSockets.
+**Answer:**
+
+Subscriptions provide a mechanism for the **server to push real-time data to clients** over a persistent connection, usually WebSockets. They are most effective in scenarios where the state of the system changes frequently and users need to see updates without manually refreshing their view.
+
+Subscriptions enable real-time, event-based updates from server to client using WebSockets.
 
 **Use Cases:**
 - Chat applications (new messages)
@@ -1814,7 +1846,9 @@ Subscription: {
 
 ### Q5: How does GraphQL work with SQL vs MongoDB?
 
-**Answer:** 
+**Answer:**
+
+GraphQL remains **database-agnostic at the resolver layer**, meaning the logical implementation of your API often looks identical regardless of the underlying storage engine. However, the implementation details differ behind the scenes: SQL databases benefit from standard relational joins and optimized ORM inclusions, while MongoDB may require manual relationship population or the use of aggregation pipelines for complex data assembly.
 
 **With Prisma:**
 - GraphQL resolvers are database-agnostic
@@ -1853,6 +1887,8 @@ for (const user of users) {
 
 **Answer:**
 
+While GraphQL offers significant advantages, it introduces **new complexities in infrastructure and security**. The most prominent challenges involve managing the lack of native HTTP caching, preventing clients from executing overly complex or malicious queries, and the overhead of implementing batching to avoid performance pitfalls.
+
 1. **Caching:** More complex than REST (can't use HTTP caching easily)
 2. **Query Complexity:** Clients can create expensive queries
 3. **Learning Curve:** Steeper than REST
@@ -1871,6 +1907,8 @@ for (const user of users) {
 ### Q7: Explain GraphQL schema types: Query, Mutation, and Subscription
 
 **Answer:**
+
+The GraphQL type system is built on **three primary operation types** that define the entry points for any request. Queries represent safe, read-only data fetching; Mutations handle all state-changing operations like create, update, and delete; and Subscriptions manage long-lived connections for real-time event delivery.
 
 **Query (Read operations):**
 ```graphql

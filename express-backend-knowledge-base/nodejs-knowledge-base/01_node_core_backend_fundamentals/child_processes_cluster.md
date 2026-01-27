@@ -97,7 +97,7 @@ if (cluster.isMaster) {
 }
 ```
 
-## Worker Threads
+## Worker Threads   --- IMP
 
 **Worker threads** provide true parallelism with shared memory.
 
@@ -128,7 +128,7 @@ if (isMainThread) {
 
 ## Real-World Examples
 
-### Example 1: CPU-Intensive Task
+### Example 1: CPU-Intensive Task   --- IMP
 
 ```javascript
 // Main process

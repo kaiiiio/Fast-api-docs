@@ -317,6 +317,8 @@ Password hashing in Express.js requires: Using bcrypt for secure hashing, never 
 
 **Answer:**
 
+Storing passwords in plaintext is essentially a **catastrophic single point of failure** for any application's security. Hashing transforms the security model from a fragile reliance on preventing database access to a resilient architecture where even a complete data breach does not immediately compromise user credentials.
+
 **Why Plaintext is Insecure:**
 
 Plaintext password storage is insecure because **database breaches are inevitable** (SQL injection, compromised credentials, insider threats, backup theft). Even with strong database security, passwords can be exposed, and since users often reuse passwords across services, a breach exposes accounts on other platforms.
@@ -379,6 +381,10 @@ Breach → Attacker sees: "$2b$10$abc123..." → Cannot reverse to "MyPassword12
 ### Q2: Explain the concept of "salting" in password hashing. Why is a unique salt per password critical, and what happens if you reuse the same salt for all passwords?
 
 **Answer:**
+
+**Answer:**
+
+Salting is a **cryptographic fortification** designed to make every user's credential unique, even if they choose identical passwords. By introducing a random "salt" into the hashing process, it effectively neutralizes pre-computation attacks like Rainbow Tables and prevents attackers from identifying groups of users with weak, shared passwords.
 
 **Salting** is adding a random value (salt) to a password before hashing. The salt is stored alongside the hash and used during verification. It prevents **rainbow table attacks** and ensures identical passwords produce different hashes.
 
@@ -464,6 +470,8 @@ const isValid = await bcrypt.compare(password, hash);
 
 **Answer:**
 
+Modern password hashing is a **deliberate trade-off between security and computational cost**. Algorithms like bcrypt, scrypt, and argon2 are designed to be "slow by design," forcing attackers to expend massive amounts of CPU or memory resources for every guess, thereby making large-scale brute-force attacks economically and technically unfeasible.
+
 **Algorithm Comparison:**
 
 | Algorithm | Memory Hard | CPU Cost | Adaptive | Best For |
@@ -534,6 +542,8 @@ argon2:    memoryCost=65536, timeCost=3, parallelism=4 (complex)
 ### Q4: Explain the concept of "password reset tokens" and how you would implement a secure password reset flow in Express.js. What are the security considerations, and how do you prevent token reuse and timing attacks?
 
 **Answer:**
+
+A secure password reset flow is a **highly sensitive state transition** that must be guarded as strictly as the login process itself. It relies on cryptographically secure, one-time tokens that exist independently of the main password, ensuring that account recovery is possible without exposing the user to token theft or timing attacks.
 
 **Password Reset Tokens:**
 
@@ -675,6 +685,8 @@ app.post('/auth/reset-password', async (req, res) => {
 ### Q5: What is "password strength validation," and how would you implement it in an Express.js application? Discuss the trade-offs between strict validation and user experience, and explain why password length is more important than complexity requirements.
 
 **Answer:**
+
+Password strength validation is the **first line of defense in user security**, focusing on maximizing the "entropy" or unpredictability of chosen credentials. Modern best practices have shifted away from complex character requirements toward enforcing significant length, as it is exponentially more effective at defeating brute-force attempts while providing a better user experience.
 
 **Password Strength Validation:**
 

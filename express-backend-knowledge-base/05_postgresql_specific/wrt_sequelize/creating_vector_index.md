@@ -191,7 +191,7 @@ WHERE indexname LIKE '%embedding%'
 ORDER BY idx_scan DESC;
 ```
 
-## Best Practices
+## Best Practices  --- IMP
 
 1. **Choose Right Index**: IVFFlat for large datasets, HNSW for quality
 2. **Tune Parameters**: Adjust lists (IVFFlat) or m/ef_construction (HNSW)

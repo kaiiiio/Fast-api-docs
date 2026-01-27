@@ -370,6 +370,8 @@ Choose SQL for structured data with relationships and ACID transaction requireme
 
 **Answer:**
 
+Selecting between SQL and NoSQL is a **foundational architectural decision** that depends primarily on your data's structure and your consistency requirements. While SQL databases excel at complex relationships and guaranteed integrity through ACID transactions, NoSQL provides the high-velocity writes and horizontal scaling needed for schema-less data or real-time event processing.
+
 **SQL (PostgreSQL, MySQL) - Choose When:**
 
 ```
@@ -466,17 +468,22 @@ await redis.set(`user:${userId}:session`, sessionData, 'EX', 3600);
 
 **Answer:**
 
+The ACID properties represent the **gold standard of database reliability**, ensuring that complex multi-step operations are executed as a single, coherent unit. This level of rigor is what allows Express.js applications to handle sensitive financial or inventory operations with total confidence that data will never be left in a corrupted or half-processed state.
+
 **ACID** = Atomicity, Consistency, Isolation, Durability - guarantees for database transactions.
 
 **1. Atomicity - All or Nothing:**
+A transaction is a single "unit of work." If any part of the transaction fails, the entire transaction is **rolled back**, and the database state remains unchanged. There is no such thing as a "half-finished" transaction.
+
+*   **Interview Answer:** "Atomicity ensures that a complex operation—like a bank transfer involving a debit and a credit—is treated as one atomic unit. If the credit fails, the debit is undone."
 
 ```javascript
 // Either all operations succeed, or all fail
 await db.transaction(async (trx) => {
-    await Order.create(orderData, { transaction: trx });
+    const order = await Order.create(orderData, { transaction: trx });
     await Inventory.decrement('quantity', { where: { productId }, transaction: trx });
     await Payment.create({ orderId: order.id }, { transaction: trx });
-    // If any fails, all rollback
+    // If any operation fails, the database automatically rolls back all changes
 });
 ```
 
@@ -495,44 +502,47 @@ Transaction:
 ```
 
 **2. Consistency - Valid State:**
+Consistency ensures that a transaction takes the database from one valid state to another. It guarantees that all **constraints** (like Unique, Not Null, Foreign Keys) are satisfied before the commit.
+
+*   **Interview Answer:** "Consistency prevents the database from being 'corrupted' by invalid data. If a transaction violates a business rule or database constraint, the database rejects it."
 
 ```javascript
-// Database always in valid state
-// Constraints enforced (foreign keys, checks)
-
+// Database always remains in a valid state
+// Constraints (Foreign Keys, Data Types) are strictly enforced
 await db.transaction(async (trx) => {
-    // If user doesn't exist, transaction fails
     await Order.create({
-        userId: 999, // Invalid user
-        // Foreign key constraint → Transaction fails
+        userId: 999, // If User 999 doesn't exist...
+        // ...the Foreign Key constraint will fail and the transaction will stop.
     }, { transaction: trx });
 });
 ```
 
-**3. Isolation - Concurrent Transactions:**
+**3. Isolation - Independence:**
+Isolation ensures that concurrent transactions (transactions happening at the same time) do not interfere with each other. They appear to run one after another, even if they are simultaneous.
+
+*   **Interview Answer:** "Isolation prevents 'Race Conditions.' If two people try to buy the last item in stock at the same millisecond, isolation ensures one transaction finishes before the other sees the result."
 
 ```javascript
-// Transactions don't interfere with each other
-
 // Transaction 1: Reading
 const user1 = await User.findByPk(1); // Reads balance: $100
 
-// Transaction 2: Writing (concurrent)
+// Transaction 2: Writing (concurrently)
 await User.update({ balance: 150 }, { where: { id: 1 } });
 
-// Transaction 1: Still sees $100 (isolation)
-// Until Transaction 1 commits, it sees consistent snapshot
+// Transaction 1: Still sees $100 (depending on isolation level)
+// This prevents 'Dirty Reads' - seeing data that hasn't been committed yet.
 ```
 
-**4. Durability - Persistence:**
+**4. Durability - Permanence:**
+Once a transaction is committed, it is saved permanently in **non-volatile memory** (the disk). Even if the server crashes or the power goes out immediately after, the data will not be lost.
+
+*   **Interview Answer:** "Durability is the guarantee that once a 'Success' response is sent to the user, the data is physically on the disk and ready for the next restart."
 
 ```javascript
-// Once committed, data is permanent (even if server crashes)
-
 await db.transaction(async (trx) => {
     await Order.create(orderData, { transaction: trx });
-    await trx.commit(); // Data written to disk
-    // Even if server crashes now, order is saved
+    await trx.commit(); // At this point, data is forced to DISK.
+    // Server crash here? No problem. Data is safe.
 });
 ```
 
@@ -588,6 +598,10 @@ NoSQL (BASE):
 ### Q3: How would you design a database schema for a multi-tenant SaaS application in Express.js?
 
 **Answer:**
+
+**Answer:**
+
+Designing for multi-tenancy is about **balancing data isolation with operational efficiency**. Whether you choose a shared table approach for its simplicity and low cost, or separate databases for the ultimate in security and compliance, the goal is to create a robust filter that ensures each customer's data remains strictly separated from others at the infrastructure level.
 
 **Multi-tenant** = Single application serves multiple customers (tenants) with data isolation.
 
@@ -711,6 +725,10 @@ app.get('/users/:id', async (req, res) => {
 ### Q4: Explain database indexing strategies. How do you optimize queries in Express.js applications?
 
 **Answer:**
+
+**Answer:**
+
+Database indexing is the **most effective tool for query performance optimization**, acting as a high-speed search index that eliminates the need for expensive full-table scans. Proper indexing requires a deep understanding of your application's read patterns, as every index added improves search speed at the cost of slightly slower write operations.
 
 **Indexes** speed up queries by creating **sorted data structures** for fast lookups.
 

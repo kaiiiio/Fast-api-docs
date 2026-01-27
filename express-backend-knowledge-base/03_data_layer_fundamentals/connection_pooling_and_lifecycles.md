@@ -2,7 +2,7 @@
 
 Connection pooling is essential for managing database connections efficiently in Express.js applications. This guide covers connection pool setup, lifecycle management, and best practices.
 
-## What is Connection Pooling?
+## What is Connection Pooling?  --- IMP
 
 **Connection pooling** maintains a pool of reusable database connections instead of creating new connections for each request. This improves performance and resource utilization.
 
@@ -174,9 +174,9 @@ app.get('/users/:id', async (req, res) => {
 });
 ```
 
-## Connection Lifecycle
+## Connection Lifecycle  --- IMP
 
-### Connection States
+### Connection States  
 
 ```
 1. Created → Added to pool
@@ -410,7 +410,7 @@ app.get('/users/:id', async (req, res) => {
 });
 ```
 
-## Summary
+## Summary --- IMP
 
 **Connection Pooling and Lifecycles:**
 
@@ -435,7 +435,7 @@ Connection pooling is essential for production Express.js applications. It reuse
 
 ---
 
-## 🎯 Interview Questions: Connection Pooling & Database Lifecycle
+## 🎯 Interview Questions: Connection Pooling & Database Lifecycle   --- IMP
 
 ### Q1: Explain connection pooling in Express.js. Why is it critical for production applications?
 

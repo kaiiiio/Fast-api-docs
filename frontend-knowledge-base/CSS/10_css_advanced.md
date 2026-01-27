@@ -90,6 +90,7 @@ filter: invert(100%);
 filter: opacity(50%);
 filter: saturate(200%);
 filter: sepia(100%);
+/* drop-shadow: offset-x | offset-y | blur-radius | color */
 filter: drop-shadow(10px 10px 5px rgba(0,0,0,0.5));
 
 /* Multiple filters */
@@ -216,10 +217,13 @@ padding: min(5%, 20px);
 width: max(50%, 300px);  /* Larger of two */
 font-size: max(16px, 1rem);
 
-/* clamp() */
+/* clamp(min, preferred, max) */
+/* Clamps a value between an upper and lower bound. */
+/* The value will be the preferred value as long as it's between min and max. */
 font-size: clamp(1rem, 2.5vw, 2rem);  /* min, preferred, max */
 width: clamp(300px, 50%, 800px);
 padding: clamp(10px, 5%, 50px);
+
 
 /* Complex calculations */
 width: calc(100% / 3 - 20px);
@@ -345,7 +349,7 @@ element.attributeStyleMap.set('width', CSS.px(100));
     place-items: center;
 }
 
-/* Aspect ratio box */
+/* aspect-ratio: width / height */
 .aspect-box {
     aspect-ratio: 16 / 9;
 }

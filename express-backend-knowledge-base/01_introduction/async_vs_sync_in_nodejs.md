@@ -16,7 +16,7 @@ app.get("/users/:user_id", (req, res) => {
 });
 ```
 
-**Problems:** One request blocks the event loop. Event loop sits idle waiting for I/O (database, API calls, file reads). Limited concurrency (can't handle other requests during wait). CPU underutilized during I/O waits.
+**Problems:** One request blocks the event loop. Event loop sits idle waiting for I/O (database, API calls, file reads). Limited concurrency (can't handle other requests during wait). CPU underutilized during I/O waits.  --- IMP
 
 ### Asynchronous (Async) Code
 
@@ -100,9 +100,9 @@ app.post("/analyze", async (req, res) => {
 
 ## Node.js Event Loop
 
-Node.js uses a single-threaded event loop for async operations:
+Node.js uses a single-threaded event loop for async operations:   --- IMP
 
-```javascript
+```javascript   
 // Event loop: Single thread handles all async I/O efficiently.
 app.get("/users/:id", async (req, res) => {
     // Step 1: Request received (event loop)
@@ -122,17 +122,28 @@ app.get("/users/:id", async (req, res) => {
 
 **Sync approach:**
 - Each request blocks the event loop
+- **The Rule:** 1 Request = 1 Dedicated Thread
 - With 4 CPU cores: ~400-800 concurrent requests max
 - Memory: ~8MB per thread × 800 = ~6.4GB just for threads
 - Slow response times under load
 
-**Async approach:**
+**Async approach:**   --- IMP
 - All requests share event loop
+- **The Rule:** 1 Thread = Thousands of Requests
 - Same 4 cores: easily handle 10,000+ concurrent requests
 - Memory: ~50-100MB for event loop
 - Fast response times, efficient resource usage
 
-## Common Patterns
+> [!NOTE]
+> **Deep Dive: Thread Calculation & Cost**
+>
+> 1. **Thread Allocation (The Count):** In sync-based servers, 1000 concurrent requests require 1000 threads. The OS has to perform "Context Switching" between these threads, which is computationally expensive.
+> 2. **What one thread does (The Work):** In a sync model, a thread initiates a DB call and **waits (blocks)**. It is essentially idle, doing zero work but remaining occupied until the DB responds.
+> 3. **The Memory Math:** Each thread is assigned a "Stack" (memory for local variables). If the OS default is 8MB:
+>    - **Math:** `800 threads * 8MB = 6.4 GB`.
+>    - This is why Node.js is a game-changer; it handles the same 1000 requests using ~50MB instead of 6GB because it doesn't need a stack per request.
+
+## Common Patterns  --- IMP
 
 ### 1. Database Operations
 
@@ -173,7 +184,7 @@ async function fetchUserData(userId) {
 }
 ```
 
-### 3. Background Jobs
+### 3. Background Jobs   --- IMP
 
 ```javascript
 const Bull = require('bull');
@@ -197,7 +208,7 @@ app.post("/users/", async (req, res, next) => {
 });
 ```
 
-## Best Practices
+## Best Practices  --- IMP
 
 1. **Use async for all I/O operations**
    - Database calls
@@ -208,6 +219,10 @@ app.post("/users/", async (req, res, next) => {
 2. **Keep CPU-bound work separate**
    - Use worker threads (worker_threads module)
    - Or process in background jobs (Bull, Agenda)
+
+> [!NOTE]
+> **What is a Worker Thread?**
+> A Worker Thread allows Node.js to perform tasks on a separate CPU thread, parallel to the main Event Loop. While the Event Loop handles I/O (Database, Network), a Worker Thread handles heavy calculation (Encryption, Image processing) so that the server doesn't freeze or lag for other users.
 
 3. **Handle errors properly**
    - Always use try/catch with async/await
@@ -231,7 +246,7 @@ app.get("/data", (req, res) => {
 });
 ```
 
-### ✅ Non-blocking Alternative
+### ✅ Non-blocking Alternative  --- IMP
 
 ```javascript
 // GOOD: Async file read doesn't block.
@@ -445,7 +460,7 @@ Use Async If:
 
 ---
 
-### Q3: Explain Promise chains vs async/await. When would you use each?
+### Q3: Explain Promise chains vs async/await. When would you use each?  --- IMP
 
 **Answer:**
 
@@ -490,7 +505,7 @@ app.get('/users/:id', async (req, res) => {
 });
 ```
 
-**Comparison:**
+**Comparison:** --- IMP
 
 | Feature | Promise Chains | Async/Await |
 |---------|---------------|-------------|
@@ -562,7 +577,7 @@ const [user, posts] = await Promise.all([
 
 **Answer:**
 
-**Common Pitfall: Unhandled Promise Rejections**
+**Common Pitfall: Unhandled Promise Rejections**  --- IMP
 
 ```javascript
 // ❌ Problem: Error not caught, crashes server
@@ -680,13 +695,13 @@ app.get('/users/:id', (req, res) => {
 
 ---
 
-### Q5: How does Node.js handle concurrent async operations? Explain the event loop's role.
+### Q5: How does Node.js handle concurrent async operations? Explain the event loop's role.  --- IMP
 
 **Answer:**
 
 Node.js uses an **event loop** to handle concurrent async operations with a **single thread**.
 
-**Event Loop Architecture:**
+**Event Loop Architecture:**   --- IMP
 
 ```
 ┌─────────────────────────────────────────┐
@@ -741,7 +756,7 @@ Event Loop:
 **Key Points:**
 - **Single thread** handles all requests
 - **Non-blocking I/O** allows concurrency
-- **Event loop** switches between operations
+- **Event loop** switches between operations   --- IMP
 - **10,000+ concurrent requests** possible
 
 ---
@@ -839,7 +854,7 @@ process.on('SIGUSR2', () => {
 
 ---
 
-## Summary
+## Summary  --- IMP
 
 These interview questions cover:
 - ✅ Blocking vs non-blocking I/O and performance impact

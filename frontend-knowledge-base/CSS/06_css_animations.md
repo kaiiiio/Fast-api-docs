@@ -8,6 +8,7 @@
 
 ```css
 .element {
+    /* transition: property | duration | timing-function | delay */
     transition: property duration timing-function delay;
     
     /* Examples */
@@ -136,6 +137,7 @@ element.addEventListener('transitioncancel', (e) => {
 
 /* Apply animation */
 .element {
+    /* animation: name | duration | timing-function | delay | iteration-count | direction | fill-mode | play-state */
     animation: slideIn 0.5s ease-out;
     
     /* Full syntax */

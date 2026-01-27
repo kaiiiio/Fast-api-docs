@@ -104,7 +104,7 @@ const config = {
 module.exports = config;
 ```
 
-**Explanation:** This pattern groups related settings into sub-objects (`databaseConfig`, `securityConfig`). Access via `config.database.url` or `config.security.secretKey`. This keeps the configuration namespace organized.
+**Explanation:** This pattern groups related settings into sub-objects (`databaseConfig`, `securityConfig`). Access via `config.database.url` or `config.security.secretKey`. This keeps the configuration namespace organized.  --- IMP
 
 ### 2. **Environment-Specific Configuration**
 
@@ -289,7 +289,7 @@ function validateConfig() {
 validateConfig();
 ```
 
-### 4. **Type Safety with TypeScript**
+### 4. **Type Safety with TypeScript** --- IMP
 
 ```typescript
 // config/env.ts: TypeScript provides compile-time type safety.
@@ -316,7 +316,7 @@ Effective configuration management in Express.js requires: Using dotenv for envi
 
 ---
 
-## 🎯 Interview Questions: Configuration Management
+## 🎯 Interview Questions: Configuration Management   --- IMP
 
 ### Q1: How do you manage environment variables in a production Express.js application? What are the security best practices?
 
@@ -324,7 +324,7 @@ Effective configuration management in Express.js requires: Using dotenv for envi
 
 **Environment Variables** store **sensitive configuration** outside code. Never commit secrets to git.
 
-**Basic Setup:**
+**Basic Setup:** --- IMP
 
 ```javascript
 // .env (not committed)

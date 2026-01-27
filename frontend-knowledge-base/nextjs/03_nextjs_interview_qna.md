@@ -941,6 +941,9 @@ export default async function Dashboard() {
 
 **Approach 3: NextAuth.js (Recommended)**
 
+**NextAuth.js** (now Auth.js) is a comprehensive, open-source authentication solution specifically designed for Next.js. It handles the complexity of managing session tokens, cookies, CSRF protection, and OAuth flows (like Google or GitHub login) out of the box. It works seamlessly with both Client and Server Components and provides built-in database adapters for persistent sessions.
+
+
 ```javascript
 // app/api/auth/[...nextauth]/route.js
 import NextAuth from 'next-auth';

@@ -1,4 +1,6 @@
-# Next.js SSR Fundamentals: Complete Guide
+# Next.js SSR Fundamentals: Complete Guide --> 
+
+IMP
 
 Next.js is a React framework that enables server-side rendering (SSR), static site generation (SSG), and hybrid rendering strategies. This guide covers all data fetching methods and SSR concepts for interviews.
 
@@ -28,7 +30,7 @@ Next.js is a React framework that enables server-side rendering (SSR), static si
 ```
 
 ## Server-Side Rendering (SSR)
-
+IMP
 ### getServerSideProps
 
 **Definition**: `getServerSideProps` runs on **every request** on the server. It fetches data and passes it as props to the page component.
@@ -122,7 +124,7 @@ export async function getServerSideProps(context) {
 ## Static Site Generation (SSG)
 
 ### getStaticProps
-
+IMP
 **Definition**: `getStaticProps` runs at **build time** only. It generates static HTML pages that are served from CDN.
 
 **When to Use**:
@@ -274,7 +276,7 @@ export default LegacyPage;
 - Harder to debug
 
 ## Incremental Static Regeneration (ISR)
-
+IMP
 **Definition**: ISR allows you to update static pages **after build** without rebuilding the entire site.
 
 ```javascript
@@ -392,7 +394,7 @@ function UserProfile({ userId }) {
 ```
 
 ## Rendering Strategies Comparison
-
+IMP
 ```javascript
 // 1. SSR (Server-Side Rendering)
 // - Fresh data on every request

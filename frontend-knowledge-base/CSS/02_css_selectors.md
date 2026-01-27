@@ -39,9 +39,9 @@ li:last-child { margin-bottom: 0; }
 li:only-child { list-style: none; }
 
 li:nth-child(2) { color: red; }      /* 2nd child */
-li:nth-child(2n) { background: #f0f0f0; }  /* Even (2, 4, 6...) */
+li:nth-child(2n) { background: #f0f0f0; }  /* Even (2, 4, 6...) | n is index 0, 1, 2... */
 li:nth-child(odd) { background: white; }   /* Odd (1, 3, 5...) */
-li:nth-child(3n+1) { color: blue; }  /* 1, 4, 7, 10... */
+li:nth-child(3n+1) { color: blue; }  /* 1, 4, 7, 10... | 3n (step), +1 (start offset) */
 
 li:nth-last-child(2) { color: green; }  /* 2nd from end */
 
@@ -65,9 +65,9 @@ input:not([type="submit"]) { width: 100%; }
 :root { --main-color: blue; }  /* Root element */
 :target { background: yellow; }  /* URL fragment target */
 :lang(en) { quotes: """ """; }  /* Language */
-:is(h1, h2, h3) { color: blue; }  /* Matches any */
-:where(h1, h2, h3) { margin: 0; }  /* Zero specificity */
-:has(> img) { padding: 20px; }  /* Parent selector */
+:is(h1, h2, h3) { color: blue; }  /* Matches any | Takes highest specificity */
+:where(h1, h2, h3) { margin: 0; }  /* Zero specificity | Useful for overrides */
+:has(> img) { padding: 20px; }  /* Parent selector | Styles parent based on child */
 ```
 
 ---

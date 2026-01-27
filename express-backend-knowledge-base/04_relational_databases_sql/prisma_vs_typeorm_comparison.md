@@ -17,7 +17,7 @@ A detailed comparison between Prisma and TypeORM for both SQL and NoSQL database
 
 ## Overview
 
-### Prisma
+### Prisma  --- IMP
 **Definition:** Prisma is a next-generation ORM that provides type-safe database access through a declarative schema and auto-generated client.
 
 **Key Characteristics:**
@@ -984,7 +984,7 @@ const AppDataSource = new DataSource({
 
 ---
 
-## Interview Questions
+## Interview Questions   --- IMP
 
 ### Q1: Explain the key differences between Prisma and TypeORM. When would you choose one over the other?
 

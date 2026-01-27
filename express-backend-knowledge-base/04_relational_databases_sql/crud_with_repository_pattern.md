@@ -2,7 +2,7 @@
 
 This guide teaches the Repository pattern using our e-commerce example. We'll build complete repositories for Users, Products, Orders, and OrderItems, showing every operation from scratch.
 
-## Understanding the Repository Pattern
+## Understanding the Repository Pattern   --- IMP
 
 **The Problem:** Without repositories, database code is scattered everywhere. If you change databases, you have to update code in many places.
 
@@ -382,7 +382,7 @@ class UserController {
 module.exports = new UserController();
 ```
 
-## Best Practices
+## Best Practices  --- IMP
 
 ### 1. **Repository Returns Models**
 Repositories return Sequelize models, services convert to DTOs:
@@ -447,7 +447,7 @@ Repository pattern in Express.js requires: Creating base repository for common C
 
 ---
 
-## 🎯 Interview Questions: Repository Pattern & CRUD Operations
+## 🎯 Interview Questions: Repository Pattern & CRUD Operations  --- IMP
 
 ### Q1: Explain the Repository Pattern. Why is it beneficial in Express.js applications?
 

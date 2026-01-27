@@ -57,6 +57,7 @@ The **Box Model** describes how elements are rendered with content, padding, bor
     width: 200px;
     height: 100px;
     padding: 20px;
+    /* border: width | style | color */
     border: 5px solid black;
     margin: 10px;
 }

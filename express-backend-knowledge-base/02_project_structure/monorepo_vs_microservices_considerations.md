@@ -2,7 +2,7 @@
 
 Choosing between monorepo and microservices architecture is a critical decision that affects development velocity, deployment, and team structure. This guide helps you make informed decisions.
 
-## What is a Monorepo?
+## What is a Monorepo?  --- IMP
 
 **Monorepo** is a single repository containing multiple related projects or services. All code lives in one place, making it easier to share code and coordinate changes.
 
@@ -130,7 +130,7 @@ Monorepo size: 2GB
 // Change in shared code triggers builds for all services
 ```
 
-## Microservices Advantages
+## Microservices Advantages   --- IMP
 
 ### 1. Independent Deployment
 
@@ -267,7 +267,7 @@ monorepo/
 // Each in separate repository
 ```
 
-## Hybrid Approach
+## Hybrid Approach  --- IMP
 
 ### Monorepo with Microservices
 
@@ -376,7 +376,7 @@ Monorepo is better for small teams with shared code and rapid development needs.
 
 ---
 
-## 🎯 Interview Questions: Monorepo vs Microservices
+## 🎯 Interview Questions: Monorepo vs Microservices  --- IMP
 
 ### Q1: When would you choose a monorepo over microservices architecture? What are the trade-offs?
 

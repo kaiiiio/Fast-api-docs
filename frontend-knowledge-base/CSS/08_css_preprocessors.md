@@ -22,14 +22,14 @@
     padding: var(--spacing);
 }
 
-/* Fallback value */
+/* Fallback value: var(--name, fallback) */
 color: var(--text-color, #333);
 
 /* Computed values */
 .element {
     --size: 100px;
     width: var(--size);
-    height: calc(var(--size) * 2);
+    height: calc(var(--size) * 2);  /* calc(expression) */
 }
 ```
 

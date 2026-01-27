@@ -84,7 +84,7 @@ my_express_app/
 └── README.md
 ```
 
-## Detailed Breakdown
+## Detailed Breakdown   --- IMP
 
 ### 1. `src/app.js` - Application Entry Point
 
@@ -216,7 +216,7 @@ module.exports = config;
 ```
 
 **Explanation:**
-Configuration is centralized in `env.js` using `dotenv`. This ensures type safety and validation of required environment variables. Other parts of the app import `config` from here.
+Configuration is centralized in `env.js` using `dotenv`. This ensures type safety and validation of required environment variables. Other parts of the app import `config` from here.  --- IMP
 
 ### 4. `src/routes/v1/users.js` - Route Handlers
 
@@ -506,7 +506,7 @@ Effective Express.js project structure requires: Separation of concerns (routes,
 
 ---
 
-## 🎯 Interview Questions: Project Structure & Architecture
+## 🎯 Interview Questions: Project Structure & Architecture   --- IMP
 
 ### Q1: How would you structure a large Express.js application for a team of 20+ developers? What principles guide your structure?
 

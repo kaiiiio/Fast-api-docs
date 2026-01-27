@@ -842,6 +842,12 @@ module.exports = {
   theme: {
     extend: {
       keyframes: {
+        /* transform functions & parameters: 
+           - translate(x, y): moves element (px, %, rem)
+           - rotate(deg): rotates element (deg, turn, rad)
+           - scale(x, y): resizes element (multiplier, e.g., 1.5)
+           - skew(x, y): distorts element (deg)
+        */
         slideInLeft: {
           '0%': { transform: 'translateX(-100%)', opacity: '0' },
           '100%': { transform: 'translateX(0)', opacity: '1' },
@@ -886,6 +892,7 @@ module.exports = {
         'shake': 'shake 0.5s ease-in-out',
         'float': 'float 3s ease-in-out infinite',
       },
+
     },
   },
 }
@@ -942,9 +949,9 @@ module.exports = {
         },
       },
       animation: {
-        'gradient': 'gradient 3s ease infinite',
-        'reveal': 'reveal 0.6s ease-out',
-        'typing': 'typing 3.5s steps(40, end), blink 0.75s step-end infinite',
+        'gradient': 'gradient 3s ease infinite',    /* name | duration | timing | iteration */
+        'reveal': 'reveal 0.6s ease-out',           /* name | duration | timing */
+        'typing': 'typing 3.5s steps(40, end), blink 0.75s step-end infinite', /* multi-animation */
       },
     },
   },
@@ -1160,6 +1167,7 @@ module.exports = {
 ```html
 <input 
     type="text" 
+    /* outline: width | style | color (drawn outside border, no space) */
     class="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none px-4 py-2 rounded"
     placeholder="Focus me"
 >
@@ -1350,14 +1358,18 @@ document.documentElement.classList.toggle('dark');
 **CSS:**
 ```css
 .button {
+    /* linear-gradient(angle, color stop1, color stop2) */
     background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 12px 24px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
+    /* transition: property duration timing-function delay */
     transition: all 0.3s ease;
+    /* transform: translateY(value) */
     transform: translateY(0);
+    /* box-shadow: offset-x | offset-y | blur-radius | spread-radius | color */
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
@@ -1400,6 +1412,7 @@ document.documentElement.classList.toggle('dark');
     background: white;
     border-radius: 12px;
     padding: 24px;
+    /* box-shadow: h-offset v-offset blur color */
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     cursor: pointer;
@@ -1452,6 +1465,7 @@ document.documentElement.classList.toggle('dark');
     border: 4px solid #f3f3f3;
     border-top: 4px solid #3498db;
     border-radius: 50%;
+    /* animation: name duration timing-function iteration-count */
     animation: spin 1s linear infinite;
 }
 ```

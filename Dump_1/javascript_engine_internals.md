@@ -15,7 +15,7 @@ A comprehensive guide to how JavaScript code executes in V8 engine, covering mem
 ## V8 Engine Architecture
 
 ### **Core Components**
-
+IMP
 ```
 Source Code
     ↓
@@ -61,7 +61,8 @@ Garbage Collector
 
 ---
 
-## Memory: Stack vs Heap
+## Memory: Stack vs Heap IMP
+
 
 ### **🔴 Critical Concept: Where Variables Live**
 
@@ -71,7 +72,7 @@ Garbage Collector
 | **Objects, Arrays, Functions** | **Heap** | Until garbage collected | `let obj = { name: "John" };` |
 | **Closures** | **Heap** (lexical environment) | As long as referenced | Inner function referencing outer variables |
 
-### **Stack (Call Stack)**
+### **Stack (Call Stack)** IMP
 
 > **What:** LIFO structure storing execution contexts/frames
 
@@ -107,7 +108,7 @@ a();
 → GEC remains until end
 ```
 
-### **Heap**
+### **Heap IMP**
 
 > **What:** Large memory region for dynamic data
 
@@ -133,7 +134,7 @@ const user = { name: "Karan" };
 
 ---
 
-## Execution Context
+## Execution Context IMP
 
 ### **What is an Execution Context?**
 
@@ -404,14 +405,14 @@ function makeUser4() {
 
 ### **Core Engine & Execution**
 
-### Q1: Explain the difference between Stack and Heap
+### Q1: Explain the difference between Stack and Heap ---- IMP
 
 **Answer:**
 - **Stack:** LIFO structure storing execution contexts and primitive values. Fast, fixed size, automatically managed.
 - **Heap:** Large region for objects, arrays, functions. Garbage collected, slower, flexible size.
 - **Key:** Primitives go on stack, objects go on heap. Stack stores references to heap objects.
 
-### Q2: What is a closure and how does it work?
+### Q2: What is a closure and how does it work? ---- IMP
 
 **Answer:**
 A closure is when an inner function retains access to its outer function's variables even after the outer function has returned. This works because the inner function stores a reference to the outer function's lexical environment, which is kept alive on the heap.
@@ -427,7 +428,7 @@ const fn = outer();
 fn(); // 10
 ```
 
-### Q3: What is the Temporal Dead Zone (TDZ)?
+### Q3: What is the Temporal Dead Zone (TDZ)? ---- IMP
 
 **Answer:**
 The TDZ is the period between entering a scope and the actual initialization of a `let`/`const` variable. Accessing the variable during TDZ throws `ReferenceError`.
@@ -472,7 +473,7 @@ let b = 20;
 
 ### **Web Performance & Optimization**
 
-### Q6: What are Preload, Reconnect, Prefetch, and Prerender?
+### Q6: What are Preload, Reconnect, Prefetch, and Prerender?   ---- IMP
 
 **Answer:** These are **Resource Hints** to improve loading performance:
 
@@ -515,7 +516,7 @@ let b = 20;
 
 4. **Local Storage:** Client-side temporary data
 
-### Q8: What are ETag, Cache-Control, and DocumentFragment?
+### Q8: What are ETag, Cache-Control, and DocumentFragment? ---- IMP
 
 **Answer:**
 
@@ -627,7 +628,7 @@ Event Loop continuously checks if call stack is empty and executes queued tasks.
 
 ### **Arrays & Algorithms**
 
-### Q15: What algorithm does Array.prototype.sort() use?
+### Q15: What algorithm does Array.prototype.sort() use?  ---- IMP
 
 **Answer:**
 Modern JS (V8) uses **Timsort** (hybrid of merge + insertion sort).
@@ -665,7 +666,7 @@ Sort converts elements to **strings** unless compare function provided.
 - `beforeunload`: Before leaving page
 - `visibilitychange`: User switches tabs
 
-### Q18: What are render-blocking resources?
+### Q18: What are render-blocking resources? ---- IMP
 
 **Answer:**
 CSS and JS that block browser from rendering until loaded.
@@ -744,7 +745,7 @@ const user = new Person("Nikita");
 
 ### **this, call, apply, bind**
 
-### Q24: Can we bind `this` in an arrow function?
+### Q24: Can we bind `this` in an arrow function?  ---- IMP
 
 **Answer:**
 No. Arrow functions don't have their own `this`; they inherit from lexical scope.
@@ -760,7 +761,7 @@ obj.regular(); // JS
 obj.arrow();   // undefined (inherits outer scope)
 ```
 
-### Q25: Difference between call, apply, and bind?
+### Q25: Difference between call, apply, and bind? ---- IMP
 
 **Answer:**
 - `call(thisArg, arg1, arg2, ...)` - Calls immediately
@@ -783,7 +784,7 @@ boundGreet("Hey");           // Hey Nikita
 
 ### **Modern JavaScript**
 
-### Q26: Difference between Map and Object
+### Q26: Difference between Map and Object  ---- IMP
 
 **Answer:**
 - **Map:** Ordered, keys can be any type, has built-in size/iteration
@@ -801,7 +802,7 @@ obj['1'] = 'string one';
 console.log(Object.keys(obj).length); // 1 (keys coerced to strings)
 ```
 
-### Q27: What are Symbols and Generators?
+### Q27: What are Symbols and Generators? ---- IMP
 
 **Answer:**
 
@@ -957,7 +958,7 @@ function sleep(ms) {
 })();
 ```
 
-### Q39: What happens if you await inside a loop?
+### Q39: What happens if you await inside a loop? ---- IMP
 
 **Answer:**
 Each iteration waits for the previous one — **serial execution** (slow).
@@ -1165,7 +1166,7 @@ Object.defineProperty(obj, "x", {
 });
 ```
 
-### Q53: Object.seal() vs Object.freeze()?
+### Q53: Object.seal() vs Object.freeze()?  ---IMP
 
 **Answer:**
 - `seal()` → Can't add/delete, but **can modify** existing props
@@ -1176,11 +1177,14 @@ const o = { a: 1 };
 
 Object.seal(o);
 o.a = 2;    // ✅ Works
-o.b = 3;    // ❌ Fails (can't add)
+o.b = 3;    // ❌ Fails silently (non-strict) or throws TypeError (strict)
 
 Object.freeze(o);
-o.a = 5;    // ❌ Fails (can't modify)
+o.a = 5;    // ❌ Fails silently (non-strict) or throws TypeError (strict)
 ```
+
+> [!IMPORTANT]
+> **Strict Mode Behavior:** In `"use strict";` mode, attempting to modify a frozen object or add a property to a sealed object will throw a **TypeError**. In non-strict mode, these operations simply fail silently.
 
 ---
 
@@ -1232,10 +1236,10 @@ run(fetchSequence);
 
 ### **Event Delegation & Custom Events**
 
-### Q56: What is Event Delegation?
+### Q56: What is Event Delegation? ---IMP
 
 **Answer:**
-Instead of attaching listeners to multiple child elements, attach one to their common parent and use event bubbling.
+Instead of attaching listeners to multiple child elements, attach one to their common parent and use event bubbling. When an event happens on a child, it "bubbles up" to the parent, where the listener catches it.
 
 ```javascript
 document.querySelector("#list").addEventListener("click", (e) => {
@@ -1244,6 +1248,11 @@ document.querySelector("#list").addEventListener("click", (e) => {
   }
 });
 ```
+
+**Why use it?**
+1. **Memory Efficiency:** Instead of 100 listeners for 100 list items, you use only **one** on the `<ul>`.
+2. **Dynamic Elements:** If you add a new `<li>` via JS later, it automatically has the click behavior because the parent is already listening.
+3. **Cleaner Code:** Less boilerplate for attaching/detaching listeners.
 
 ### Q57: How to create and dispatch a custom event?
 
@@ -1367,7 +1376,7 @@ Each tenant feels like they have their own app — but under the hood, it's **on
 
 ---
 
-### **Database Schema Example**
+### **Database Schema Example**  ---IMP
 
 ```sql
 -- Extension for UUID convenience
@@ -1562,7 +1571,7 @@ def create_project(db: Session, tenant_id: str, owner_id: str, name: str):
 
 ---
 
-## Key Takeaways
+## Key Takeaways  ---IMP
 
 ✅ **Stack** = Execution contexts + primitives (fast, LIFO)
 ✅ **Heap** = Objects, arrays, functions (GC managed)

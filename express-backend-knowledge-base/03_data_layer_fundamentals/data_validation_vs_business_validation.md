@@ -1,8 +1,8 @@
 # Data Validation vs Business Validation
 
 Understanding the distinction between data validation (syntax) and business validation (semantics) is crucial for building robust Express.js applications.
-
-## Key Differences
+ 
+## Key Differences  --- IMP
 
 ### Data Validation (Syntax)
 - **What**: Format, type, structure correctness
@@ -329,7 +329,7 @@ Effective validation in Express.js requires: Data validation at API boundary (Jo
 ---
 
 ## 🎯 Interview Questions: Validation Strategies
-
+--- IMP
 ### Q1: Explain the difference between data validation and business validation. Where does each belong in Express.js architecture?
 
 **Answer:**

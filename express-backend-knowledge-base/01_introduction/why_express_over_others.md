@@ -20,7 +20,7 @@ Express.js was created in 2010 to address these modern needs:
 - Large ecosystem of packages
 - Simple, unopinionated design
 
-## Key Advantages
+## Key Advantages --- IMP
 
 ### 1. **Performance - Why It Matters**
 
@@ -51,7 +51,7 @@ app.get("/users/:user_id", async (req, res) => {
 });
 ```
 
-**Explanation:** The `async` and `await` keywords enable non-blocking I/O. When the database query runs, the function doesn't block—other requests can be handled while waiting. The response returns as soon as the database responds.
+**Explanation:** The `async` and `await` keywords enable non-blocking I/O. When the database query runs, the function doesn't block—other requests can be handled while waiting. The response returns as soon as the database responds.   --- IMP
 
 Compare this to synchronous code:
 ```javascript
@@ -168,7 +168,7 @@ app.get("/users/:user_id", (req, res) => {
 
 That's it. Routing, parsing, and serialization happen automatically.
 
-**Flexible Structure:**
+**Flexible Structure:**  --- IMP
 Express.js is unopinionated. You can structure your project however you want:
 - MVC pattern
 - Service layer pattern
@@ -224,7 +224,7 @@ io.on('connection', (socket) => {
 **Background Tasks:**
 Sometimes you need to do things after responding to the user (like sending an email). Express.js makes this trivial:
 
-```javascript
+```javascript   --- IMP --- VIMP
 // Background task: Queue job without blocking response.
 const Bull = require('bull');
 const emailQueue = new Bull('email');
@@ -279,7 +279,7 @@ Express.js apps deploy easily to:
 ## 🎯 Interview Questions: Framework Selection & Architecture Decisions
 
 ### Q1: When would you choose Express.js over NestJS or FastAPI? What are the trade-offs?
-
+--- IMP
 **Answer:**
 
 **Choose Express.js when:**
@@ -509,7 +509,7 @@ Spring Boot (Java):
 
 **Use Cases:**
 
-**Express.js Best For:**
+**Express.js Best For:** --- IMP
 - ✅ High-concurrency APIs (chat, gaming)
 - ✅ Real-time applications (WebSockets)
 - ✅ Microservices (lightweight, fast)
@@ -761,7 +761,7 @@ def process_message(ch, method, properties, body):
     channel.basic_ack(delivery_tag=method.delivery_tag)
 ```
 
-**3. gRPC Pattern:**
+**3. gRPC Pattern:**   --- IMP--- VIMP
 
 ```javascript
 // Express.js: gRPC Client
@@ -804,7 +804,7 @@ gRPC:
 
 ---
 
-### Q6: Explain the ecosystem advantage of Express.js. How does npm package availability impact development speed?
+### Q6: Explain the ecosystem advantage of Express.js. How does npm package availability impact development speed?   
 
 **Answer:**
 
@@ -935,7 +935,7 @@ npm audit fix
 
 ---
 
-## Summary
+## Summary  --- IMP
 
 These interview questions cover:
 - ✅ Framework selection criteria and trade-offs

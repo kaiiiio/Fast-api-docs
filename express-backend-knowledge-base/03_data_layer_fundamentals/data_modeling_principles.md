@@ -1,10 +1,10 @@
-# Data Modeling Principles: Designing Effective Database Schemas
+# Data Modeling Principles: Designing Effective Database Schemas  --- IMP
 
 Data modeling is the process of designing database schemas to efficiently store and retrieve data. This guide covers principles for designing effective database schemas in Express.js applications.
 
 ## Core Principles
 
-### 1. Normalization
+### 1. Normalization  --- IMP
 
 **Normalization** reduces data redundancy by organizing data into related tables.
 
@@ -259,7 +259,7 @@ const userSchema = new mongoose.Schema({
 });
 ```
 
-## Common Patterns
+## Common Patterns   --- IMP
 
 ### Pattern 1: Soft Deletes
 
@@ -299,7 +299,7 @@ const documentSchema = new mongoose.Schema({
 
 ## Summary
 
-**Data Modeling Principles:**
+**Data Modeling Principles:**  --- IMP
 
 1. **Normalization**: Reduce redundancy, ensure consistency
 2. **Denormalization**: Add redundancy for performance when needed
@@ -324,7 +324,7 @@ Effective data modeling balances normalization (consistency) with denormalizatio
 
 ---
 
-## 🎯 Interview Questions: Data Modeling & Schema Design
+## 🎯 Interview Questions: Data Modeling & Schema Design  --- IMP
 
 ### Q1: Explain normalization vs denormalization. When would you denormalize a database schema?
 

@@ -1,6 +1,6 @@
 # Dependency Injection Best Practices in Express.js
 
-Dependency injection (DI) in Express.js enables clean, testable, and maintainable code by managing dependencies explicitly. While Express doesn't have built-in DI like FastAPI, we can implement it effectively using patterns and libraries.
+Dependency injection (DI) in Express.js enables clean, testable, and maintainable code by managing dependencies explicitly. While Express doesn't have built-in DI like FastAPI, we can implement it effectively using patterns and libraries.   --- IMP
 
 ## Understanding Dependency Injection in Express.js
 
@@ -33,7 +33,7 @@ class UserService {
 ```
 
 **Explanation:**
-By injecting dependencies, we can easily replace them with mocks in tests and swap implementations without changing the service code.
+By injecting dependencies, we can easily replace them with mocks in tests and swap implementations without changing the service code.  --- IMP
 
 ## Dependency Injection Patterns
 
@@ -165,7 +165,7 @@ app.post('/users', async (req, res) => {
 ```
 
 **Explanation:**
-A dependency container automatically resolves dependencies, creating instances as needed. Singletons are cached for performance.
+A dependency container automatically resolves dependencies, creating instances as needed. Singletons are cached for performance.   --- IMP
 
 ## Real-World Examples
 
@@ -471,7 +471,7 @@ class UserService {
 }
 ```
 
-## Summary
+## Summary   --- IMP
 
 **Dependency Injection in Express.js:**
 
@@ -496,7 +496,7 @@ Dependency injection in Express.js is achieved through constructor injection, fa
 
 ---
 
-## 🎯 Interview Questions: Dependency Injection
+## 🎯 Interview Questions: Dependency Injection --- IMP
 
 ### Q1: Explain Dependency Injection in Express.js. How does it improve code quality and testability?
 
@@ -578,7 +578,7 @@ With DI:
 
 ---
 
-### Q2: What are the different ways to implement Dependency Injection in Express.js? Compare them.
+### Q2: What are the different ways to implement Dependency Injection in Express.js? Compare them.   --- IMP
 
 **Answer:**
 
@@ -688,7 +688,7 @@ const userService = container.get('userService');
 - ⚠️ More complex setup
 - ⚠️ Can hide dependencies
 
-**Comparison:**
+**Comparison:**  --- IMP
 
 | Approach | Complexity | Testability | Use Case |
 |----------|-----------|-------------|----------|
@@ -698,7 +698,7 @@ const userService = container.get('userService');
 
 ---
 
-### Q3: How do you test code that uses Dependency Injection? Provide examples.
+### Q3: How do you test code that uses Dependency Injection? Provide examples.   --- IMP
 
 **Answer:**
 
@@ -852,6 +852,13 @@ class Container {
 
 module.exports = Container;
 ```
+
+> [!TIP]
+> **Deep Dive: Factories vs Singletons**
+>
+> 1.  **Factories (The "How"):** A factory is a function that tells the container how to create a service. Instead of passing an already created object, we pass a function (`() => new Service()`). This allows **Lazy Loading**—the service is only created when it's actually needed.
+> 2.  **Singletons (The "How Many"):** When a service is registered as a singleton, the container creates it only **once**. It stores that instance in the `this.services` cache. Every time you call `get()`, you get the same exact instance. This is perfect for Database Pools or Loggers to save memory and connections.
+> 3.  **Transient (Non-Singleton):** If `singleton: false`, the container will call the factory function **every single time** you call `get()`, giving you a fresh, new instance.
 
 **Usage:**
 

@@ -52,8 +52,8 @@ Order.belongsTo(User);
 ## NoSQL Databases (Document, Key-Value, etc.)
 
 **NoSQL databases** store data in flexible formats (documents, key-value pairs). They're schema-less and scale horizontally.
-
-### Types of NoSQL
+  
+### Types of NoSQL --- IMP
 
 ```
 1. Document: MongoDB (JSON-like documents)
@@ -62,7 +62,7 @@ Order.belongsTo(User);
 4. Graph: Neo4j (nodes and edges)
 ```
 
-### When to Use NoSQL
+### When to Use NoSQL --- IMP
 
 ```javascript
 // ✅ Good for: Flexible schema, high write throughput
@@ -339,7 +339,7 @@ const eventSchema = new mongoose.Schema({
 });
 ```
 
-## Summary
+## Summary --- IMP
 
 **Choosing Database Type:**
 
@@ -364,7 +364,7 @@ Choose SQL for structured data with relationships and ACID transaction requireme
 
 ---
 
-## 🎯 Interview Questions: Database Selection & Architecture
+## 🎯 Interview Questions: Database Selection & Architecture --- IMP
 
 ### Q1: When would you choose SQL vs NoSQL for an Express.js application? Explain with real-world scenarios.
 

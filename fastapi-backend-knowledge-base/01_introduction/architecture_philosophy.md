@@ -2,7 +2,7 @@
 
 FastAPI's design encourages clean, maintainable architectures. Understanding these principles will help you build scalable, testable applications.
 
-## What is Pydantic?
+## What is Pydantic?  ---IMP
 
 **Pydantic** is a data validation library that uses Python type hints to validate data at runtime. It's the foundation of FastAPI's automatic request validation, serialization, and documentation generation.
 
@@ -86,7 +86,7 @@ class User(BaseModel):
         return v
 ```
 
-**Pydantic vs TypeScript:**
+**Pydantic vs TypeScript:** ---IMP
 
 | Feature | TypeScript | Pydantic |
 |---------|-----------|----------|
@@ -169,7 +169,7 @@ async def get_user(user_id: int):
     return {"id": user["id"], "name": user["name"], "status": user["status"]}
 ```
 
-**Good pattern:**
+**Good pattern:** ---IMP
 ```python
 # Separated concerns
 # app/models/user.py
@@ -569,8 +569,8 @@ app/
 │   └── repositories.py
 └── main.py                   # Application entry point
 ```
-
-## Design Patterns for FastAPI
+ 
+## Design Patterns for FastAPI   ---IMP
 
 ### 1. Repository Pattern
 
@@ -663,7 +663,7 @@ async def test_get_active_user_not_found():
         await service.get_active_user(999)
 ```
 
-## Summary
+## Summary   ---IMP
 
 FastAPI architecture philosophy emphasizes:
 

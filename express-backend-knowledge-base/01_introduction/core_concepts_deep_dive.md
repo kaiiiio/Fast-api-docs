@@ -4,7 +4,7 @@ Understanding Express.js core concepts is essential for building robust applicat
 
 ## 1. Middleware: The Request Pipeline
 
-Express.js is built around middleware functions. Middleware functions have access to the request object (`req`), the response object (`res`), and the next middleware function in the application's request-response cycle.
+Express.js is built around middleware functions. Middleware functions have access to the request object (`req`), the response object (`res`), and the next middleware function in the application's request-response cycle.   --- IMP
 
 ### Understanding Middleware
 
@@ -64,7 +64,7 @@ Content-Type: application/json
 { "ok": true }
 ```
 
-**When it causes errors:**
+**When it causes errors:**  --- IMP
 - **Invalid JSON syntax**:
     ```http
     { email: "a@b.com" }   // missing quotes around key → invalid JSON
@@ -74,7 +74,7 @@ Content-Type: application/json
 - **Wrong Content-Type**:
   - If client sends JSON but **without** `Content-Type: application/json`, `express.json()` **won't parse** it → `req.body` stays `{}`.
 
-#### 2) `express.urlencoded({ extended: true })` – Form body parser
+#### 2) `express.urlencoded({ extended: true })` – Form body parser  --- IMP
 
 **What it does**:  
 - Parses `application/x-www-form-urlencoded` bodies (HTML forms)  
@@ -117,7 +117,7 @@ app.post('/profile', (req, res) => {
 });
 ```
 
-**When it causes errors / gotchas:**
+**When it causes errors / gotchas:**  --- IMP
 - Payload too big → if you configure a small `limit`, Express can return **413 Payload Too Large**.
 - Wrong content-type → if client sends `application/json` but only `urlencoded` middleware is configured, `req.body` will be `{}`.
 - If you use `extended: false`, nested data like `user[name]` will not parse into objects properly (it will be a flat string).
@@ -154,7 +154,7 @@ Content-Type: application/json; charset=utf-8
 { "message": "This is public data" }
 ```
 
-**When CORS causes issues:**
+**When CORS causes issues:**  --- IMP
 - **No CORS middleware**:
   - Browser shows: `CORS error / Access-Control-Allow-Origin missing` in console.
   - API works in tools like Postman, but fails from browser frontend.
@@ -363,7 +363,7 @@ app.get('/users/:id', async (req, res) => {
 
 ## 6. Validation: Request Validation
 
-### Joi Validation
+### Joi Validation --- IMP
 
 ```javascript
 const Joi = require('joi');
@@ -472,7 +472,7 @@ Understanding these concepts is essential for building robust Express.js applica
 
 ## 🎯 Interview Questions: Express.js Core Concepts
 
-### Q1: Explain the Express.js middleware execution flow. What happens if you forget to call `next()`?
+### Q1: Explain the Express.js middleware execution flow. What happens if you forget to call `next()`?  --- IMP
 
 **Answer:**
 
@@ -530,9 +530,17 @@ app.use((req, res, next) => {
 - **Logging**: Log request, always call `next()` to continue
 - **Rate Limiting**: Check limit, call `next()` or send 429
 
+> [!NOTE]
+> **How to check limits (Deep Dive):**
+> 1. **Manual Way:** You maintain a counter in **Redis** or **In-Memory** with the User's IP as the Key. On every request, you increment the counter. If `count > MAX`, you don't call `next()` and send `res.status(429)`.
+> 2. **Header-based check:** Middleware usually attaches limit info to `res` headers so the client knows how much is left:
+>    - `X-RateLimit-Limit`: Max allowed
+>    - `X-RateLimit-Remaining`: Remaining hits
+>    - `X-RateLimit-Reset`: Time until it resets
+
 ---
 
-### Q2: How does Express handle async errors in route handlers? What's the difference between throwing an error and calling `next(error)`?
+### Q2: How does Express handle async errors in route handlers? What's the difference between throwing an error and calling `next(error)`?  --- IMP
 
 **Answer:**
 
@@ -592,7 +600,7 @@ app.use((err, req, res, next) => {
 });
 ```
 
-**Key Difference:**
+**Key Difference:** 
 - **`throw error`**: Crashes if not caught
 - **`next(error)`**: Passes to error middleware (proper way)
 
@@ -703,7 +711,7 @@ Content-Type: application/x-www-form-urlencoded
 email=john@example.com&password=secret
 ```
 
-**Key Differences:**
+**Key Differences:** --- IMP
 
 | Feature | `express.json()` | `express.urlencoded()` |
 |--------|------------------|------------------------|
@@ -729,11 +737,11 @@ app.post('/users', (req, res) => {
 
 ---
 
-### Q5: Explain Express routing with parameters. How does route order affect matching?
+### Q5: Explain Express routing with parameters. How does route order affect matching? 
 
 **Answer:**
 
-Express matches routes **in the order they're defined**. First match wins, so **specific routes must come before parameterized routes**.
+Express matches routes **in the order they're defined**. First match wins, so **specific routes must come before parameterized routes**. --- IMP
 
 **Route Parameters:**
 
@@ -867,7 +875,9 @@ const logger = (req, res, next) => {
 const rateLimiter = require('express-rate-limit');
 const limiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // 100 requests per window
+    max: 100, // 100 requests per window
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
 // 3. Body Parser (built-in)
@@ -940,7 +950,7 @@ app.post('/api/users',
 
 ### Q7: Explain CORS in Express. When and why do you need it? How do you configure it properly?
 
-**Answer:**
+**Answer:**  --- IMP
 
 **CORS (Cross-Origin Resource Sharing)** allows browsers to make requests from one domain to another. By default, browsers **block cross-origin requests** for security.
 
@@ -977,7 +987,7 @@ app.use(cors({
 }));
 ```
 
-**How CORS Works:**
+**How CORS Works:**  --- IMP
 
 ```
 1. Browser sends OPTIONS request (preflight)
@@ -1026,7 +1036,7 @@ app.use(cors({
 
 ---
 
-### Q8: How does Express handle static files? When would you use it vs a CDN?
+### Q8: How does Express handle static files? When would you use it vs a CDN?  --- IMP
 
 **Answer:**
 
@@ -1073,7 +1083,7 @@ app.use(express.static('public', {
 }));
 ```
 
-**Express Static vs CDN:**
+**Express Static vs CDN:**  --- IMP
 
 | Feature | Express Static | CDN |
 |---------|---------------|-----|
@@ -1114,7 +1124,7 @@ if (process.env.NODE_ENV === 'development') {
 
 Understanding the **complete request lifecycle** is crucial for debugging and optimization.
 
-**Lifecycle Flow:**
+**Lifecycle Flow:**   --- IMP
 
 ```
 1. HTTP Request Arrives

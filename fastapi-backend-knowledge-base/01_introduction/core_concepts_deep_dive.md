@@ -174,7 +174,7 @@ async def add_process_time_header(request: Request, call_next):
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI  --- IMP
 
 ### Q1: Explain FastAPI's core concepts including Pydantic models, dependency injection, async/await, path/query parameters, and middleware. Provide detailed examples showing how each concept works and when to use them.
 
@@ -254,7 +254,7 @@ async def create_user(user: User):
 
 **2. Dependency Injection: The Secret Weapon**
 
-**What is Dependency Injection:**
+**What is Dependency Injection:**   --- IMP
 
 Dependency Injection (DI) is a design pattern where dependencies are provided to a function rather than created inside it. FastAPI makes DI trivial with the `Depends` system.
 

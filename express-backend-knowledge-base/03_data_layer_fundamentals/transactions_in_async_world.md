@@ -1,8 +1,8 @@
 # Transactions in Async World: Managing Database Transactions in Express.js
 
 Transactions ensure data consistency by grouping multiple database operations into atomic units. This guide covers transaction management in Express.js with async/await.
-
-## What are Transactions?
+ 
+## What are Transactions? ---VIMP
 
 **Transactions** group multiple database operations into a single atomic unit. Either all operations succeed (commit) or all fail (rollback), ensuring data consistency.
 
@@ -151,7 +151,7 @@ app.post('/transfer', async (req, res) => {
 });
 ```
 
-## Sequelize Transactions
+## Sequelize Transactions  --- IMP
 
 ### Using Sequelize
 
@@ -338,7 +338,7 @@ app.post('/orders', async (req, res) => {
 });
 ```
 
-## Best Practices
+## Best Practices   --- IMP
 
 ### 1. Always Use Try-Catch-Finally
 
@@ -436,7 +436,7 @@ await connection.commit();
 await connection.commit();
 ```
 
-## Summary
+## Summary   --- IMP
 
 **Transactions in Async World:**
 

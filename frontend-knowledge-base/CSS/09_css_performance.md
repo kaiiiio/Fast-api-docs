@@ -17,6 +17,7 @@ div > div > div > p { }  /* Deep nesting */
 #id { }
 
 /* ❌ Expensive properties */
+/* box-shadow: x | y | blur | spread | color */
 box-shadow: 0 0 50px rgba(0,0,0,0.5);  /* Large blur */
 filter: blur(10px);
 transform: perspective(1000px) rotateY(45deg);  /* 3D */
@@ -289,7 +290,9 @@ margin-right: 20px;
 margin-bottom: 10px;
 margin-left: 20px;
 
-/* ✅ Use shorthand */
+/* ✅ Use shorthand: top | right | bottom | left */
+margin: 10px 20px 10px 20px;
+/* or: top/bottom | left/right */
 margin: 10px 20px;
 
 /* ❌ 5. Inline styles */

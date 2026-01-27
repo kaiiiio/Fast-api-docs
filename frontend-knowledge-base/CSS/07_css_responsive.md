@@ -172,8 +172,8 @@ padding: 1em;  /* Relative to element font-size */
 width: 50%;  /* Relative to parent */
 
 /* Clamp (responsive without media queries) */
-font-size: clamp(1rem, 2.5vw, 2rem);
-/* min, preferred, max */
+font-size: clamp(1rem, 2.5vw, 2rem);  /* min, preferred, max */
+/* preferred is used if between min/max; otherwise clamps to bounds */
 
 width: clamp(300px, 50%, 800px);
 ```
@@ -217,8 +217,8 @@ font-size: calc(16px + 0.5vw);
 <!-- srcset for different sizes -->
 <img 
     src="small.jpg"
-    srcset="small.jpg 480w, medium.jpg 768w, large.jpg 1200w"
-    sizes="(max-width: 768px) 100vw, 50vw"
+    srcset="small.jpg 480w, medium.jpg 768w, large.jpg 1200w"  /* w = image width in px */
+    sizes="(max-width: 768px) 100vw, 50vw"  /* media condition | slot width */
     alt="Responsive image"
 >
 

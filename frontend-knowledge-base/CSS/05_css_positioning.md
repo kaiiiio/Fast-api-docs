@@ -156,6 +156,7 @@ transform: translateZ(50px);  /* 3D */
 transform: translate3d(50px, 100px, 50px);
 
 /* Scale */
+/* transform: scale(factor) | scale(x, y) */
 transform: scale(1.5);  /* 150% */
 transform: scaleX(2);
 transform: scaleY(0.5);
@@ -174,6 +175,7 @@ transform: skewX(20deg);
 transform: skewY(10deg);
 
 /* Multiple transforms */
+/* transform: translate(x, y) rotate(deg) scale(factor) */
 transform: translate(50px, 100px) rotate(45deg) scale(1.5);
 
 /* Transform origin */
@@ -260,6 +262,7 @@ transform-origin: 100px 50px;
 
 ```css
 /* Matrix for complex transforms */
+/* transform: matrix(a, b, c, d, tx, ty) */
 transform: matrix(a, b, c, d, tx, ty);
 
 /* Example: Rotate 45deg */

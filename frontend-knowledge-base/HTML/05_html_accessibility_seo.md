@@ -1,4 +1,4 @@
-# HTML Accessibility & SEO - Interview Questions & Answers
+# HTML Accessibility & SEO - Interview Questions & Answers   -> IMP
 
 ## Q41. What is ARIA? Why is it important?
 
@@ -502,7 +502,7 @@ Structured data helps search engines understand content.
 <!-- Bad: Generic text -->
 <a href="/article">Click here</a>  <!-- Not descriptive -->
 
-<!-- External links -->
+<!-- External links IMP --> 
 <a href="https://external.com" target="_blank" rel="noopener noreferrer">
     External Link
 </a>
@@ -531,14 +531,22 @@ Structured data helps search engines understand content.
 </nav>
 ```
 
-**Best Practices:**
+**Best Practices:** IMP
 - Use descriptive link text
 - Indicate external links
 - Show file type and size for downloads
 - Use `rel="noopener noreferrer"` for `target="_blank"`
-  - **`noopener`**: Prevents new page from accessing `window.opener` (security - prevents tabnabbing attacks)
-  - **`noreferrer`**: Doesn't send referrer info to new page (privacy - hides where user came from)
-  - **Why needed**: Without these, opened page can redirect your original page using `window.opener.location`
+  - **`noopener`**: Security - Prevents new page from accessing `window.opener` (prevents tabnabbing).
+  - **`noreferrer`**: Privacy - Doesn't send `Referer` header to destination.
+  - **`nofollow`**: SEO - Search engines won't follow this link or pass ranking authority.
+  - **`sponsored`**: SEO - For advertisements, paid placements, or sponsored links.
+  - **`ugc`**: SEO - For User Generated Content (comments, forum posts).
+  - **`external`**: Semantic - Indicates the link leads to an external site.
+  - **`author`**: Link to author profile or information.
+  - **`license`**: Link to copyright/licensing info.
+  - **`prev` / `next`**: Pagination - Relationship between current and other pages in series.
+  - **`me`**: Social - Links to another profile of the same person.
+
 - Ensure sufficient color contrast
 - Make links keyboard accessible
 

@@ -14,7 +14,7 @@ A comprehensive guide to GraphQL covering fundamentals, integration with SQL and
 
 ---
 
-## What is GraphQL?
+## What is GraphQL? --- IMP
 
 **Definition:** GraphQL is a query language for APIs and a runtime for executing those queries. It was developed by Facebook in 2012 and open-sourced in 2015.
 
@@ -34,7 +34,7 @@ A comprehensive guide to GraphQL covering fundamentals, integration with SQL and
 
 ---
 
-## GraphQL vs REST
+## GraphQL vs REST  --- IMP
 
 ### Comparison Table
 
@@ -318,7 +318,7 @@ query {
 
 ---
 
-## GraphQL with SQL Databases
+## GraphQL with SQL Databases   --- IMP
 
 ### Setup with Prisma
 
@@ -419,7 +419,7 @@ type Mutation {
 }
 ```
 
-**Resolvers with Prisma:**
+**Resolvers with Prisma:**   --- IMP
 ```typescript
 // resolvers.ts
 import { PrismaClient } from '@prisma/client';
@@ -683,7 +683,7 @@ mutation AddComment {
 
 ---
 
-## GraphQL with MongoDB
+## GraphQL with MongoDB   --- IMP
 
 ### Setup with Prisma (MongoDB)
 
@@ -968,7 +968,7 @@ export const resolvers = {
 
 ---
 
-## Advanced Patterns
+## Advanced Patterns    --- IMP
 
 ### 1. DataLoader (Solving N+1 Problem)
 
@@ -1665,8 +1665,8 @@ const server = new ApolloServer({
 
 ---
 
-## Interview Questions
-
+## Interview Questions   --- IMP
+  
 ### Q1: What is GraphQL and how does it differ from REST?
 
 **Answer:** GraphQL is a query language for APIs that allows clients to request exactly the data they need. Key differences from REST:

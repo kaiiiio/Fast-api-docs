@@ -22,7 +22,7 @@ pages/
 export default function BlogPost({ slug }) {
     return <h1>Post: {slug}</h1>;
 }
-
+// IMP
 export async function getServerSideProps({ params }) {
     return { props: { slug: params.slug } };
 }
@@ -357,7 +357,7 @@ export async function GET(request) {
     const headersList = headers();
     const userAgent = headersList.get('user-agent');
     
-    // Access search params
+    // Access search params  IMP
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query');
     

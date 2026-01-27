@@ -156,7 +156,8 @@ Grid is a two-dimensional layout system (rows AND columns).
     grid-row: 1 / 2;
     
     /* Shorthand */
-    grid-area: 1 / 1 / 3 / 3;  /* row-start / col-start / row-end / col-end */
+    /* grid-area: row-start / col-start / row-end / col-end */
+    grid-area: 1 / 1 / 3 / 3;
     
     /* Named areas */
     grid-area: header;

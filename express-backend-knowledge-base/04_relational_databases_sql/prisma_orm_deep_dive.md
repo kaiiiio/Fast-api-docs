@@ -2,7 +2,7 @@
 
 Prisma is a next-generation ORM that provides type-safe database access, auto-generated queries, and excellent developer experience. This guide covers using Prisma in Express.js applications.
 
-## 📝 Interview-Ready Definitions
+## 📝 Interview-Ready Definitions  --- IMP
 
 **Prisma:** A next-generation ORM that uses a declarative schema to generate a type-safe database client. It provides auto-completion, compile-time type checking, and excellent developer experience for TypeScript/JavaScript applications.
 
@@ -602,7 +602,7 @@ Prisma is a modern ORM that provides type-safe database access with excellent de
 
 ---
 
-## 🎯 Interview Questions: Prisma ORM
+## 🎯 Interview Questions: Prisma ORM  --- IMP
 
 ### Q1: What are the key advantages of Prisma over Sequelize? When would you choose Prisma?
 

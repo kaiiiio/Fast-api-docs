@@ -11,9 +11,23 @@
     width: 200px;           /* Content width */
     height: 100px;          /* Content height */
     padding: 20px;          /* Space inside border */
+    /* border: width | style | color */
     border: 5px solid black; /* Border */
     margin: 10px;           /* Space outside border */
 }
+
+/* box-shadow: h-offset | v-offset | blur | spread | color */
+.box-shadow {
+    box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+}
+
+/* outline: width | style | color */
+/* Difference: outline doesn't take space (drawn outside border) */
+.outline {
+    outline: 2px solid blue;
+    outline-offset: 4px; /* Space between border and outline */
+}
+
 
 /* box-sizing changes calculation */
 .border-box {

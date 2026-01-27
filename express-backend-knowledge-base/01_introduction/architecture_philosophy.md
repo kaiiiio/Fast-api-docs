@@ -1,8 +1,10 @@
 # Architecture Philosophy: Building Maintainable Express.js Applications
 
+
 Express.js's flexibility allows for clean, maintainable architectures. Understanding these principles will help you build scalable, testable applications.
 
-## Core Principles
+## Core Principles 
+IMP
 
 ### 1. **Modularity**
 
@@ -383,7 +385,7 @@ router.get("/users/:user_id", async (req, res, next) => {
 });
 ```
 
-**Benefits:** Automatic lifecycle management, easy to swap implementations (e.g., test vs production), and clear dependency graph.
+**Benefits:** Automatic lifecycle management, easy to swap implementations (e.g., test vs production), and clear dependency graph.  
 
 ## Recommended Project Structure
 
@@ -430,6 +432,9 @@ src/
 
 Abstracts data access logic:
 
+> [!TIP]
+> "The Repository Pattern abstracts data access. Instead of calling the database directly in your business logic, you call repository methods. This makes it easy to swap databases (e.g., SQL to NoSQL) and simplifies testing by allowing you to easily mock data access."
+
 ```javascript
 // repositories/baseRepository.js
 class BaseRepository {
@@ -467,6 +472,9 @@ class UserRepository extends BaseRepository {
 
 Encapsulates business logic:
 
+> [!TIP]
+> "The Service Layer is where all business rules and orchestration logic live. It sits between the controller and the repository, ensuring that your core application logic is independent of the transport layer (Express) and the data storage details."
+
 ```javascript
 class UserService {
     constructor(userRepository) {
@@ -486,6 +494,9 @@ class UserService {
 ### 3. Middleware Pattern
 
 Express.js's middleware system:
+
+> [!TIP]
+> "Middleware is a pipeline for processing requests. Each middleware function has access to the request and response objects and the next middleware in the cycle. It allows us to centralize cross-cutting concerns like authentication, logging, and global error handling."
 
 ```javascript
 // Middleware: Authentication check
@@ -551,7 +562,7 @@ describe('UserService', () => {
 });
 ```
 
-## Summary
+## Summary   --- IMP
 
 Express.js architecture philosophy emphasizes:
 
@@ -572,7 +583,7 @@ By following these principles, you build applications that are:
 
 ## 🎯 Interview Questions: Architecture & Design Patterns
 
-### Q1: Explain the separation of concerns in Express.js. How would you structure a large-scale application?
+### Q1: Explain the separation of concerns in Express.js. How would you structure a large-scale application?  --- IMP
 
 **Answer:**
 
@@ -675,7 +686,7 @@ Separation of Concerns:
 
 ---
 
-### Q2: What is Dependency Injection in Express.js? How does it improve testability?
+### Q2: What is Dependency Injection in Express.js? How does it improve testability?   --- IMP
 
 **Answer:**
 
@@ -695,7 +706,11 @@ exports.getUser = async (req, res) => {
 // Testing is hard - need real database
 ```
 
-**With DI (Loose Coupling):**
+**With DI (Loose Coupling):**   --- IMP
+
+> [!NOTE]
+> **What is Loose Coupling?**
+> It's an architectural goal where components are independent and don't rely on the internal implementation of their dependencies. If you change how `UserRepository` works (e.g., switch from SQL to NoSQL), you don't have to touch `UserService` at all as long as the interface remains the same.
 
 ```javascript
 // ✅ Solution: Inject dependencies
@@ -767,7 +782,7 @@ Dependency Injection:
 
 ---
 
-### Q3: Explain the Repository Pattern. Why use it in Express.js applications?
+### Q3: Explain the Repository Pattern. Why use it in Express.js applications?   --- IMP
 
 **Answer:**
 
@@ -831,7 +846,7 @@ app.get('/users/:id', async (req, res) => {
 });
 ```
 
-**Benefits:**
+**Benefits:**   --- IMP
 
 ```
 Repository Pattern:
@@ -929,7 +944,7 @@ app.use('/api/orders', orderModule.routes);
 app.use('/api/products', productModule.routes);
 ```
 
-**Team Collaboration:**
+**Team Collaboration:**  --- IMP
 
 ```
 Team Structure:
@@ -1073,7 +1088,7 @@ class UserController {
 }
 ```
 
-**Key Differences:**
+**Key Differences:**   --- IMP
 
 | Aspect | MVC | Clean Architecture |
 |--------|-----|-------------------|
@@ -1085,7 +1100,7 @@ class UserController {
 
 ---
 
-### Q6: How do you handle configuration management in a large Express.js application?
+### Q6: How do you handle configuration management in a large Express.js application?   --- IMP
 
 **Answer:**
 

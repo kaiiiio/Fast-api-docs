@@ -18,7 +18,7 @@ def get_user(user_id: int):
 
 **Problems:** One request = one thread. Thread sits idle waiting for I/O (database, API calls, file reads). Limited concurrency (e.g., 1000 threads = high memory usage). CPU underutilized during I/O waits.
 
-### Asynchronous (Async) Backends
+### Asynchronous (Async) Backends  --- IMP
 
 In asynchronous code, operations can **yield control** during I/O:
 
@@ -144,7 +144,7 @@ def sync_route():
 ### 1. Database Operations
 
 ```python
-# Async SQLAlchemy
+# Async SQLAlchemy --- IMP
 from sqlalchemy.ext.asyncio import AsyncSession
 
 @app.get("/users/{user_id}")
@@ -167,7 +167,7 @@ async def get_user(
 
 **Interview Tip:** Explain that AsyncSession is SQLAlchemy's async version of Session. It uses async database drivers (like asyncpg) to perform non-blocking database operations. This allows your application to handle other requests while waiting for database queries to complete, dramatically improving concurrency.
 
-### 2. Multiple External APIs
+### 2. Multiple External APIs  --- IMP
 
 ```python
 async def fetch_user_data(user_id: int):
@@ -349,7 +349,7 @@ Async Backend:
 - CPU utilization: High (processes other requests during I/O)
 ```
 
-**When to Use Async:**
+**When to Use Async:** --- IMP
 
 **✅ Use Async For:**
 
@@ -480,7 +480,7 @@ def sync_route():
 
 **Real-World Performance Impact:**
 
-**Scenario: 1000 concurrent requests fetching from database**
+**Scenario: 1000 concurrent requests fetching from database** --- IMP
 
 **Sync Approach:**
 ```

@@ -272,7 +272,7 @@ Pagination strategies in Express.js include: Offset-based (simple, but degrades)
 ---
 
 ## 🎯 Interview Questions: Pagination Strategies
-
+--- IMP
 ### Q1: Compare offset-based vs cursor-based pagination. When would you use each?
 
 **Answer:**

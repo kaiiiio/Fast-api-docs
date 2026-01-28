@@ -2,9 +2,27 @@
 
 Node.js provides multiple ways to achieve parallelism: child processes, cluster module, and worker threads. This guide covers when and how to use each.
 
-## Child Processes
+## Parallelism Models: When to use what?
 
-**Child processes** spawn separate Node.js processes for CPU-intensive tasks.
+Node.js is single-threaded, but it provides several ways to leverage multi-core systems. Choosing the right one depends on the nature of the task.
+
+| Method | Best For | Architecture | Overhead |
+| :--- | :--- | :--- | :--- |
+| **`spawn()`** | Large data, external CLI tools | Separate process, Stream-based | Medium |
+| **`exec()`** | Small data, shell commands | Separate process, Buffer-based | High |
+| **`fork()`** | CPU-intensive Node.js tasks | Separate **Node.js** process, built-in IPC | Medium |
+| **Worker Threads** | CPU-intensive calculations | **Shared memory (v8 heap)**, same process | Low |
+
+---
+
+## Child Processes
+A child process is a separate instance of the OS process. It has its own memory, own V8 instance, and its own event loop.
+
+### Communication (IPC)
+When using `fork()`, Node.js automatically sets up an **IPC (Inter-Process Communication)** channel. You communicate using `.send()` and `.on('message')`. 
+
+> [!IMPORTANT]
+> **Heavy Data**: Avoid sending massive objects through IPC. Data is serialized/deserialized as JSON, which can block the event loop of both processes.
 
 ### spawn()
 

@@ -4,7 +4,22 @@ Buffers provide a way to work with binary data in Node.js. Understanding buffers
 
 ## What are Buffers? --- IMP
 
-**Buffers** are fixed-size chunks of memory that store binary data. They're similar to arrays but work with raw binary data.
+**Buffers** are fixed-size chunks of memory allocated **outside the V8 heap**. They are designed to handle raw binary data (e.g., TCP streams, file system operations) that JavaScript's strings aren't equipped to handle efficiently.
+
+### Key Characteristics
+- **Memory Allocation**: Buffers use **"Raw Memory"** (C++ level), meaning they aren't subject to V8 garbage collection until the Buffer object itself is collected.
+- **Fixed Size**: Once created, a Buffer's size cannot be changed.
+- **Performance**: Accessing raw binary data via Buffers is significantly faster than using strings for non-textual data.
+
+### Creating Buffers: The Safe vs Unsafe Way
+| Method | Description | Security |
+| :--- | :--- | :--- |
+| **`Buffer.alloc(size)`** | Allocates a new buffer and **zero-fills** it. | ✅ Safe |
+| **`Buffer.allocUnsafe(size)`** | Allocates a buffer but **does not zero-fill**. It may contain old, sensitive data from memory. | ⚠️ Use with caution |
+| **`Buffer.from(data)`** | Creates a buffer from an existing string, array, or another buffer. | ✅ Safe |
+
+> [!CAUTION]
+> **Why use `allocUnsafe`?**: It is faster because it skip the zero-filling step. Only use it when you are certain you will immediately fill the entire buffer with new data.
 
 ### Creating Buffers
 

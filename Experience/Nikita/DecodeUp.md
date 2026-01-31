@@ -198,6 +198,16 @@ function SearchPage({ query }) {
     - **Horizontal (Sharding)**: Split data within one table across multiple DB instances based on a **Shard Key** (e.g., `user_id % 10`).
 - **Index Optimization**: Use `EXPLAIN ANALYZE` to find slow queries and add missing indexes (or remove redundant ones).
 
+**Q: In-Memory Caching (Redis vs. Memcached): When to use what and which strategies to apply?**
+**A:** As a Lead, you must choose caching based on scale and data complexity:
+- **Redis (Recommended)**: Supports complex data types (Lists, Sets, Hashes), persistence (AOF/RDB), and Pub/Sub. Best for session management, leaderboards, and rate-limiting.
+- **Memcached**: Simple, multi-threaded, and extremely fast for simple key-value pairs. Use if you only need a basic object cache with high concurrent read throughput.
+- **Caching Strategies**:
+    1. **Cache-Aside (Lazy Loading)**: The app checks the cache; if a "miss," it fetches from DB and populates the cache. *Pros*: Resilient to cache failure. *Cons*: First request is always slow.
+    2. **Write-Through**: Data is written to both the cache and the DB simultaneously. *Pros*: Ensures consistency. *Cons*: Higher write latency.
+    3. **Write-Behind (Write-Back)**: Data is written to the cache and then asynchronously to the DB. *Pros*: High write performance. *Cons*: Risk of data loss if the cache crashes before the DB write.
+- **Eviction Policies**: Always mention **LRU (Least Recently Used)** and **TTL-based expiration** to prevent the cache from running out of memory.
+
 **Q: Explain the CAP Theorem and its extension PACELC.**
 **A:** 
 - **CAP Theorem**: In a distributed system, you can only have 2 of 3:
@@ -276,18 +286,29 @@ const debounce = (fn, delay) => {
 ```
 
 ### Backend: NestJS Logger Interceptor
-**Task:** Create an interceptor that logs the time taken for each request.
+**Task:** Create an interceptor that logs the time taken for each request. --- IMP
 ```typescript
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const now = Date.now();
     return next
-      .handle()
-      .pipe(tap(() => console.log(`Time taken: ${Date.now() - now}ms`)));
+      .handle() // Mandatory to call handle() to execute the route handler
+      .pipe(
+        tap(() => console.log(`Time taken: ${Date.now() - now}ms`))
+      );
   }
 }
 ```
+
+**Syntax Breakdown:**
+1.  **`intercept(...)`**: The core method required by the `NestInterceptor` interface. It is the entry point for the interception logic.
+2.  **`context: ExecutionContext`**: An object that provides information about the current request. It allows you to:
+    - Determine which controller/class is being called (`context.getClass()`).
+    - Determine which specific method/handler is being called (`context.getHandler()`).
+    - Switch contexts using `switchToHttp()` to access the raw Express/Fastify `Request` and `Response` objects.
+3.  **`next: CallHandler`**: Represents the next step in the request execution pipe. You **must** call `next.handle()` to trigger the actual route handler (the method in your controller). If you don't return `next.handle()`, the request will never reach your controller.
+4.  **`Observable<any>`**: In NestJS, interceptors use **RxJS**. `next.handle()` returns an Observable. This is powerful because it allows you to use operators like `tap` (for side effects like logging), `map` (to transform the response body), or `catchError` (to handle errors globally).
 
 ### Frontend: Custom Hook `useLocalStorage`
 **Task:** Create a hook to sync state with localStorage.

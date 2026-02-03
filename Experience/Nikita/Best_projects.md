@@ -1,21 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Nikita Desai | Full Stack Developer
 **MERN | Next.js | NestJS | FastAPI | System Architecture**
 

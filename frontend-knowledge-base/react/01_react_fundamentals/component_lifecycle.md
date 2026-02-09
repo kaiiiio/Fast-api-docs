@@ -2,6 +2,81 @@
 
 Complete guide to React component lifecycle in class and functional components.
 
+## What is SPA (Single Page Application)?
+
+A **Single Page Application (SPA)** is a web application that loads a single HTML page and dynamically updates content as the user interacts with the app, without requiring full page reloads from the server.
+
+### How SPAs Work
+
+```
+Traditional Multi-Page App:
+User clicks link → Browser requests new page → Server sends HTML → Full page reload
+
+Single Page App:
+User clicks link → JavaScript intercepts → Fetch data (JSON) → Update DOM dynamically
+```
+
+### Key Characteristics
+
+1. **Single HTML Load**: Only one initial HTML page is loaded
+2. **Dynamic Updates**: Content changes via JavaScript without page refresh
+3. **Client-Side Routing**: Navigation handled by JavaScript (e.g., React Router)
+4. **API Communication**: Data fetched via AJAX/Fetch from backend APIs
+
+### React as an SPA Framework
+
+React is commonly used to build SPAs because:
+
+```jsx
+// React handles dynamic UI updates efficiently
+function App() {
+    const [page, setPage] = useState('home');
+    
+    // No page reload - just component re-render
+    return (
+        <div>
+            <nav>
+                <button onClick={() => setPage('home')}>Home</button>
+                <button onClick={() => setPage('about')}>About</button>
+            </nav>
+            {page === 'home' ? <HomePage /> : <AboutPage />}
+        </div>
+    );
+}
+```
+
+### Benefits of SPAs
+
+- **Fast Navigation**: No full page reloads after initial load
+- **Better UX**: Smooth, app-like experience
+- **Reduced Server Load**: Server only sends data (JSON), not full HTML
+- **Code Reusability**: Components can be reused across different views
+
+### Drawbacks of SPAs
+
+- **SEO Challenges**: Search engines may struggle with JavaScript-rendered content
+- **Initial Load Time**: Larger JavaScript bundle to download upfront
+- **Browser History**: Requires manual handling of back/forward navigation
+- **JavaScript Dependency**: App won't work if JavaScript is disabled
+
+### SPA vs Traditional Apps
+
+| Aspect | SPA | Traditional MPA |
+|--------|-----|-----------------|
+| Page Load | Once | Every navigation |
+| Performance | Fast after initial load | Slower navigation |
+| SEO | Requires SSR/SSG | Native support |
+| Complexity | Higher | Lower |
+| User Experience | App-like | Website-like |
+
+### React Lifecycle in SPA Context
+
+Understanding component lifecycle is crucial in SPAs because:
+- Components mount/unmount as users navigate
+- Data fetching happens in lifecycle methods
+- Cleanup prevents memory leaks in long-running apps
+- Efficient updates improve SPA performance
+
 ## Class Component Lifecycle
 
 ### Mounting Phase

@@ -9,7 +9,7 @@ configuring terminal using .bashrc file
 
 
 ====================================================================
-Topic 1: Client–Server Architecture & CLI vs GUI
+Topic 1: Client–Server Architecture & CLI vs GUI    --IMP
 ====================================================================
 
 ASCII flow (request/response):

@@ -110,5 +110,59 @@ We use a **Hybrid Storage** model to handle massive audio files efficiently.
 
 ---
 
+## 10. Deep Dive: Automated CI/CD Workflow
+
+This section explains the technical implementation behind the "Power Answer" in Section 9.
+
+### Deployment Flow Diagram
+```mermaid
+graph TD
+    A[Push to development branch] --> B{GitHub Action Triggered}
+    B --> C[Job: deploy-to-production]
+    C --> D[Retrieve SSH_KEY from GitHub Secrets]
+    D --> E[SSH into DigitalOcean Droplet]
+    E --> F[Run deploy.sh on Server]
+    F --> G[git pull & pm2 restart]
+    G --> H[Send Discord Webhook Success/Fail]
+```
+
+### Technical Components
+
+1.  **GitHub Secrets (Security)**
+    - Never hardcode IP addresses or SSH keys in your `.yml` files.
+    - Store them in **Settings > Secrets and variables > Actions**.
+    - Common secrets: `SSH_HOST` (Your IP), `SSH_USER` (usually root), `SSH_PRIVATE_KEY`.
+
+2.  **The Workflow File (`.github/workflows/deploy.yml`)**
+    ```yaml
+    jobs:
+      deploy:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Deploy via SSH
+            uses: appleboy/ssh-action@master
+            with:
+              host: ${{ secrets.SSH_HOST }}
+              key: ${{ secrets.SSH_PRIVATE_KEY }}
+              script: |
+                cd /home/project/backend
+                git pull origin development
+                ./start.sh  # Script containing pm2 reload/migrate
+    ```
+
+3.  **The Deployment Script (`start.sh`)**
+    This script runs *on the server* once GitHub connects:
+    - `git pull`: Updates the code.
+    - `source venv/bin/activate`: Enters the environment.
+    - `pip install -r requirements.txt`: Installs new dependencies.
+    - `pm2 reload all`: Restarts the app with zero downtime.
+
+4.  **Real-time Visibility: Discord Webhooks**
+    - We use a simple `curl` command at the end of our workflow to send a POST request to a Discord channel.
+    - **Why?** "It allows the whole team to see that a new version is live without checking the GitHub dashboard."
+
+---
+
+
 > [!TIP]
 > **Final Pro-Tip:** In interviews, always mention **Automated Testing** and **Monitoring (PM2/HTOP)**. It shows you care about the long-term reliability of the product.

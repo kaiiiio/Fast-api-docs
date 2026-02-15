@@ -860,7 +860,7 @@ module.exports = Container;
 ```
 
 > [!TIP]
-> **Deep Dive: Factories vs Singletons**
+> **Deep Dive: Factories vs Singletons**  IMP
 >
 > 1.  **Factories (The "How"):** A factory is a function that tells the container how to create a service. Instead of passing an already created object, we pass a function (`() => new Service()`). This allows **Lazy Loading**—the service is only created when it's actually needed.
 > 2.  **Singletons (The "How Many"):** When a service is registered as a singleton, the container creates it only **once**. It stores that instance in the `this.services` cache. Every time you call `get()`, you get the same exact instance. This is perfect for Database Pools or Loggers to save memory and connections.

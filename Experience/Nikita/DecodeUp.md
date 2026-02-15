@@ -21,9 +21,24 @@ Experience with Serverless architecture, AWS ecosystem and Knowledge of microser
 
 
 React + Nest + Nodejs + typescript + RestfulAPI, DBMS, Git, and CI/CD pipelines, Serverless architecture, AWS ecosystem
+---
+### Lead Focus: REST API Best Practices
+*   **Statelessness**: Server doesn't store session state; all info is in JWT. **Why**: Enables **Horizontal Scaling**—any server node behind a Load Balancer can handle any request.
+
+*   **Versioning**: `/v1/` path prefix. **Why**: Ensures **Backward Compatibility**; new updates won't break existing mobile/frontend clients still using older routes.
+
+*   **Idempotency**: `PUT`/`PATCH` for updates, `X-Idempotency-Key` for `POST`. 
+    *   **Why**: Guaranteed **Safe Retries**; prevents duplicate data if a request is sent twice.
+    *   **How**: `PUT` is idempotent by design (replaces state); for `POST`, the server stores the `X-Idempotency-Key` in **Redis** for 24h. If the same key is seen again, the server returns the **cached response** instead of re-running the logic.
+
+*   **Performance**: Cursor Pagination + JSONB. **Why**: Cursors scale better than Offset for large datasets; JSONB allows flexible metadata without frequent DB migrations.
+
+*   **Security**: Rate-Limiting + DTO Whitelisting. **Why**: Prevents **DoS attacks** and **Mass-Assignment** vulnerabilities (users hacking fields they shouldn't).
+---
 
 DSA, queries, machine code(hooks)
 
+IMP
 ------------------------------------------------------
 
 # Interview Preparation Guide: DecodeUp (Full Stack Lead)
@@ -106,7 +121,8 @@ async function createOrderSaga(orderData) {
 - **Lead Tip**: While `forwardRef` works, frequent circular dependencies often signal poor architectural design. Consider refactoring common logic into a third "Shared" module or using a **Mediator Pattern**.
 
 ### React (Frontend)
-**Q: How do you optimize a large-scale React application?**
+**Q: How do you optimize a large-scale React application?**  IMP
+
 **A:** Beyond simple memoization, a Lead must understand the **Reconciliation** process:
 - **Fiber Engine**: React's core algorithm that allows "incremental rendering"—breaking rendering work into chunks and spreading it out over multiple frames to keep the UI responsive.
 - **Code Splitting**: Use `React.lazy` and `Suspense` to load components only when needed, reducing initial bundle size. Use **Route-based splitting** for major sections.
@@ -133,7 +149,7 @@ export default async function ProductList() {
 }
 ```
 
-**Q: When would you use `useTransition` or `useDeferredValue`?**
+**Q: When would you use `useTransition` or `useDeferredValue`?**  IMP
 **A:** 
 - **useTransition**: Used to mark a state update as a "transition" that doesn't block the UI. Useful for heavy UI updates that can wait (e.g., filtering a long list).
 - **useDeferredValue**: Used to defer a value that is expensive to render. It lets React prioritize more urgent updates (like input typing) over the expensive render.
@@ -208,7 +224,8 @@ function SearchPage({ query }) {
     3. **Write-Behind (Write-Back)**: Data is written to the cache and then asynchronously to the DB. *Pros*: High write performance. *Cons*: Risk of data loss if the cache crashes before the DB write.
 - **Eviction Policies**: Always mention **LRU (Least Recently Used)** and **TTL-based expiration** to prevent the cache from running out of memory.
 
-**Q: Explain the CAP Theorem and its extension PACELC.**
+**Q: Explain the CAP Theorem and its extension PACELC.**   IMP
+
 **A:** 
 - **CAP Theorem**: In a distributed system, you can only have 2 of 3:
     - **Consistency (C)**: Every read receives the most recent write.
@@ -1112,7 +1129,8 @@ async intercept(context: ExecutionContext, next: CallHandler) {
 
 ---
 
-## 38. Security: OAuth2 vs OpenID Connect
+## 38. Security: OAuth2 vs OpenID Connect  
+IMP
 
 **Q: What is the difference between OAuth2 and OpenID Connect (OIDC)?**
 **A:** 

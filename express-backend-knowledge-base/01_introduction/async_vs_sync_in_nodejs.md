@@ -292,7 +292,7 @@ Async operations in Express.js are essential for: High performance (handle thous
 
 ---
 
-## 🎯 Interview Questions: Async vs Sync Operations
+## 🎯 Interview Questions: Async vs Sync Operations   --- IMP
 
 ### Q1: Explain the difference between blocking and non-blocking I/O in Node.js. How does this affect Express.js performance?
 

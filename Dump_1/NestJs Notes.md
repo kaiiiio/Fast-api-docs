@@ -544,7 +544,7 @@ async function bootstrap() {
 }
 ```
 
-**Interview Explanation:**
+**Interview Explanation:**  IMP
 "ValidationPipe is a game-changer compared to Express. Instead of writing validation logic in every route, you define validation rules on DTO classes using decorators from class-validator. The pipe automatically validates incoming data and returns detailed error messages if validation fails. This is much cleaner than Joi or manual validation in Express."
 
 ---
@@ -1743,8 +1743,8 @@ class ExampleController {
 }
 ```
 
-### Explain use of decorators in NestJS controllers.
-Decorators are special functions prefixed with `@` that add metadata to classes, methods, or properties.
+### Explain use of decorators in NestJS controllers.  IMP
+Decorators are special functions prefixed with `@` that add metadata to classes, methods, or properties.  
 - **Class decorators**: `@Controller()`, `@Module()`, `@Injectable()`.
 - **Method decorators**: `@Get()`, `@Post()`, `@Put()`.
 - **Parameter decorators**: `@Param()`, `@Body()`, `@Query()`.
@@ -1894,8 +1894,46 @@ Use `@nestjs/graphql`.
 - `@Scalar()`: Defines custom primitive types (e.g., Date).
 
 ### What is Serialization and Deserialization?
-- **Serialization**: Converting objects to storage/transmission format (JSON).
-- **Deserialization**: Reconstructing objects from data.
+
+- **Serialization**: Converting objects to a storage/transmission format (like JSON).
+- **Deserialization**: Reconstructing objects from that data.
+
+**Example in NestJS (using class-transformer):**
+
+```typescript
+import { Exclude, Expose, plainToInstance, instanceToPlain } from 'class-transformer';
+
+export class UserEntity {
+  id: number;
+  firstName: string;
+  lastName: string;
+
+  @Exclude() // Stripped during Serialization
+  password: string;
+
+  @Expose() // Added during Serialization
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
+}
+
+// 1. Serialization (Object -> JSON)
+const user = new UserEntity();
+user.id = 1;
+user.firstName = 'John';
+user.lastName = 'Doe';
+user.password = 'secret123';
+
+const serialized = instanceToPlain(user); 
+// Output: { "id": 1, "firstName": "John", "lastName": "Doe", "fullName": "John Doe" }
+
+// 2. Deserialization (JSON -> Class Instance)
+const rawData = { id: 1, firstName: 'John', lastName: 'Doe' };
+const userInstance = plainToInstance(UserEntity, rawData);
+// Output: UserEntity { id: 1, firstName: 'John', lastName: 'Doe' }
+```
+
+---
 
 ### Loose vs Tight Coupling?
 - **Tight**: High interdependence; hard to change.
@@ -6426,3 +6464,57 @@ const parallelTasks = async () => {
 - [ ] Do I know how to **Dockerize** and deploy to **AWS (ECS/Lambda)**?
 - [ ] Can I articulate why **React Query** is better for server state than Redux?
 - [ ] Am I ready to lead a team through **Sprint Planning** and **Code Reviews**?
+
+---
+
+## 📑 Quick Reference: NestJS Components Glossary (IMP)
+
+| Component | Definition |
+| :--- | :--- |
+| **Modules** | Classes annotated with `@Module()` that organize the application into logical blocks. |
+| **Controllers** | Classes responsible for handling incoming requests and returning responses to the client. |
+| **Services** | Providers designed to encapsulate complex business logic and data processing. |
+| **Providers** | Objects that can be injected as dependencies (Services, Repositories, Helpers). |
+| **Guards** | Classes that determine whether a request will be handled by the route handler (Auth/Authz). |
+| **Middlewares** | Functions called before the route handler, used for pre-processing tasks. |
+| **Interceptors** | Classes that can bind extra logic before/after method execution (AOP). |
+| **Pipes** | Classes used for data validation and transformation before it reaches the controller. |
+| **Exception Filters** | Classes that capture unhandled exceptions and format the error response. |
+| **Decorators** | Functions used to attach metadata to classes, methods, or properties (e.g., `@Get()`). |
+| **DTO** | Data Transfer Objects define the schema of data sent over the network for validation. |
+| **Entities** | Classes that define the mapping between a database table and the code. |
+| **Lifecycle Hooks** | Methods that provide visibility into key lifecycle events (e.g., `onModuleInit`). |
+| **`forwardRef`** | A utility used to resolve circular dependencies between modules or providers. |
+| **Custom Providers** | Injection tokens designed for dynamic or conditional dependency resolution. |
+| **`ExecutionContext`** | Provides details about the current request (e.g., which controller/method is running). |
+| **`switchToHttp()`** | Utility to access HTTP-specific objects like `Request` and `Response` from context. |
+| **`next`** | A callback (in Interceptors/Middlewares) that must be called to continue the execution flow. |
+| **`Observable`** | An **RxJS** stream that handles asynchronous data and allows response transformation. |
+| **Throughput** | The number of requests a system can handle in a given time period (e.g., Requests Per Second). |
+| **Latency** | The time it takes for a single request to travel from the client to the server and back. |
+| **Singleton Scope** | Default. One instance of the provider is shared across the entire application. |
+| **Request Scope** | A new instance of the provider is created for every incoming request. |
+| **Transient Scope** | A new instance of the provider is created every time it is injected. |
+| **Global Module** | A module marked with `@Global()`, making its exports accessible everywhere. |
+| **Dynamic Module** | A module that can be configured dynamically (e.g., using `forRoot()` or `register()`). |
+| **Microtasks** | High-priority tasks: `process.nextTick()`, `Promise.then`, `async/await`. |
+| **Macrotasks** | Low-priority tasks: `setTimeout`, `setInterval`, `setImmediate`, I/O operations. |
+
+---
+
+## ⚡ NestJS Request Lifecycle: The Execution Order (IMP)
+When a request hits your server, it flows through components in this **exact** order:
+
+1.  **Incoming Request**
+2.  **Middleware** (Global -> Module)
+3.  **Guards** (Global -> Controller -> Route)
+4.  **Interceptors (Pre-controller)** (Global -> Controller -> Route)
+5.  **Pipes** (Global -> Controller -> Route -> Param)
+6.  **Custom Decorators** (Param resolution)
+7.  **Controller (Handler)** 
+8.  **Service** (Business Logic)
+9.  **Interceptors (Post-controller)** (RxJS Response Mapping)
+10. **Outgoing Response** (or **Exception Filter** if error occurs)
+
+> [!TIP]
+> **Interceptors** are the only component that can "wrap" the request (logic before AND after). **Guards** are for "Can you enter?". **Pipes** are for "Is the data clean?".

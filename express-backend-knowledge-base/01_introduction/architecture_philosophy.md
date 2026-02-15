@@ -1224,3 +1224,56 @@ These interview questions cover:
 
 Master these for senior-level interviews focusing on architecture and design patterns.
 
+### Inversion of Control (IoC) is a design principle where the control of your program's flow is "inverted" or handed over to a framework, rather than you manually managing it.
+
+- In traditional programming, you are in control: you decide when to create a new object, when to call a function, and how to wire everything together. In IoC, the framework (like NestJS or Spring) takes that responsibility away from you.
+
+1. Traditional Control vs. Inversion of Control
+Traditional (You are in control)
+In an Express app, you usually create instances of your services manually.
+
+```javascript
+// You decide to create the service
+const userService = new UserService(); 
+// You decide when to use it
+app.get('/users', (req, res) => {
+  const users = userService.findAll();
+  res.send(users);
+});
+```
+The Problem: Your code is tightly coupled. If UserService changes (e.g., now needs a database connection in its constructor), you have to find every place you used new UserService() and update it.
+
+Inversion of Control (Framework is in control)
+In an IoC-based framework like NestJS, you don't use new. You simply say, "I need this service," and the framework provides it.
+
+```typescript
+@Injectable() // Marks this for the IoC container
+export class UserService { ... }
+@Controller('users')
+export class UserController {
+  // You just declare it in the constructor
+  // NestJS "injects" the instance for you
+  constructor(private userService: UserService) {}
+  @Get()
+  findAll() {
+    return this.userService.findAll();
+  }
+}
+```
+
+The Benefit: The framework manages the lifecycle. If UserService needs 5 other dependencies, the framework creates them all in the right order for you.
+
+2. The Relationship with Dependency Injection (DI)
+IoC is the concept, and Dependency Injection is the most common method used to achieve it.
+
+IoC Container: The "warehouse" where the framework keeps all the instances of your classes.
+Injection: The act of the framework "giving" a dependency to a class that needs it (usually via the constructor).
+
+3. Why is this better? (Interview Ready Answer)
+Decoupling: Classes don't need to know how their dependencies are created or what they require. They just use them.
+Testability: Since dependencies are "injected," you can easily swap a real database service for a "Mock" service during unit testing.
+Scalability: Adding new services or changing how they work becomes much easier because the "wiring" logic is centralized in the framework's IoC container.
+Single Responsibility: Your classes focus only on their logic, not on managing the lifecycle of other objects.
+Summary
+Traditional: You call the library/code.
+IoC: The framework calls you (or your code) and provides what you need.

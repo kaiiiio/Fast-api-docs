@@ -8,7 +8,7 @@ We’ll go one by one:
 
 ---
 
-### 🔹 What is Redis?
+### 🔹 What is Redis?  IMP
 
 Redis (**Remote Dictionary Server**) is an **in-memory data structure store** used as a **database, cache, and message broker**.
 It stores data in **RAM**, so it’s **super fast** compared to disk-based databases.

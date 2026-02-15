@@ -47,17 +47,42 @@ console.log(maxSubarraySum([-2, 1, -3, 4, -1, 2, 1, -5, 4])); // 6
 
 **5️⃣ Remove duplicates from list**
 ```javascript
+// Using Set (Modern way)
 function removeDuplicates(lst) {
     return [...new Set(lst)];
+}
+
+// Alternative: Generic solution using loop
+function removeDuplicates(lst) {
+    let unique = [];
+    for(let i = 0; i < lst.length; i++) {
+        if(!unique.includes(lst[i])) unique.push(lst[i]);
+    }
+    return unique;
 }
 console.log(removeDuplicates([1, 2, 2, 3, 4, 4, 5])); // [1, 2, 3, 4, 5]
 ```
 
 **6️⃣ Check if string is palindrome**
 ```javascript
+// Using split and reverse
 function isPalindrome(s) {
     const cleaned = s.toLowerCase().replace(/[^a-z0-9]/g, '');
     return cleaned === cleaned.split('').reverse().join('');
+}
+
+// Alternative: Without Regex (Using loop)
+function isPalindromeManual(s) {
+    let cleaned = "";
+    for (let char of s.toLowerCase()) {
+        if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
+            cleaned += char;
+        }
+    }
+    for (let i = 0; i < cleaned.length / 2; i++) {
+        if (cleaned[i] !== cleaned[cleaned.length - 1 - i]) return false;
+    }
+    return true;
 }
 console.log(isPalindrome("A man a plan a canal Panama")); // true
 ```
@@ -95,6 +120,7 @@ console.log(gcd(48, 18)); // 6
 ```
 
 **🔟 Find LCM of two numbers**
+> **Description:** The smallest number that is a multiple of both $a$ and $b$.
 ```javascript
 function lcm(a, b) {
     return Math.abs(a * b) / gcd(a, b);
@@ -103,6 +129,7 @@ console.log(lcm(12, 15)); // 60
 ```
 
 **1️⃣1️⃣ Check if number is Armstrong**
+> **Description:** A number equal to the sum of its digits raised to the power of the count of digits (e.g., $153 = 1^3 + 5^3 + 3^3$).
 ```javascript
 function isArmstrong(n) {
     const digits = n.toString().split('');
@@ -146,6 +173,7 @@ console.log(decimalToBinary(10)); // '1010'
 ```
 
 **1️⃣6️⃣ Find second largest in list**
+> **Description:** Finds the unique value right after the maximum.
 ```javascript
 function secondLargest(lst) {
     const unique = [...new Set(lst)].sort((a, b) => a - b);
@@ -176,6 +204,7 @@ console.log(swap(5, 10)); // [10, 5]
 ```
 
 **1️⃣9️⃣ Check if string is anagram**
+> **Description:** Words formed by rearranging characters of another word. (e.g., "listen" and "silent")
 ```javascript
 function isAnagram(s1, s2) {
     const normalize = s => s.toLowerCase().split('').sort().join('');
@@ -229,6 +258,8 @@ console.log(binarySearch([1, 2, 3, 4, 5], 3)); // 2
 ```
 
 **2️⃣3️⃣ Bubble sort**
+> **Description:** Swaps adjacent elements, pushing largest element to end.
+> **Visualization:** `[5, 2, 8] -> [2, 5, 8]`
 ```javascript
 function bubbleSort(arr) {
     let n = arr.length;
@@ -245,6 +276,8 @@ console.log(bubbleSort([64, 34, 25, 12, 22])); // [12, 22, 25, 34, 64]
 ```
 
 **2️⃣4️⃣ Selection sort**
+> **Description:** Repeatedly finds minimum and moves it to front.
+> **Visualization:** `[5, 2, 1] -> [1, 2, 5]`
 ```javascript
 function selectionSort(arr) {
     let n = arr.length;
@@ -261,6 +294,8 @@ console.log(selectionSort([64, 25, 12, 22, 11])); // [11, 12, 22, 25, 64]
 ```
 
 **2️⃣5️⃣ Insertion sort**
+> **Description:** Builds sorted array one element at a time from left to right.
+> **Visualization:** `[2, 8, 1] -> [1, 2, 8]`
 ```javascript
 function insertionSort(arr) {
     for (let i = 1; i < arr.length; i++) {
@@ -279,6 +314,7 @@ console.log(insertionSort([12, 11, 13, 5, 6])); // [5, 6, 11, 12, 13]
 
 **2️⃣6️⃣ Find longest substring without repeating characters**
 ```javascript
+// Optimized using Set
 function longestSubstring(s) {
     let charSet = new Set();
     let left = 0, maxLen = 0;
@@ -291,17 +327,43 @@ function longestSubstring(s) {
     }
     return maxLen;
 }
+
+// Alternative: Using loop and substring
+function longestSubstringLoop(s) {
+    let currentString = "";
+    let maxLen = 0;
+    for (let char of s) {
+        let index = currentString.indexOf(char);
+        if (index !== -1) {
+            currentString = currentString.substring(index + 1);
+        }
+        currentString += char;
+        maxLen = Math.max(maxLen, currentString.length);
+    }
+    return maxLen;
+}
 console.log(longestSubstring("abcabcbb")); // 3
 ```
 
 **2️⃣7️⃣ Two sum problem**
 ```javascript
+// Optimized with Map
 function twoSum(nums, target) {
     let seen = new Map();
     for (let i = 0; i < nums.length; i++) {
         let complement = target - nums[i];
         if (seen.has(complement)) return [seen.get(complement), i];
         seen.set(nums[i], i);
+    }
+    return [];
+}
+
+// Alternative: Brute force (Using loops)
+function twoSumLoops(nums, target) {
+    for (let i = 0; i < nums.length; i++) {
+        for (let j = i + 1; j < nums.length; j++) {
+            if (nums[i] + nums[j] === target) return [i, j];
+        }
     }
     return [];
 }
@@ -336,10 +398,22 @@ console.log(rotateArray([1, 2, 3, 4, 5], 2)); // [4, 5, 1, 2, 3]
 
 **3️⃣0️⃣ Find intersection of two arrays**
 ```javascript
+// Using Set
 function intersection(arr1, arr2) {
     const set1 = new Set(arr1);
     const set2 = new Set(arr2);
     return [...set1].filter(x => set2.has(x));
+}
+
+// Alternative: Without Set
+function intersectionManual(arr1, arr2) {
+    let result = [];
+    for(let val of arr1) {
+        if(arr2.includes(val) && !result.includes(val)) {
+            result.push(val);
+        }
+    }
+    return result;
 }
 console.log(intersection([1, 2, 2, 1], [2, 2])); // [2]
 ```
@@ -407,16 +481,35 @@ console.log(countChars("hello")); // {h: 1, e: 1, l: 2, o: 1}
 
 **3️⃣7️⃣ Remove vowels from string**
 ```javascript
+// Using Regex
 function removeVowels(s) {
     return s.replace(/[aeiou]/gi, '');
+}
+
+// Alternative: Using loop (No Regex)
+function removeVowelsManual(s) {
+    const vowels = "aeiouAEIOU";
+    let res = "";
+    for (let char of s) {
+        if (!vowels.includes(char)) res += char;
+    }
+    return res;
 }
 console.log(removeVowels("Hello World")); // "Hll Wrld"
 ```
 
 **3️⃣8️⃣ Check if power of two**
 ```javascript
+// Bitwise approach
 function isPowerOfTwo(n) {
     return n > 0 && (n & (n - 1)) === 0;
+}
+
+// Alternative: Loop approach
+function isPowerOfTwoLoop(n) {
+    if (n <= 0) return false;
+    while (n % 2 === 0) n /= 2;
+    return n === 1;
 }
 console.log(isPowerOfTwo(16)); // true
 ```

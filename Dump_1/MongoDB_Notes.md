@@ -57,7 +57,7 @@ Database
 }
 ```
 
-### MongoDB Cursor
+### MongoDB Cursor  IMP
 A cursor is a pointer to the result set of a query. It allows you to iterate through results efficiently.
 
 ```javascript
@@ -169,9 +169,9 @@ JSON (JavaScript Object Notation) is a lightweight data-interchange format.
 BSON (Binary JSON) is MongoDB's binary representation of JSON with additional data types.
 
 **What is BSON?**
-- BSON = Binary JSON (JSON का binary format)
+- BSON = Binary JSON (Binary format of JSON)
 - MongoDB internally stores data as BSON (not JSON)
-- JSON से convert होता है storage के लिए, और वापस JSON में convert होता है retrieval के लिए
+- Converted from JSON for storage, and converted back to JSON for retrieval
 
 **JSON vs BSON - Detailed Comparison:**
 
@@ -182,9 +182,9 @@ BSON (Binary JSON) is MongoDB's binary representation of JSON with additional da
 
 const jsonExample = {
   "name": "John",
-  "age": 30,                    // JSON में सिर्फ number (int/float difference नहीं)
+  "age": 30,                    // In JSON, only numbers (no difference between int/float)
   "isActive": true,
-  "birthdate": "1993-01-15",    // JSON में date string के रूप में (actual Date type नहीं)
+  "birthdate": "1993-01-15",    // In JSON, date is stored as a string (not an actual Date type)
   "salary": 50000.50,
   "tags": ["developer", "react"],
   "address": null
@@ -205,16 +205,16 @@ const jsonExample = {
 
 const bsonExample = {
   name: "John",
-  age: NumberInt(30),                    // BSON में int32 type
+  age: NumberInt(30),                    // In BSON, it is int32 type
   isActive: true,
-  birthdate: ISODate("1993-01-15"),      // BSON में actual Date type
-  salary: NumberDecimal("50000.50"),      // BSON में Decimal128 (precise decimal)
+  birthdate: ISODate("1993-01-15"),      // In BSON, it is an actual Date type
+  salary: NumberDecimal("50000.50"),      // In BSON, it is Decimal128 (precise decimal)
   tags: ["developer", "react"],
   address: null,
-  _id: ObjectId("507f1f77bcf86cd799439011"),  // BSON में ObjectId type
-  profileImage: BinData(0, "base64data"),     // BSON में Binary data
-  createdAt: new Timestamp(),                  // BSON में Timestamp type
-  regex: /pattern/i                            // BSON में RegExp type
+  _id: ObjectId("507f1f77bcf86cd799439011"),  // In BSON, it is ObjectId type
+  profileImage: BinData(0, "base64data"),     // In BSON, it is Binary data
+  createdAt: new Timestamp(),                  // In BSON, it is Timestamp type
+  regex: /pattern/i                            // In BSON, it is RegExp type
 };
 
 // BSON Advantages:
@@ -272,16 +272,16 @@ const bsonDoc = {
 **Why BSON is Better for MongoDB:**
 
 1. **Type Safety**: 
-   - JSON: `{"age": 30}` - क्या यह int है या float? पता नहीं
+   - JSON: `{"age": 30}` - Is this an int or a float? It is unclear.
    - BSON: `{age: NumberInt(30)}` - clearly int32 type
 
 2. **Date Handling**:
-   - JSON: `"1993-01-15"` - string, date operations नहीं कर सकते
-   - BSON: `ISODate("1993-01-15")` - actual Date, queries में use कर सकते हैं
+   - JSON: `"1993-01-15"` - stored as a string, cannot perform date operations
+   - BSON: `ISODate("1993-01-15")` - stored as an actual Date, can be used in queries
 
 3. **Performance**:
-   - JSON: पूरा document parse करना पड़ता है
-   - BSON: Length prefixes की वजह से specific fields skip कर सकते हैं (faster)
+   - JSON: The entire document must be parsed
+   - BSON: Specific fields can be skipped due to length prefixes (faster)
 
 4. **Storage Efficiency**:
    - JSON: Text format - larger size
@@ -290,16 +290,16 @@ const bsonDoc = {
 **Edge Cases:**
 
 ```javascript
-// Edge case: JSON में number precision issue
+// Edge case: Number precision issue in JSON
 {"price": 0.1 + 0.2}  // Result: 0.30000000000000004 (floating point error)
 
-// Edge case: BSON में Decimal128 - precise decimal
+// Edge case: Decimal128 in BSON - precise decimal
 {price: NumberDecimal("0.3")}  // Result: 0.3 (exact, no precision loss)
 
-// Edge case: JSON में date comparison नहीं कर सकते
+// Edge case: Cannot perform date comparison in JSON
 {"createdAt": "2024-01-15"}  // String comparison only
 
-// Edge case: BSON में date queries कर सकते हैं
+// Edge case: Can perform date queries in BSON
 {createdAt: ISODate("2024-01-15")}  // Can use $gte, $lte, date functions
 ```
 
@@ -886,7 +886,7 @@ db.users.find({
 // $not       - Logical NOT
 // $nor       - Logical NOR
 
-// ========== 3. AGGREGATION OPERATORS ($match, $group, $project, etc.) ==========
+// ========== 3. AGGREGATION OPERATORS ($match, $group, $project, etc.) ==========IMP
 // Used in aggregation pipeline for data processing
 
 db.orders.aggregate([
@@ -2367,7 +2367,7 @@ db.products.updateOne(
 **Detailed Explanation of `$[]` (All Positional Operator):**
 
 ```javascript
-// ========== WHAT IS $[]? ==========
+// ========== WHAT IS $[]? ==========IMP
 // $[] is the "All Positional Operator" in MongoDB
 // It updates ALL elements in an array, not just the first matching one
 
@@ -2408,7 +2408,7 @@ db.students.updateOne(
   ]
 }
 
-// ========== DETAILED BREAKDOWN ==========
+// ========== DETAILED BREAKDOWN ==========IMP
 
 // Syntax: "arrayField.$[].fieldName"
 //          |           |   |        |
@@ -2623,7 +2623,7 @@ db.users.updateOne(
 )
 ```
 
-**Summary:**
+**Summary:**   IMP
 
 | Operator | Updates | Filter Needed? | Use Case |
 |----------|---------|----------------|----------|
@@ -5256,7 +5256,7 @@ db.products.aggregate([
 
 ## ADVANCED QUERY EXAMPLES
 
-### Complex Aggregation Pipeline
+### Complex Aggregation Pipeline   IMP
 ```javascript
 // Sales analysis with multiple stages
 db.orders.aggregate([
@@ -5446,7 +5446,7 @@ db.places.aggregate([
 **Detailed Explanation of `$geoWithin`, `$centerSphere`, and `$geoNear`:**
 
 ```javascript
-// ========== WHAT ARE GEOSPATIAL QUERIES? ==========
+// ========== WHAT ARE GEOSPATIAL QUERIES? ========== IMP
 // Geospatial queries allow you to search for documents based on geographic location
 // MongoDB supports queries like: "Find all restaurants within 5 miles of this location"
 // Requires: 2dsphere index on location field
@@ -6086,7 +6086,7 @@ try {
 **In-Depth Explanation of MongoDB Transactions:**
 
 ```javascript
-// ========== WHAT ARE TRANSACTIONS? ==========
+// ========== WHAT ARE TRANSACTIONS? ==========  IMP
 // Transactions ensure ACID properties for multi-document operations
 // ACID = Atomicity, Consistency, Isolation, Durability
 // All operations succeed together OR all fail together (rollback)
@@ -6734,7 +6734,7 @@ db.products.createIndex(
 )
 ```
 
-**In-Depth Explanation of Indexes and Performance:**
+**In-Depth Explanation of Indexes and Performance:**   IMP
 
 ```javascript
 // ========== WHAT ARE INDEXES? ==========
@@ -7410,7 +7410,7 @@ bulk.execute()
 **Detailed Explanation of Bulk Operations:**
 
 ```javascript
-// ========== WHAT ARE BULK OPERATIONS? ==========
+// ========== WHAT ARE BULK OPERATIONS? ==========   IMP
 // Bulk operations allow you to perform multiple write operations efficiently
 // Instead of sending individual requests, batch multiple operations together
 // Much faster than individual insert/update/delete operations
@@ -7792,7 +7792,7 @@ function migrateData() {
 **In-Depth Explanation of Data Migration in MongoDB:**
 
 ```javascript
-// ========== WHAT IS DATA MIGRATION? ==========
+// ========== WHAT IS DATA MIGRATION? ==========   IMP
 // Data migration is the process of moving, transforming, or restructuring data
 // from one format/structure to another within MongoDB or between systems
 // Common scenarios: Schema changes, collection restructuring, data cleanup, system upgrades
@@ -8935,7 +8935,7 @@ db.products.aggregate([
 **Detailed Explanation of `$facet` (Multiple Pipelines):**
 
 ```javascript
-// ========== WHAT IS $facet? ==========
+// ========== WHAT IS $facet? ==========  IMP
 // $facet allows you to run MULTIPLE aggregation pipelines on the SAME input
 // Each pipeline processes the same documents independently
 // Results are combined into separate fields in output document
@@ -9880,7 +9880,7 @@ db.employees.aggregate([
 **Detailed Explanation of `$graphLookup`:**
 
 ```javascript
-// ========== WHAT IS $graphLookup? ==========
+// ========== WHAT IS $graphLookup? ==========  IMP
 // $graphLookup performs recursive lookup to traverse relationships
 // Unlike $lookup (which does one-level join), $graphLookup traverses multi-level relationships
 // Perfect for hierarchical data: organization charts, categories, tree structures, comment threads
@@ -10165,7 +10165,7 @@ db.orders.aggregate([
 **Detailed Explanation of `$lookup` with Pipeline:**
 
 ```javascript
-// ========== WHAT IS $lookup WITH PIPELINE? ==========
+// ========== WHAT IS $lookup WITH PIPELINE? ==========   IMP
 // $lookup with pipeline allows complex joins with custom filtering and transformation
 // Unlike basic $lookup (simple equality match), pipeline gives full control over join logic
 // Can perform: complex filters, multiple conditions, aggregations, transformations
@@ -10516,7 +10516,7 @@ db.dailySales.aggregate([
 **Detailed Explanation of `$merge`:**
 
 ```javascript
-// ========== WHAT IS $merge? ==========
+// ========== WHAT IS $merge? ==========   IMP
 // $merge writes aggregation results to a collection
 // Unlike $out (which replaces), $merge can update existing documents or insert new ones
 // Perfect for: Incremental updates, data warehousing, materialized views, ETL processes
@@ -11017,7 +11017,7 @@ db.products.aggregate([
 **Detailed Explanation of `$unionWith`:**
 
 ```javascript
-// ========== WHAT IS $unionWith? ==========
+// ========== WHAT IS $unionWith? ==========   IMP
 // $unionWith combines documents from two collections
 // Similar to SQL UNION: combines results from multiple sources
 // Perfect for: Merging time-series data, combining related collections, querying across collections
@@ -11471,7 +11471,7 @@ const newStream = db.orders.watch([], {
 })
 ```
 
-### Data Modeling Patterns
+### Data Modeling Patterns   - IMP
 
 ```javascript
 // 1. Polymorphic Pattern
@@ -11718,7 +11718,7 @@ const ClientEncryption = require('mongodb-client-encryption')
 
 ---
 
-## SUMMARY OF KEY CONCEPTS
+## SUMMARY OF KEY CONCEPTS    IMP
 
 ### When to Use MongoDB
 ✅ **Good for:**
@@ -16508,7 +16508,7 @@ db.runCommand({
 
 **Definition**: Replication provides redundancy and high availability by maintaining multiple copies of data across servers.
 
-**Replica Set Components:**
+**Replica Set Components:**   -IMP
 - **Primary**: Receives all write operations
 - **Secondary**: Replicates primary's data
 - **Arbiter**: Participates in elections (no data)

@@ -1,0 +1,34 @@
+Monday ke practical task ke liye DecodeUp standard industry patterns hi follow karta hai, lekin Lead role ke liye expectation kaafi high hogi.
+
+Yaha ek detailed guide hai jo aapko Monday se pehle prepare karni chahiye:
+
+1. Likely Practical Tasks (What to expect?)
+Full-Stack Feature Build: Aapko ek blank repo se start karke 2-3 ghante mein ek function feature banana pad sakta hai (e.g., A simple Task Management tool or a Subscription Dashboard).
+API Design with NestJS: Ek scalable API design karni hogi jisme validation (DTOs), authentication (JWT Guards), aur relational database (TypeORM/Prisma) integrated ho.
+Frontend Challenges: React mein Custom Hooks bana ke API consume karna aur selective re-rendering optimize karna.
+System Refactoring: Wo aapko ek "ganda" codebase denge aur bolege ki isse Lead perspective se refactor karo (SOLID principles apply karke).
+2. What to Practice (Key Focus Areas)
+Backend (NestJS):
+Validation: DTO logic aur ValidationPipe ka sahi use.
+Consistency: Transaction management (kaise handle karte ho aggregate results).
+Patterns: Repository Pattern ya Service Layer architecture.
+Frontend (React):
+State Management: Context API ya Zustand ka setup (setup fast hona chahiye).
+Performance: useMemo, useCallback aur custom hooks ka use cases.
+SQL/Database:
+PostgreSQL ya MongoDB ke complex queries (Joins, Aggregation).
+3. Tools Allowed
+IDE: VS Code (Best preference).
+API Testing: Postman ya Insomnia.
+DB Client: MongoDB Compass ya DBeaver.
+Terminal: PowerShell ya Git Bash.
+Internet: Generally allowed for documentation (MDN, NestJS docs).
+4. Is AI (ChatGPT/Gemini) allowed?
+Short answer: Jab tak wo "Yes" na bole, mat use karna.
+Logic: Machine coding rounds mein wo aapka Thought Process aur Speed dekhna chahte hain. Agar aap copy-paste karoge toh wo interview mein cross-question karenge aur aap fans sakte ho.
+Lead Tip: Ek Lead ke liye AI use karna efficiency hai, lekin agar live coding hai toh avoid it. Agar take-home task hai, toh AI help le sakte ho but make sure aap har line explain kar pao.
+Pro-Tip for DecodeUp Interview:
+Pura focus code ki Modularitiy aur Cleanliness par rakhna. Ek Lead se wo expected hota hai ki wo sirf kaam khatam na kare, balki aisa code likhe jo debug karna aasaan ho.
+
+All the best! Sunday ko ek pura Full-stack CRUD (Create, Read, Update, Delete) scratch se practice kar lo.
+

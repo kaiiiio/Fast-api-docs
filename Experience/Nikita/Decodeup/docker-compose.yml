@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Database Service: PostgreSQL container
   db:
     image: postgres:15-alpine
     container_name: decodeup-db
@@ -12,8 +13,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data # Persist database data locally
 
+  # Backend Service: NestJS application
   backend:
     build:
       context: ./backend
@@ -23,11 +25,13 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Use same DB credentials and container name as the host
       DATABASE_URL: "postgresql://user:password@db:5432/decodeup_db?schema=public"
       JWT_SECRET: "super-secret-key-change-me"
     depends_on:
-      - db
+      - db # Ensure DB starts before backend
 
+  # Frontend Service: React application + Nginx
   frontend:
     build:
       context: ./frontend
@@ -37,7 +41,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - backend # Ensure Backend starts before frontend
 
 volumes:
   postgres_data:

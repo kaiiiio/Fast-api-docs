@@ -1,21 +1,21 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "declaration": true,
-        "removeComments": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "target": "ES2021",
-        "sourceMap": true,
-        "outDir": "./dist",
-        "baseUrl": "./",
-        "incremental": true,
-        "skipLibCheck": true,
-        "strictNullChecks": false,
-        "noImplicitAny": false,
-        "strictBindCallApply": false,
-        "forceConsistentCasingInFileNames": false,
-        "noFallthroughCasesInSwitch": false
+        "module": "commonjs", // Sets the build system for the compiled JavaScript (NestJS uses Node.js standard)
+        "declaration": true, // Generates .d.ts files for better IDE support and library usage
+        "removeComments": true, // Strips comments from compiled JavaScript to keep the build small
+        "emitDecoratorMetadata": true, // Required for NestJS to handle Dependency Injection via decorators
+        "experimentalDecorators": true, // Enables support for @Decorators (essential for NestJS)
+        "allowSyntheticDefaultImports": true, // Allows 'import X from y' when 'y' doesn't have a default export
+        "target": "ES2021", // Sets the version of JavaScript the code will be compiled to
+        "sourceMap": true, // Generates .map files for easier debugging of TypeScript in the browser/node
+        "outDir": "./dist", // Directory where compiled JavaScript files will be saved
+        "baseUrl": "./", // Sets the root directory for non-relative module resolution
+        "incremental": true, // Speeds up subsequent builds by only compiling changed files
+        "skipLibCheck": true, // Speeds up builds by Skipping type checking of all declaration files (*.d.ts)
+        "strictNullChecks": false, // If false, null and undefined are valid for any type (NestJS default)
+        "noImplicitAny": false, // If false, variables with an inferenced 'any' type don't throw errors
+        "strictBindCallApply": false, // Disables stricter checking for bind, call, and apply functions
+        "forceConsistentCasingInFileNames": false, // If false, the compiler is less strict about variable/file casing
+        "noFallthroughCasesInSwitch": false // If false, cases in switch statements can 'fall through' to the next one
     }
 }

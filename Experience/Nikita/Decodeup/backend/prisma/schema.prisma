@@ -1,22 +1,30 @@
+// Prisma Client Generator: Defines how to generate the database client code
 generator client {
   provider = "prisma-client-js"
 }
 
+// Datasource: Defines the DB provider and connection URL via env variable
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+/**
+ * User Model: Stores personal credentials and associations.
+ */
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
   name      String?
-  tasks     Task[]
+  tasks     Task[]   // One-to-Many relationship with Tasks
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+/**
+ * Task Model: Represents a single to-do item for a user.
+ */
 model Task {
   id          Int      @id @default(autoincrement())
   title       String

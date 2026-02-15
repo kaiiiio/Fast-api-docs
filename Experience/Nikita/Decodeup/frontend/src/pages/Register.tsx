@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useFetch } from '../hooks/useFetch';
 
+/**
+ * Register Page Component.
+ * Allows new users to create an account.
+ */
 const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -9,6 +13,9 @@ const Register = () => {
     const { request, loading, error } = useFetch();
     const navigate = useNavigate();
 
+    /**
+     * Handles account creation.
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -16,10 +23,11 @@ const Register = () => {
                 method: 'POST',
                 body: { email, password, name },
             });
+            // Friendly alert and redirect to login
             alert('Registration successful! Please login.');
             navigate('/login');
         } catch (err) {
-            console.error(err);
+            console.error('Registration failed:', err);
         }
     };
 

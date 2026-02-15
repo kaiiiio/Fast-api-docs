@@ -3,11 +3,15 @@ import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 
+/**
+ * Controller for Authentication related routes (login, register).
+ */
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
 
+    // POST /auth/register - Create a new user account
     @Post('register')
     @ApiOperation({ summary: 'Register a new user' })
     @ApiResponse({ status: 201, description: 'User successfully registered' })
@@ -15,6 +19,7 @@ export class AuthController {
         return this.authService.register(registerDto.email, registerDto.password, registerDto.name);
     }
 
+    // POST /auth/login - Authenticate user and return a JWT
     @HttpCode(HttpStatus.OK)
     @Post('login')
     @ApiOperation({ summary: 'User login' })

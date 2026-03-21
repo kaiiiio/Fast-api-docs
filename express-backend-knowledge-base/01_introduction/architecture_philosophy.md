@@ -694,8 +694,6 @@ Separation of Concerns:
 
 **Answer:**
 
-**Answer:**
-
 Dependency Injection (DI) is an **architectural pattern for inversion of control**, moving the responsibility of creating and managing dependencies away from a service and into a dedicated provider or container. This shift in responsibility is what enables individual components to remain loosely coupled, drastically simplifying the process of unit testing and allowing for flexible implementation swaps as an application's requirements evolve.
 
 **Dependency Injection (DI)** means **passing dependencies** to functions/classes instead of creating them inside. This makes code **testable** and **flexible**.
@@ -791,8 +789,6 @@ Dependency Injection:
 ---
 
 ### Q3: Explain the Repository Pattern. Why use it in Express.js applications?   --- IMP
-
-**Answer:**
 
 **Answer:**
 
@@ -998,8 +994,6 @@ eventBus.on('user.created', (data) => {
 
 **Answer:**
 
-**Answer:**
-
 Clean Architecture is an **organization-centric design philosophy** that prioritizes the stability of your business rules by keeping them at the absolute core of the application, completely isolated from external frameworks or databases. Unlike traditional MVC—which often leads to business logic leaking into models or controllers—Clean Architecture enforces a strict dependency rule where "inner layers" never depend on "outer layers," resulting in a system that is incredibly easy to test, maintain, and adapt to changing technology.
 
 **Clean Architecture** organizes code in **layers** with **dependency inversion** - inner layers don't depend on outer layers.
@@ -1121,8 +1115,6 @@ class UserController {
 ---
 
 ### Q6: How do you handle configuration management in a large Express.js application?   --- IMP
-
-**Answer:**
 
 **Answer:**
 

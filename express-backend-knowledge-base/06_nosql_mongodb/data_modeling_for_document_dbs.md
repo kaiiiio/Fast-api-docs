@@ -111,7 +111,7 @@ const postSchema = new mongoose.Schema({
 });
 ```
 
-## Best Practices
+## Best Practices   -- IMP
 
 1. **Embed Small Data**: Embed small, frequently accessed data
 2. **Reference Large Data**: Reference large collections
@@ -141,7 +141,7 @@ Document database modeling balances embedding (fast reads, data duplication) wit
 
 ---
 
-## 🎯 Interview Questions: Document Data Modeling
+## 🎯 Interview Questions: Document Data Modeling   -- IMP
 
 ### Q1: Embed vs Reference — how do you decide in MongoDB?
 

@@ -794,7 +794,7 @@ deleteUser() {}
 
 ## 6️⃣ INTERCEPTORS
 
-### NestInterceptor - FROM '@nestjs/common'
+### NestInterceptor - FROM '@nestjs/common'    --- IMP
 
 **What it is:**  
 Interface for creating interceptors that can transform requests and responses. Interceptors are based on **Aspect-Oriented Programming (AOP)** techniques. They wrap the request/response cycle, allowing you to:
@@ -1165,7 +1165,7 @@ export class AppModule implements NestModule {
 
 ## 7️⃣ EXCEPTION HANDLING
 
-### ExceptionFilter - FROM '@nestjs/common'
+### ExceptionFilter - FROM '@nestjs/common'   --- IMP
 
 **What it is:**  
 An interface used to create custom exception filters. It allows you to catch specific exceptions (or all of them) and format the response that the client receives.
@@ -1350,7 +1350,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
 ## 8️⃣ LIFECYCLE HOOKS
 
-### Lifecycle Hook Interfaces - FROM '@nestjs/common'
+### Lifecycle Hook Interfaces - FROM '@nestjs/common'   --- IMP
 
 **What they are:**  
 Interfaces that provide visibility into the application lifecycle. They allow you to run code at specific points (e.g., when a module is loaded or before the app shuts down).
@@ -1374,7 +1374,7 @@ import {
 } from '@nestjs/common';
 ```
 
-**Execution Order:**  --- IMP
+**Execution Order:**
 1. `OnModuleInit` - After module dependencies resolved
 2. `OnApplicationBootstrap` - After all modules initialized
 3. `OnModuleDestroy` - Before module destroyed
@@ -1743,7 +1743,7 @@ class ExampleController {
 }
 ```
 
-### Explain use of decorators in NestJS controllers.  IMP
+### Explain use of decorators in NestJS controllers.  VIMP
 Decorators are special functions prefixed with `@` that add metadata to classes, methods, or properties.  
 - **Class decorators**: `@Controller()`, `@Module()`, `@Injectable()`.
 - **Method decorators**: `@Get()`, `@Post()`, `@Put()`.
@@ -2160,7 +2160,7 @@ app.useGlobalPipes(new ValidationPipe({
 
 <a id="caching"></a>
 
-## 1️⃣4️⃣ CACHING (Redis / Cache Manager) --- IMP
+## 1️⃣4️⃣ CACHING (Redis / Cache Manager) --- VIMP
 
 Caching is essential for large-scale SaaS (Software as a Service - software delivered over the internet via subscription rather than installed locally) to reduce database load and improve response times.
 
@@ -2239,7 +2239,7 @@ export class UserService {
 
 <a id="micro"></a>
 
-## 🔟 MICROSERVICES & LEAD-LEVEL ARCHITECTURE (Mastery Hub) --- IMP
+## 🔟 MICROSERVICES & LEAD-LEVEL ARCHITECTURE (Mastery Hub) --- VIMP
 
 
 ### 🚀 1. NestJS Microservices: The Essentials
@@ -2253,7 +2253,7 @@ NestJS has a built-in module for microservices that abstracts away the underlyin
 | **TCP** | Simple service-to-service communication. | Easy |
 | **Redis** | Fast, simple for small queues/pub-sub. | Easy |
 | **RabbitMQ** | **Standard** for complex SaaS. Great for high reliability. | Medium |
-| **gRPC** | Extremely fast, type-safe (protobufs). Best for high performance. | High |
+| **gRPC** | Extremely fast, type-safe (protobufs*). Best for high performance. | High |
 | **NATS** | Cloud-native, high throughput. | Medium |
 
 #### **Communication Patterns**
@@ -2296,7 +2296,7 @@ export class OrdersController {
 
 ---
 
-### 🐂 3. BullMQ: Distributed Job Queues
+### 🐂 3. BullMQ: Distributed Job Queues  --- IMP
 When you have heavy tasks (Image processing, PDF generation, Bulk Emails), don't do them in the request. Use **BullMQ**. It uses **Redis** under the hood.
 
 **Comparison for Interviews:**
@@ -2469,7 +2469,7 @@ export class PostController {
 
 ---
 
-# Next.js Complete Deep Dive Notes
+# Next.js Complete Deep Dive Notes   
 
 
 ## Table of Contents
@@ -6495,7 +6495,25 @@ const parallelTasks = async () => {
 | **Singleton Scope** | Default. One instance of the provider is shared across the entire application. |
 | **Request Scope** | A new instance of the provider is created for every incoming request. |
 | **Transient Scope** | A new instance of the provider is created every time it is injected. |
-| **Global Module** | A module marked with `@Global()`, making its exports accessible everywhere. |
+| **Global Module** | A module marked with `@Global()`, making its exports accessible everywhere WITHOUT needing to import it in every module. |
+
+**Syntax Example:**
+```typescript
+// 1. Define Global Module
+@Global()
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
+
+// 2. Access in any other Service (NO need to import PrismaModule)
+@Injectable()
+export class UsersService {
+  constructor(private prisma: PrismaService) {} // Injected directly
+}
+```
+
 | **Dynamic Module** | A module that can be configured dynamically (e.g., using `forRoot()` or `register()`). |
 | **Microtasks** | High-priority tasks: `process.nextTick()`, `Promise.then`, `async/await`. |
 | **Macrotasks** | Low-priority tasks: `setTimeout`, `setInterval`, `setImmediate`, I/O operations. |

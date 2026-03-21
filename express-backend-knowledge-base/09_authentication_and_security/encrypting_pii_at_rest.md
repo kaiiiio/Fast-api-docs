@@ -616,7 +616,7 @@ const User = sequelize.define('User', {
 
 ### Q5: How would you implement encryption key rotation for PII at rest in a production Express.js application? Explain the challenges and provide a strategy for seamless key rotation without downtime.
 
-**Answer:**io
+**Answer:**
 
 **Key Rotation:**
 

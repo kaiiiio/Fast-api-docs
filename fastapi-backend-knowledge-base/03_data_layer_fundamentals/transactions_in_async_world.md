@@ -312,7 +312,7 @@ Proper transaction management ensures data consistency and prevents common async
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI    --- IMP
 
 ### Q1: Explain transaction management in async FastAPI applications, including how async transactions work, commit/rollback patterns, exception handling, isolation levels, and best practices. Provide detailed examples showing proper transaction handling.
 

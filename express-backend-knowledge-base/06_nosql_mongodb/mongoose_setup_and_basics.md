@@ -453,7 +453,7 @@ userSchema.post('save', async function(doc) {
 });
 ```
 
-## Best Practices
+## Best Practices   -- IMP
 
 1. **Use Schemas**: Always define schemas for validation
 2. **Index Fields**: Index frequently queried fields
@@ -483,7 +483,7 @@ Mongoose provides a schema-based solution for working with MongoDB in Express.js
 
 ---
 
-## 🎯 Interview Questions: Mongoose Basics
+## 🎯 Interview Questions: Mongoose Basics   -- IMP
 
 ### Q1: How does Mongoose differ from the native MongoDB driver? When would you choose one over the other?
 

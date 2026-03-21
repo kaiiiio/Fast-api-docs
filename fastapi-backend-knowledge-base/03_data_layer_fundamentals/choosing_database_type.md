@@ -301,4 +301,3 @@ class Document(Base):
 **Graph DB:** Relationship-heavy, network analysis. Best for social networks and complex relationship queries.
 
 **Recommendation:** Most applications benefit from starting with PostgreSQL and adding specialized databases as needed. PostgreSQL's extensions (pgvector, TimescaleDB) make it versatile for many use cases.
-

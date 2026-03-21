@@ -19,7 +19,7 @@ changeStream.on('change', (change) => {
 ```
 
 **Explanation:**
-Change streams provide real-time notifications of database changes, enabling event-driven architectures and real-time features.
+Change streams provide real-time notifications of database changes, enabling event-driven architectures and real-time features.   -- IMP
 
 ## Setting Up Change Streams
 
@@ -320,7 +320,7 @@ changeStream.on('change', async (change) => {
 });
 ```
 
-## Summary
+## Summary   -- IMP
 
 **Change Streams for Events:**
 
@@ -342,7 +342,7 @@ MongoDB Change Streams provide real-time notifications of database changes, enab
 
 ---
 
-## 🎯 Interview Questions: Change Streams
+## 🎯 Interview Questions: Change Streams   -- IMP
 
 ### Q1: How do MongoDB Change Streams work under the hood? When are they preferable to polling?
 

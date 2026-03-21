@@ -1,295 +1,93 @@
-﻿# PostgreSQL Learning Notes - Complete Guide with Definitions & Theory
+﻿# 🐘 PostgreSQL & SQL Mastery: The Complete Guide
+
+> [!IMPORTANT]
+> This document is a comprehensive technical reference for SQL and PostgreSQL, designed for Lead-level developers. It covers everything from basic CRUD to advanced architecture and performance tuning.
 
 PostgreSQL is an open-source, object-relational database system (ORDBMS) that uses SQL (Structured Query Language) as its query language.
 
-### Key Concepts
-- **SQL**: The language standard for querying relational databases
-- **PostgreSQL**: A specific database system that implements and extends SQL
-- **RDBMS**: Relational Database Management System (stores data in tables)
+### 🏛️ Key Concepts
+- **SQL**: The language standard for querying relational databases.
+- **PostgreSQL**: A specific database system that implements and extends SQL.
+- **RDBMS**: Relational Database Management System (stores data in tables).
 
-## 📖 Basic Query Example
+---
 
-- **SELECT**: Retrieves data from database
-- **`*`**: Means "all columns" (you can also specify column names)
-- **FROM**: Specifies which table to query
-- **ORDER BY**: Sorts the results (ASC = ascending, DESC = descending)
+## 📖 1. Core SQL Operations (CRUD)
 
-This query retrieves all columns from the 'cars' table and sorts by 'year'.
+### 1.1 Basic Query Example
+- **SELECT**: Retrieves data from the database.
+- **`*`**: Wildcard meaning "all columns".
+- **FROM**: Specifies the source table.
+- **ORDER BY**: Sorts results (`ASC` for ascending, `DESC` for descending).
 
 ```sql
 SELECT * FROM cars
 ORDER BY year;
 ```
-
 > [!TIP]
-> Always end SQL statements with a semicolon (`;`). This tells PostgreSQL that the statement is complete.
+> Always end SQL statements with a semicolon (`;`).
 
-## 📖 CREATE TABLE - Defining Database Structure   IMP
+### 1.2 Defining Structure (`CREATE TABLE`)
+- **Table Name**: The identifier for the table (e.g., `cars`).
+- **Columns**: Attributes defining the structure (e.g., `brand`, `model`, `year`).
 
-- **CREATE TABLE**: Creates a new table in the database
-- **Table Name**: 'cars' - the name of the table
-- **Columns**: brand, model, year - attributes that define the structure
-
-### Data Types in PostgreSQL
-- **VARCHAR(255)**: Variable-length string, max 255 characters
-  (Use for text of varying lengths like names, descriptions)
-- **INT**: Integer (whole numbers like 1, 2, 100)
-
-**Why VARCHAR instead of CHAR?**
-- **VARCHAR**: Variable length, saves space (stores only what's needed)
-- **CHAR**: Fixed length, pads with spaces (use when length is always same)
+#### 📦 Data Types in PostgreSQL
+- **`VARCHAR(255)`**: Variable-length string (max 255 chars). Best for text like names.
+- **`INT`**: Integer (whole numbers).
+- **`VARCHAR` vs `CHAR`**: `VARCHAR` saves space by only storing actual text, while `CHAR` pads with spaces to a fixed length.
 
 ```sql
 CREATE TABLE cars(
-  brand VARCHAR(255),    -- Car manufacturer name (e.g., "Toyota", "BMW")
-  model VARCHAR(255),    -- Car model name (e.g., "Camry", "M1")
-  year INT               -- Manufacturing year (e.g., 2020, 1968)
+  brand VARCHAR(255),    -- Car manufacturer
+  model VARCHAR(255),    -- Car model
+  year INT               -- Manufacturing year
 );
 ```
 
-> [!NOTE]
-> PostgreSQL is case-insensitive for keywords (`CREATE` = `create`). But table and column names can be case-sensitive if quoted: `"Cars"`.
+### 1.3 Adding Data (`INSERT INTO`)
+Syntax: `INSERT INTO table_name (col1, col2) VALUES (val1, val2);`
 
-## 📖 INSERT INTO - Adding Data to Table
-INSERT INTO: Adds new rows (records) to a table
-Syntax: INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...)
-
-Multiple rows can be inserted in a single statement:
-- Separate each row with a comma
-- Maintain order: column order must match VALUES order
-
-Return value: "INSERT 0 3" means:
-- 0: No OID (Object Identifier) returned
-- 3: Three rows were successfully inserted
----
+```sql
 INSERT INTO cars(brand, model, year)
-VALUES('Volvo', 'p1800', 1968),      // First row
-  ('BMW', 'M1', 1978),                // Second row
-  ('Toyota', 'Celica', 1975);         // Third row
-Return: INSERT 0 3 (means 3 rows inserted successfully)
-💡 Tip: Single quotes (') for text values, no quotes for numbers
-💡 PostgreSQL uses single quotes, not double quotes for strings
+VALUES 
+  ('Volvo', 'p1800', 1968),
+  ('BMW', 'M1', 1978),
+  ('Toyota', 'Celica', 1975);
+```
+> [!NOTE]
+> Use single quotes (`'`) for text and no quotes for numbers.
 
----
-## 📖 SELECT - Retrieving Data
-SELECT * : Retrieves all columns and all rows from the table
-The asterisk (*) is a wildcard meaning "all columns"
+### 1.4 Modifying Structure (`ALTER TABLE`)
+Used to change table architecture without losing data.
+- **ADD CMD**: `ALTER TABLE cars ADD color VARCHAR(255);`
+- **DROP CMD**: `ALTER TABLE cars DROP COLUMN color;`
+- **RENAME CMD**: `ALTER TABLE cars RENAME COLUMN old TO new;`
 
-## Alternative: SELECT column1, column2 FROM cars; (specific columns only)
-SELECT * FROM cars;
-This displays all data in the cars table
-Output will show: brand, model, year for all rows
+### 1.5 Removing Data (`DELETE`)
+> [!CAUTION]
+> Always use a `WHERE` clause unless you intend to wipe the entire table.
 
----
-## 📖 ALTER TABLE - Modifying Table Structure
-ALTER TABLE: Modifies the structure of an existing table
-ADD: Adds a new column to the table
-
-Common ALTER TABLE operations:
-- ADD column_name datatype          (add new column)
-- DROP COLUMN column_name           (remove column)
-- ALTER COLUMN column_name TYPE new_type  (change data type)
-- RENAME COLUMN old_name TO new_name     (rename column)
-
-Why ALTER instead of recreating table?
-- Preserves existing data
-- No need to backup/restore data
-- Can be done on live databases with minimal downtime
----
-ALTER TABLE cars
-ADD color VARCHAR(255);    // Adds a new column 'color' to store car colors
-💡 After this, existing rows will have NULL for the color column
-You'll need to UPDATE rows to set color values
----
-### ---
-### ---
-## 📖 DELETE - Removing Data from Table
-DELETE FROM: Removes rows from a table
-WHERE: Specifies which rows to delete (condition-based)
-
-âš ï¸ CRITICAL WARNING:
-- DELETE without WHERE clause deletes ALL rows!
-- Always use WHERE clause unless you want to delete everything
-- Consider using transactions (BEGIN...ROLLBACK) for testing
-
-## Syntax: DELETE FROM table_name WHERE condition;
-DELETE FROM cars WHERE brand = 'Volvo';  // Fixed: Added space and semicolon
-💡 This deletes only rows where brand equals 'Volvo'
-💡 Use single quotes for string comparisons in PostgreSQL
-💡 Always test DELETE queries with SELECT first: SELECT * FROM cars WHERE brand = 'Volvo';
-
----
-## 📖 CREATE TABLE with PRIMARY KEY and SERIAL
-PRIMARY KEY: Uniquely identifies each row in a table
-- Must be UNIQUE (no duplicates)
-- Must be NOT NULL (cannot be empty)
-- Only ONE primary key per table (but can be composite - multiple columns)
-
-SERIAL: Auto-incrementing integer (PostgreSQL-specific)
-- Automatically generates next number (1, 2, 3, ...)
-- Equivalent to AUTO_INCREMENT in MySQL
-- Actually creates a sequence behind the scenes
-
-NOT NULL: Column cannot contain NULL values
-- Ensures data integrity
-- Required for PRIMARY KEY columns
-
-Why use PRIMARY KEY?
-- Ensures each row is unique
-- Improves query performance (index is automatically created)
-- Required for foreign key relationships
----
-CREATE TABLE categories(
-  category_id SERIAL NOT NULL PRIMARY KEY,    // Auto-increment ID, unique identifier
-  category_name VARCHAR(255),                 // Category name (e.g., "Electronics")
-  description VARCHAR(255)                    // Category description
-);
-💡 SERIAL is PostgreSQL shorthand for:
-  INT NOT NULL DEFAULT nextval('categories_category_id_seq')
-💡 PRIMARY KEY automatically creates an index for fast lookups
-
----
-## 📖 INSERT INTO (Alternative Syntax)
-When inserting into all columns (in order), you can omit column names
-Syntax: INSERT INTO table_name VALUES (value1, value2, ...);
-
-However, specifying columns is RECOMMENDED because:
-- More readable
-- Not affected by column order changes
-- Can omit columns with DEFAULT values or NULL
----
-INSERT INTO categories(category_name, description)
-VALUES('Electronics', 'Electronic devices and gadgets');
-💡 Note: category_id is not specified - SERIAL auto-generates it
-💡 This is the recommended way - explicit column names
----
-### ---
-### ---
-### ---
-### ---
-### ---
-### ---
-Perfect 😎 â€” letâ€™s go blazingly fast but solid.
-
-Weâ€™ll move from basics â†’ intermediate â†’ advanced in bite-sized, practical bursts â€” youâ€™ll learn by doing small queries that actually build up intuition.
-
-## Section: Core SQL Concepts and CRUD Operations
-
-### ⚡ Step 1: What SQL Actually Is
-SQL (Structured Query Language) is a standardized language used to communicate with relational databases. It allows you to:
-- Query data (`SELECT`)
-- Modify data (`INSERT`, `UPDATE`, `DELETE`)
-- Define structure (`CREATE`, `ALTER`, `DROP`)
-- Control access and transactions
-
-**Relational Database**: Data organized in tables (rows and columns). Each table represents an entity (like "users", "orders", "products"). Relationships between tables are established through foreign keys.
-
-**Example Table Structure:**
-```text
-id  | name  | age
-----|---|---
-1   | Alice | 24
-2   | Bob   | 30
+```sql
+-- Safe deletion
+DELETE FROM cars WHERE brand = 'Volvo';
 ```
 
-## âš™ï¸ Step 2: Core SQL Commands (CRUD Operations)
-CRUD = Create, Read, Update, Delete
-These are the four basic operations for managing data
+---
 
-## 1ï¸ CREATE TABLE - Define table structure
-CREATE TABLE: Creates a new table in the database
-INT: Integer data type (whole numbers)
-PRIMARY KEY: Uniquely identifies each row (cannot be NULL or duplicate)
-AUTO_INCREMENT: Automatically generates next number (MySQL syntax)
-  Note: In PostgreSQL, use SERIAL instead of AUTO_INCREMENT
-## VARCHAR(50): Variable-length string, max 50 characters
-CREATE TABLE users (
-  id INT PRIMARY KEY AUTO_INCREMENT,  // Auto-incrementing unique ID
-  name VARCHAR(50),                    // User's name (max 50 chars)
-  age INT                              // User's age (integer)
+## 🏛️ 2. Advanced Table Definitions
+
+### 2.1 Keys and Constraints
+- **PRIMARY KEY**: Uniquely identifies each row. Must be unique and NOT NULL.
+- **SERIAL**: PostgreSQL-specific auto-incrementing integer.
+- **NOT NULL**: Ensures a column cannot be empty.
+
+```sql
+CREATE TABLE categories(
+  category_id SERIAL PRIMARY KEY, -- Auto-increments 1, 2, 3...
+  category_name VARCHAR(255) NOT NULL,
+  description TEXT
 );
-
-PostgreSQL Equivalent:
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,  // SERIAL = auto-increment in PostgreSQL
-  name VARCHAR(50),
-  age INT
-);
-
-## 2ï¸ INSERT - Add new data (Create operation)
-INSERT INTO: Adds new rows (records) to a table
-Syntax: INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...)
-## Multiple rows can be inserted in one statement (separated by commas)
-INSERT INTO users (name, age)
-VALUES ('Alice', 24),    // First row
-       ('Bob', 30);       // Second row
-💡 Return value: "INSERT 0 2" means 2 rows inserted successfully
-
-## 3ï¸ SELECT - Retrieve data (Read operation)
-SELECT: Retrieves data from one or more tables
-* : Wildcard meaning "all columns"
-FROM: Specifies which table(s) to query
-WHERE: Filters rows based on conditions
-
-## Different SELECT patterns:
-SELECT * FROM users;              // All columns, all rows
-SELECT name FROM users;           // Only 'name' column, all rows
-SELECT * FROM users WHERE age > 25;  // All columns, filtered rows (age > 25)
-
-Comparison Operators:
-- =  : Equal to
-- != or <> : Not equal to
-- >  : Greater than
-- <  : Less than
-- >= : Greater than or equal to
-- <= : Less than or equal to
-- BETWEEN: Range (e.g., age BETWEEN 20 AND 30)
-- IN: Match any value in list (e.g., age IN (20, 25, 30))
-- LIKE: Pattern matching (e.g., name LIKE 'A%' - starts with 'A')
-- IS NULL / IS NOT NULL: Check for NULL values
-
-## 4ï¸ UPDATE - Modify existing data (Update operation)
-UPDATE: Modifies existing rows in a table
-SET: Specifies which columns to change and their new values
-WHERE: Specifies which rows to update (CRITICAL - without WHERE, updates ALL rows!)
-
-## âš ï¸ WARNING: Always use WHERE clause unless you want to update every row!
-UPDATE users
-SET age = 25              // Change age to 25
-WHERE name = 'Alice';     // Only for rows where name is 'Alice'
-
-Multiple columns:
-UPDATE users
-SET age = 26, name = 'Alice Smith'  // Update multiple columns
-WHERE id = 1;
-
-## 5ï¸ DELETE - Remove data (Delete operation)
-DELETE FROM: Removes rows from a table
-WHERE: Specifies which rows to delete (CRITICAL - without WHERE, deletes ALL rows!)
-
-âš ï¸ WARNING: DELETE without WHERE deletes EVERYTHING!
-Always test with SELECT first:
-  SELECT * FROM users WHERE id = 1;  // Check what will be deleted
-##   DELETE FROM users WHERE id = 1;    // Then delete
-DELETE FROM users WHERE id = 1;  // Delete row where id = 1
-💡 Tip: In PostgreSQL, you can use RETURNING to see what was deleted:
-  DELETE FROM users WHERE id = 1 RETURNING *;
-
-## 🧠 Step 3: Filtering & Sorting
-WHERE: Filters rows based on conditions
-BETWEEN: Checks if value is within a range (inclusive - includes boundaries)
-ORDER BY: Sorts results (ASC = ascending, DESC = descending)
-LIMIT: Restricts number of rows returned (useful for pagination)
-
-## Clause Order: SELECT â†’ FROM â†’ WHERE â†’ GROUP BY â†’ HAVING â†’ ORDER BY â†’ LIMIT
-SELECT * FROM users
-WHERE age BETWEEN 20 AND 30    // Age between 20 and 30 (inclusive)
-ORDER BY age DESC               // Sort by age, highest first (DESC = descending)
-LIMIT 2;                        // Return only first 2 rows
-
-Additional Sorting:
-ORDER BY age DESC, name ASC;   // Sort by age (desc), then name (asc)
-ORDER BY 2 DESC;               // Sort by 2nd column (numeric position)
+```
 
 LIMIT and OFFSET (for pagination):
 SELECT * FROM users LIMIT 10 OFFSET 20;  // Skip first 20, return next 10
@@ -362,7 +160,7 @@ Result: All users AND all orders, with NULLs where no match
 
 ## Multiple JOINs
 You can join multiple tables in one query
-## Example: users â†’ orders â†’ order_items â†’ products
+## Example: users → orders → order_items → products
 SELECT users.name, products.name, order_items.quantity
 FROM users
 JOIN orders ON users.id = orders.user_id
@@ -442,7 +240,7 @@ HAVING COUNT(*) > 1   -- Filters groups AFTER grouping
 - Can't use WHERE with aggregated values - use HAVING instead
 - GROUP BY columns can appear in SELECT (others need aggregation)
 
-## âš¡ Step 6: Subqueries & Aliases
+## ⚡ Step 6: Subqueries & Aliases
 Subquery (Nested Query): A query inside another query
 Used when you need data that depends on another query's result
 
@@ -460,7 +258,7 @@ WHERE age > (SELECT AVG(age) FROM users);
 -- Returns users older than average age
 
 Breakdown:
-1. Inner query: (SELECT AVG(age) FROM users) â†’ returns average age (e.g., 27)
+1. Inner query: (SELECT AVG(age) FROM users) → returns average age (e.g., 27)
 2. Outer query: SELECT name FROM users WHERE age > 27
 
 Subquery with IN
@@ -536,33 +334,33 @@ Add index for faster search:
 
 CREATE INDEX idx_email ON employees(email);
 
-ðŸ”¥ Step 8: Real-world Example Challenge
+🔥 Step 8: Real-world Example Challenge
 
 You try:
 
-Get the names of users who ordered a product named â€œiPhoneâ€.
+Get the names of users who ordered a product named "iPhone".
 
-Would you like me to make this interactive, where I teach you concept-by-concept with a small task after every step (and we go from beginner â†’ pro in ~10 sessions)?
-Thatâ€™s the fastest way to actually learn it.
+Would you like me to make this interactive, where I teach you concept-by-concept with a small task after every step (and we go from beginner → pro in ~10 sessions)?
+That's the fastest way to actually learn it.
 
-🧩 SQL vs PostgreSQL â€” Not the Same Thing
-1ï¸ SQL â†’ The Language
+🧩 SQL vs PostgreSQL — Not the Same Thing
+1️⃣ SQL → The Language
 
 SQL (Structured Query Language) is a standard language used to talk to relational databases.
 
-Think of it like English grammar â€” it defines how you express instructions such as:
+Think of it like English grammar — it defines how you express instructions such as:
 
 SELECT * FROM users WHERE age > 20;
 
-Every relational database (MySQL, PostgreSQL, SQLite, SQL Server, Oracle) understands SQL â€” but each adds its own flavor or extensions.
+Every relational database (MySQL, PostgreSQL, SQLite, SQL Server, Oracle) understands SQL — but each adds its own flavor or extensions.
 
-2ï¸ PostgreSQL â†’ The Database System
+2️⃣ PostgreSQL → The Database System
 
-PostgreSQL (or Postgres) is an open-source RDBMS (Relational Database Management System) that implements SQL â€” and extends it massively.
+PostgreSQL (or Postgres) is an open-source RDBMS (Relational Database Management System) that implements SQL — and extends it massively.
 
 Think of it like:
 🧠 SQL = language,
-âš™ï¸ Postgres = program that executes it (with extra powers).
+⚙️ Postgres = program that executes it (with extra powers).
 
 âš”ï¸ SQL (Standard) vs PostgreSQL (Implementation)
 Concept	SQL (Standard)	PostgreSQL (Implementation)
@@ -586,47 +384,49 @@ SELECT name
 FROM users
 WHERE details->>'city' = 'Delhi';  -- JSON query (Postgres feature)
 
-SQL itself doesnâ€™t define ->> (thatâ€™s Postgresâ€™s extension to handle JSON).
+SQL itself doesn't define ->> (that's Postgres's extension to handle JSON).
 
 🛠️ Think of it like this analogy
-Analogy	Meaning
-â€œC languageâ€	SQL syntax/standards
-â€œGCC Compilerâ€	PostgreSQL engine that runs your SQL
-â€œGCC has extensions like __attribute__â€	PostgreSQL adds its own SQL extensions
-ðŸ TL;DR
+Analogy | Meaning
+--- | ---
+"C language" | SQL syntax/standards
+"GCC Compiler" | PostgreSQL engine that runs your SQL
+"GCC extensions" | PostgreSQL adds its own SQL extensions
 
-SQL â†’ The language standard for databases.
+### 📍 TL;DR
 
-PostgreSQL â†’ A powerful open-source database that uses and extends SQL.
+SQL → The language standard for databases.
 
-Letâ€™s go step-by-step and make this crystal clear ðŸ‘‡
+PostgreSQL → A powerful open-source database that uses and extends SQL.
 
-âš™ï¸ MySQL vs PostgreSQL â€” The Big Picture
+Let's go step-by-step and make this crystal clear 👇
+
+MySQL vs PostgreSQL — The Big Picture
 Feature	MySQL	PostgreSQL
 🧠 Type	Relational Database (RDBMS)	Object-Relational Database (ORDBMS)
 ⚡¬ Query Language	Uses SQL (with MySQL flavor)	Uses SQL (with PostgreSQL flavor, more standard-compliant)
 🚀 Performance	Super fast for read-heavy apps	Slightly slower writes, but handles complex queries better
 🧩 Data Integrity & Standards	Focused on simplicity and speed	Fully ACID compliant, strict about data integrity
 🛠️ Advanced Data Types	Basic (INT, VARCHAR, DATE, etc.)	Rich (JSONB, ARRAY, UUID, HSTORE, RANGE, etc.)
-ðŸ§® Joins & Complex Queries	Optimized for simpler joins	Excellent for complex joins, subqueries, and CTEs
-ðŸ” Indexing	B-Tree, Fulltext (from v5.6+), Spatial (via InnoDB)	B-Tree, GiST, GIN, BRIN, HASH, SP-GiST, etc.
-âš¡ JSON Support	JSON (text-based, limited)	JSONB (binary, indexable, super fast)
-ðŸ”’ Transactions (ACID)	Supported (depends on engine; InnoDB = yes)	Fully ACID by design
-ðŸ” Replication	Master-slave, Group replication	Streaming, Logical, Physical, Bidirectional replication
+🧩 Joins & Complex Queries	Optimized for simpler joins	Excellent for complex joins, subqueries, and CTEs
+ Indexing	B-Tree, Fulltext (from v5.6+), Spatial (via InnoDB)	B-Tree, GiST, GIN, BRIN, HASH, SP-GiST, etc.
+⚡ JSON Support	JSON (text-based, limited)	JSONB (binary, indexable, super fast)
+Transactions (ACID)	Supported (depends on engine; InnoDB = yes)	Fully ACID by design
+Replication	Master-slave, Group replication	Streaming, Logical, Physical, Bidirectional replication
 🧩 Extensions Limited	Rich ecosystem (PostGIS, TimescaleDB, pgVector, etc.)
 🧠 Stored Procedures / Functions	Supported (SQL/PSM)	Supported (SQL, PL/pgSQL, Python, etc.)
-ðŸ›  Community / Ecosystem	Huge (especially for web apps)	Developer-oriented, strong in data engineering / analytics
+🛠️ Community / Ecosystem	Huge (especially for web apps)	Developer-oriented, strong in data engineering / analytics
 ðŸŒ Used By	Facebook, YouTube, Airbnb, Shopify	Instagram, Reddit, Spotify, Apple, NASA
 ⚡¾ Best For	Simpler web apps (CRUD, dashboards)	Complex analytics, geospatial, fintech, data-heavy systems
 🧩 Philosophy Difference
 Philosophy	MySQL	PostgreSQL
-âš™ï¸ â€œMake it simple & fast.â€	Prioritizes speed & ease for developers.	
-🧠 â€œFollow standards & be powerful.â€		Prioritizes correctness, power, and extensibility.
+⚙️ "Make it simple & fast."	Prioritizes speed & ease for developers.	
+🧠 "Follow standards & be powerful."		Prioritizes correctness, power, and extensibility.
 
 MySQL = practical and forgiving.
 Postgres = precise and powerful.
 
-ðŸ”¥ Real Example: JSON Difference
+🔥 Real Example: JSON Difference
 
 In MySQL:
 
@@ -638,9 +438,9 @@ In PostgreSQL:
 
 SELECT data->>'name' FROM users WHERE data->>'city' = 'Delhi';
 
-Binary JSON (JSONB) with index support â†’ faster queries.
+Binary JSON (JSONB) with index support → faster queries.
 
-âš–ï¸ When to Use Which
+When to Use Which
 Use Case	Choose
 Simple web app, CRUD-heavy	🟢 MySQL
 Real-time analytics, large data, or complex relations	🔵 PostgreSQL
@@ -649,9 +449,9 @@ Read-heavy CMS (WordPress, Drupal, etc.)	🟢 MySQL
 AI / ML data storage (e.g., pgVector embeddings)	🔵 PostgreSQL
 🧠 TL;DR Summary
 
-MySQL â†’ Simple, fast, great for typical web apps.
+MySQL → Simple, fast, great for typical web apps.
 
-PostgreSQL â†’ Advanced, reliable, great for data-heavy or complex logic apps.
+PostgreSQL → Advanced, reliable, great for data-heavy or complex logic apps.
 
 🧱 Example 1: Table Creation
 
@@ -718,9 +518,9 @@ WHERE data->>'city' = 'Delhi';
 
 📘 Difference:
 
-PostgreSQL uses JSONB (binary JSON â€” faster & indexable).
+PostgreSQL uses JSONB (binary JSON — faster & indexable).
 
-MySQLâ€™s JSON is text-based and slower for large data.
+MySQL's JSON is text-based and slower for large data.
 
 📊 Example 4: Aggregate & Filtering
 
@@ -756,11 +556,11 @@ SELECT * FROM users WHERE name ILIKE '%john%';
 
 📘 Difference:
 
-MySQLâ€™s LIKE is case-insensitive only if the column uses a case-insensitive collation.
+MySQL's LIKE is case-insensitive only if the column uses a case-insensitive collation.
 
-PostgreSQL has ILIKE (built-in case-insensitive matching) â€” more explicit.
+PostgreSQL has ILIKE (built-in case-insensitive matching) — more explicit.
 
-âš™ï¸ Example 6: Default Boolean Handling
+⚙️ Example 6: Default Boolean Handling
 
 🟢 MySQL
 
@@ -800,7 +600,7 @@ MySQL supports CTEs only from version 8.0+.
 
 PostgreSQL supported them long before and with recursive capabilities.
 
-🧩 Example 8: Arrays (Only PostgreSQL!)
+### 🧩 Example 8: Arrays (PostgreSQL Only)
 
 🔵 PostgreSQL
 
@@ -814,9 +614,9 @@ INSERT INTO users (skills) VALUES (ARRAY['Node.js', 'Postgres', 'Redis']);
 SELECT * FROM users WHERE 'Redis' = ANY(skills);
 
 📘 Difference:
-MySQL doesnâ€™t have true array support â€” youâ€™d need another table or store it as JSON.
+MySQL doesn't have true array support — you'd need another table or store it as JSON.
 
-🛠️ Example 9: Upsert (Insert or Update)
+### 🛠️ Example 9: Upsert (Insert or Update)
 
 🟢 MySQL
 
@@ -838,7 +638,7 @@ PostgreSQL uses ON CONFLICT (more flexible & SQL-standard).
 
 MySQL uses ON DUPLICATE KEY UPDATE.
 
-ðŸ”¥ Example 10: Case Expressions
+### 🔥 Example 10: Case Expressions
 
 🟢 MySQL
 
@@ -861,28 +661,28 @@ SELECT name,
   END AS category
 FROM users;
 
-📘 Same in both â€” this oneâ€™s fully SQL-standard.
+📘 Same in both — this one's fully SQL-standard.
 
 ðŸ§­ Summary
 Feature	MySQL	PostgreSQL
 JSON support	Basic	Advanced (JSONB, indexable)
-Array support	âŒ	âœ…
-Boolean type	âŒ (tinyint)	âœ… (true boolean)
-Case-insensitive search	Only via collation	âœ… ILIKE
-Recursive CTEs	âœ… (v8+)	âœ… (long ago)
+Array support		✅
+Boolean type	 (tinyint)	✅ (true boolean)
+Case-insensitive search	Only via collation	✅ ILIKE
+Recursive CTEs	✅ (v8+)	✅ (long ago)
 Upsert syntax	ON DUPLICATE KEY	ON CONFLICT
 Data consistency	Relaxed	Strict
 Speed	Faster for simple reads	Better for complex workloads
 
-Letâ€™s go step - by - step â€” hereâ€™s a ** clear and complete explanation of * method overloading * in C++ **, with examples and notes on how it works under the hood.
+Let's go step - by - step — here's a ** clear and complete explanation of * method overloading * in C++ **, with examples and notes on how it works under the hood.
 
 ---
-## 🧠 ** What is Method Overloading in C++ ?**
+## 🧠 ** What is Method Overloading in C++ ?**  ---   IMP
 
 ** Definition :**
-ðŸ‘‰ ** Method Overloading ** (also called ** Function Overloading **) in C++ means ** defining multiple functions with the same name but different parameter lists ** (different number or types of arguments).
+👉 ** Method Overloading ** (also called ** Function Overloading **) in C++ means ** defining multiple functions with the same name but different parameter lists ** (different number or types of arguments).
 
-The ** compiler decides which version to call at compile time ** â€” this is known as ** compile - time polymorphism **.
+The ** compiler decides which version to call at compile time ** — this is known as ** compile - time polymorphism **.
 
 ---
 ## 📘 ** Example 1: Basic Method Overloading **
@@ -925,10 +725,10 @@ Double: 12.5
 String: Nikita
 ```
 
-âœ… Here, ** all three functions have the same name`show` **, but they take different parameter types â€” thatâ€™s ** method overloading **.
+✅ Here, ** all three functions have the same name`show` **, but they take different parameter types — that's ** method overloading **.
 
 ---
-## âš™ï¸ ** How It Works(Under the Hood) **
+## ⚙️ ** How It Works(Under the Hood) **
 
   During ** compilation **, the C++ compiler ** creates a unique function signature** for each overloaded method based on:
 
@@ -987,10 +787,10 @@ int main() {
 
 ```cpp
 int test() {}
-double test() {}  // âŒ Error: redefinition of â€˜testâ€™
+double test() {}  // âŒ Error: redefinition of "˜test'
 ```
 
-Compiler canâ€™t distinguish them because parameters are identical.
+Compiler can't distinguish them because parameters are identical.
 
 ---
 ## 🧱 ** Overloading vs Overriding **
@@ -1006,7 +806,7 @@ Compiler canâ€™t distinguish them because parameters are identical.
   ---
 ## 🧩 ** Example 3: Constructor Overloading **
 
-  Constructors can also be overloaded â€” they just have different parameters.
+  Constructors can also be overloaded — they just have different parameters.
 
 ```cpp
 class Student {
@@ -1046,7 +846,7 @@ Nikita - 23
 ```
 
 ---
-## âœ… ** Summary Table **
+## ✅ ** Summary Table **
 
 | Feature | Description |
 | --- | --- |
@@ -1057,12 +857,12 @@ Nikita - 23
 | Example | `void show(int)`, `void show(string)` |
 
   ---
-Would you like me to explain ** operator overloading ** next(e.g., `+`, `==`, `<<` custom behavior for classes)? Itâ€™s the next logical topic after method overloading in C++.
+Would you like me to explain ** operator overloading ** next(e.g., `+`, `==`, `<<` custom behavior for classes)? It's the next logical topic after method overloading in C++.
 
-Perfect! Letâ€™s do a ** deep - dive PostgreSQL tutorial ** covering ** complex queries, transactions, JSONB, custom data types, MVCC, joins, and more ** â€” all with ** real SQL examples ** in a logical flow.Iâ€™ll provide ** code + short explanations ** so itâ€™s practical.
+Perfect! Let's do a ** deep - dive PostgreSQL tutorial ** covering ** complex queries, transactions, JSONB, custom data types, MVCC, joins, and more ** — all with ** real SQL examples ** in a logical flow.I'll provide ** code + short explanations ** so it's practical.
 
 ---
-# ** 1ï¸ Create Database and Connect **
+# ** 1️⃣ Create Database and Connect **
 
   ```sql
 -- Create database
@@ -1075,7 +875,7 @@ CREATE DATABASE schoolDB;
   ** Explanation:** Creates a DB `schoolDB` and connects to it.
 
 ---
-# ** 2ï¸ Create Custom Data Types **
+# ** 2️⃣ Create Custom Data Types **
 
   ```sql
 -- Custom enum type for grades
@@ -1085,7 +885,7 @@ CREATE TYPE grade_enum AS ENUM ('A', 'B', 'C', 'D', 'F');
   ** Explanation:** `grade_enum` allows only predefined values for grade field.
 
 ---
-# ** 3ï¸ Create Tables with Constraints **
+# ** 3️⃣ Create Tables with Constraints **
 
 ```sql
 -- Students table
@@ -1117,7 +917,7 @@ CREATE TABLE student_subjects (
 * `student_subjects` implements ** many - to - many relation **.
 
 ---
-# ** 4ï¸ Insert Sample Data **
+# ** 4️⃣ Insert Sample Data **
 
   ```sql
 INSERT INTO students(name, age, grade)
@@ -1141,7 +941,7 @@ VALUES
 ```
 
 ---
-# ** 5ï¸ Complex Queries with Joins **
+# ** 5️⃣ Complex Queries with Joins **
 
 ```sql
 -- Join students with subjects and marks
@@ -1155,7 +955,7 @@ ORDER BY s.name, sub.subject_name;
 ** Explanation:** Shows ** student name, subject, marks ** using ** INNER JOIN **.
 
 ---
-# ** 6ï¸ JSONB Storage and Queries **
+# ** 6️⃣ JSONB Storage and Queries **
 
   ```sql
 -- Add JSONB column for student profile
@@ -1177,7 +977,7 @@ WHERE profile->'hobbies' ? 'chess';  -- ? operator checks key/array element
 ```
 
 ---
-# ** 7ï¸ Transactions and Rollback **
+# ** 7️⃣ Transactions and Rollback **
 
   ```sql
 BEGIN;  -- start transaction
@@ -1195,7 +995,7 @@ ROLLBACK;
   ** Explanation:** Ensures multiple operations succeed together; otherwise rollback(atomicity).
 
 ---
-# ** 8ï¸ Aggregate and Window Functions **
+# ** 8️⃣ Aggregate and Window Functions **
 
   ```sql
 -- Average marks per student
@@ -1225,7 +1025,7 @@ GROUP BY s.name;
 ```
 
 ---
-# ** 9ï¸ Multi - Version Concurrency Control(MVCC) Example **
+# ** 9️⃣ Multi - Version Concurrency Control(MVCC) Example **
 
   ```sql
 -- Transaction 1
@@ -1238,7 +1038,7 @@ SELECT age FROM students WHERE student_id = 1;
 -- Transaction 1 COMMIT; now Transaction 2 sees new value
 ```
 
-  ** Explanation:** PostgreSQL uses ** MVCC **, so readers donâ€™t block writers and always see ** consistent snapshot **.
+  ** Explanation:** PostgreSQL uses ** MVCC **, so readers don't block writers and always see ** consistent snapshot **.
 
 ---
 # **10. CTEs and Recursive Queries **
@@ -1257,7 +1057,7 @@ WHERE sa.avg_marks > 80;
 ```
 
 ---
-# ** 1ï¸1ï¸ Upsert(Insert or Update) using ON CONFLICT**
+# ** 1️⃣1️⃣ Upsert(Insert or Update) using ON CONFLICT**
 
   ```sql
 INSERT INTO subjects(subject_name)
@@ -1269,7 +1069,7 @@ SET subject_name = EXCLUDED.subject_name || ' (updated)';
   ** Explanation:** If`subject_name` exists, updates it; otherwise inserts.
 
 ---
-# ** 1ï¸2ï¸ Indexing for Performance **
+# ** 1️⃣2️⃣ Indexing for Performance **
 
   ```sql
 CREATE INDEX idx_student_grade ON students(grade);
@@ -1299,15 +1099,15 @@ If you want, I can make a ** single, ready - to - run SQL script ** that:
 3. Inserts data
 4. Runs all complex queries(joins, JSONB, aggregation, transactions)
 
-â€¦so you can ** just paste and test everything at once **.
+"¦so you can ** just paste and test everything at once **.
 
-  Absolutely! Letâ€™s do this in a ** memory - friendly, structured way ** for PostgreSQL SQL queries, including ** easy + tough interview - level stuff ** and ** all important keywords **.Iâ€™ll organize it ** logically by use case**, with ** short mental hooks ** so you can recall them quickly during interviews.
+  Absolutely! Let's do this in a ** memory - friendly, structured way ** for PostgreSQL SQL queries, including ** easy + tough interview - level stuff ** and ** all important keywords **.I'll organize it ** logically by use case**, with ** short mental hooks ** so you can recall them quickly during interviews.
 
 ---
-# **ðŸ“Œ PostgreSQL Queries & Keywords Cheat Sheet(Interview Friendly) **
+# **📌 PostgreSQL Queries & Keywords Cheat Sheet(Interview Friendly) **
 
   ---
-## 1ï¸ Database and Table Basics
+## 1️⃣ Database and Table Basics
 
 ** Create DB **
 
@@ -1316,7 +1116,7 @@ CREATE DATABASE db_name;
 \c db_name; -- connect
 ```
 
-💡 * Tip to remember:* â€œ`CREATE` creates, `\c` connects.â€
+💡 * Tip to remember:* "`CREATE` creates, `\c` connects."
 
 ** Create Table **
 
@@ -1339,7 +1139,7 @@ ALTER TABLE table_name RENAME TO new_name;
 ```
 
 ---
-## 2ï¸ Insert, Update, Delete
+## 2️⃣ Insert, Update, Delete
 
 ** Insert Single / Multiple Rows **
 
@@ -1371,10 +1171,10 @@ UPDATE students SET age = age + 1 WHERE grade = 'A';
 DELETE FROM students WHERE age < 18;
 ```
 
-💡 * Tip:* Think: ** Insert adds, Update changes, Delete removes ** â†’ CRUD.
+💡 * Tip:* Think: ** Insert adds, Update changes, Delete removes ** → CRUD.
 
 ---
-## 3ï¸ Select Queries(Basic + Advanced)
+## 3️⃣ Select Queries(Basic + Advanced)
 
 ** Select All / Specific Columns **
 
@@ -1412,7 +1212,7 @@ SELECT MAX(age), MIN(age) FROM students;
         * Keywords: `COUNT`, `SUM`, `AVG`, `MAX`, `MIN`, `GROUP BY`, `HAVING`
 
 ---
-## 4ï¸ Joins(Most Interview - Tricky)
+## 4️⃣ Joins(Most Interview - Tricky)
 
 ** INNER JOIN ** (common rows)
 
@@ -1443,7 +1243,7 @@ LEFT JOIN subjects sub ON ss.subject_id = sub.id;
       * ** FULL ** = keep everything
 
 ---
-## 5ï¸ Transactions(Atomicity / Tough Interview Topic)
+## 5️⃣ Transactions(Atomicity / Tough Interview Topic)
 
   ```sql
 BEGIN; -- start transaction
@@ -1454,10 +1254,10 @@ ROLLBACK; -- undo if error
 ```
 
   * Keywords: `BEGIN`, `COMMIT`, `ROLLBACK`
-    * Memory hook: **â€œBegin â†’ do stuff â†’ commit to save / rollback to cancelâ€**
+    * Memory hook: **"Begin → do stuff → commit to save / rollback to cancel"**
 
       ---
-## 6ï¸ JSONB Storage(Postgres Unique Feature)
+## 6️⃣ JSONB Storage(Postgres Unique Feature)
 
   ```sql
 ALTER TABLE students ADD COLUMN profile JSONB;
@@ -1480,7 +1280,7 @@ SELECT name FROM students WHERE profile->'hobbies' ? 'chess';
       * `?` checks if key / array exists
 
 ---
-## 7ï¸ Complex Queries / CTEs / Window Functions
+## 7️⃣ Complex Queries / CTEs / Window Functions
 
 ** Common Table Expressions(CTE) **
 
@@ -1561,10 +1361,10 @@ GROUP BY s.name;
  * FROM student_subjects
  * GROUP BY student_id;
 
-💡 Tip: CTEs are â€œtemporary result setsâ€ â†’ make complex queries readable.
+💡 Tip: CTEs are "temporary result sets" → make complex queries readable.
 
 ---
-## **8ï¸ Indexing & Performance**
+## **8️⃣ Indexing & Performance**
 
 ```sql
 CREATE INDEX idx_grade ON students(grade);
@@ -1572,10 +1372,10 @@ CREATE INDEX idx_marks ON student_subjects(marks);
 ```
 
 * Keywords: `CREATE INDEX`
-* Memory hook: â€œIndex = speed boostâ€
+* Memory hook: "Index = speed boost"
 
 ---
-## **9ï¸ MVCC (High Concurrency)**
+## **9️⃣ MVCC (High Concurrency)**
 
 PostgreSQL automatically uses **Multi-Version Concurrency Control**:
 
@@ -1590,7 +1390,7 @@ SELECT age FROM students WHERE id = 1;
 -- Transaction 1 COMMIT;
 ```
 
-* Tip: **Readers donâ€™t block writers**, and vice versa.
+* Tip: **Readers don't block writers**, and vice versa.
 * Keywords: `BEGIN`, `COMMIT`, `ROLLBACK` (used with MVCC)
 
 ---
@@ -1625,27 +1425,27 @@ SELECT jsonb_agg(subject_id) FROM student_subjects WHERE student_id = 1;
 ---
 ## **💡 Memory Tips to Remember Queries**   IMP
 
-* **CRUD first** â†’ Insert / Select / Update / Delete
-* **Joins second** â†’ Inner / Left / Right / Full
-* **Aggregates** â†’ COUNT, SUM, AVG, MIN, MAX
-* **Window / Ranking / CTE** â†’ Advanced but logical
-* **Transactions** â†’ Begin â†’ do â†’ commit/rollback
-* **JSONB** â†’ `->` = object, `->>` = text, `?` = exists
-* **Indexes** â†’ always after table creation
-* **MVCC** â†’ default behavior â†’ focus on explanation, not query
+* **CRUD first** → Insert / Select / Update / Delete
+* **Joins second** → Inner / Left / Right / Full
+* **Aggregates** → COUNT, SUM, AVG, MIN, MAX
+* **Window / Ranking / CTE** → Advanced but logical
+* **Transactions** → Begin → do → commit/rollback
+* **JSONB** → `->` = object, `->>` = text, `?` = exists
+* **Indexes** → always after table creation
+* **MVCC** → default behavior → focus on explanation, not query
 
 ---
-If you want, I can **make a single â€œinterview-ready visual flow chartâ€** of **all PostgreSQL queries + keywords** in one image â€” so you can **recall all queries in order** in 30 seconds.
+If you want, I can **make a single "interview-ready visual flow chart"** of **all PostgreSQL queries + keywords** in one image — so you can **recall all queries in order** in 30 seconds.
 
 Do you want me to do that?
 
-Perfect! Letâ€™s make this **super concise, structured, and interview-friendly**, covering all the PostgreSQL commands and clauses you mentioned â€” grouped logically, with **short explanations** and **tough examples** where necessary. Iâ€™ll also include **keywords for querying and filtering**, **data types**, and **table/database management**.
+Perfect! Let's make this **super concise, structured, and interview-friendly**, covering all the PostgreSQL commands and clauses you mentioned — grouped logically, with **short explanations** and **tough examples** where necessary. I'll also include **keywords for querying and filtering**, **data types**, and **table/database management**.
 
 ---
-# **ðŸ“Œ PostgreSQL Cheat Sheet â€” All in One**
+# **📌 PostgreSQL Cheat Sheet — All in One**
 
 ---
-## **1ï¸ Joins**
+## **1️⃣ Joins**
 
 | Join Type       | Description                       | Example                                        |
 | --- | --- | --- |
@@ -1655,7 +1455,7 @@ Perfect! Letâ€™s make this **super concise, structured, and interview-frien
 | FULL OUTER JOIN | All rows from both tables         | `SELECT * FROM a FULL JOIN b ON a.id=b.a_id;`  |
 
 ---
-## **2ï¸ Database Management**
+## **2️⃣ Database Management**
 
 | Command         | Description        | Example                                                |
 | --- | --- | --- |
@@ -1667,7 +1467,7 @@ Perfect! Letâ€™s make this **super concise, structured, and interview-frien
 | DB Size         | Check DB size      | `SELECT pg_size_pretty(pg_database_size('schoolDB'));` |
 
 ---
-## **3ï¸ Data Types (Grouped for Memory)**   IMP
+## **3️⃣ Data Types (Grouped for Memory)**   IMP
 
 **Numeric**: `INT, BIGINT, SMALLINT, DECIMAL, NUMERIC, REAL, DOUBLE PRECISION, SERIAL`
 **Character**: `CHAR(n), VARCHAR(n), TEXT`
@@ -1678,7 +1478,7 @@ Perfect! Letâ€™s make this **super concise, structured, and interview-frien
 **Enum / Custom**: `CREATE TYPE grade_enum AS ENUM ('A','B','C');`
 
 ---
-## **4ï¸ Querying & Filtering Keywords (One-liner)**
+## **4️⃣ Querying & Filtering Keywords (One-liner)**
 
 `SELECT, SELECT DISTINCT, WHERE, ORDER BY, LIMIT, FETCH, IN, IS NULL, LIKE, NOT LIKE, BETWEEN, GROUP BY, HAVING`
 
@@ -1719,7 +1519,7 @@ HAVING AVG(age) > 20;
 ```
 
 ---
-## **5ï¸ Table Management**
+## **5️⃣ Table Management**
 
 | Command            | Description                 | Example                                                            |
 | --- | --- | --- |
@@ -1737,7 +1537,7 @@ HAVING AVG(age) > 20;
 | TRUNCATE TABLE     | Remove all rows             | `TRUNCATE TABLE students;`                                         |
 
 ---
-## **6ï¸ Temporary Tables**
+## **6️⃣ Temporary Tables**
 Temporary tables are tables that exist for the duration of a session
 and are automatically dropped at the end of the session. They are
 useful for storing intermediate results in a complex query or for
@@ -1757,7 +1557,7 @@ DROP TABLE pg_temp.temp_students;
 ```
 
 ---
-## **7ï¸ Copying & Comparing Tables**
+## **7️⃣ Copying & Comparing Tables**
 
 ```sql
 -- Copy table
@@ -1768,7 +1568,7 @@ SELECT * FROM students EXCEPT SELECT * FROM students_copy;
 ```
 
 ---
-## **8ï¸ Describe Table / Show Tables**
+## **8️⃣ Describe Table / Show Tables**
 
 ```sql
 -- Describe table
@@ -1778,7 +1578,7 @@ SELECT * FROM students EXCEPT SELECT * FROM students_copy;
 ```
 
 ---
-## **9ï¸ Import CSV into Table**
+## **9️⃣ Import CSV into Table**
 
 ```sql
 COPY students(name, age, grade)
@@ -1793,22 +1593,22 @@ CSV HEADER;
 # **Memory Tips**    IMP
 
 1. **Joins:** Inner = common, Left = all left, Right = all right, Full = all rows
-2. **CRUD:** Create, Select, Update, Delete â†’ think order
-3. **Query filters:** WHERE, IN, LIKE, BETWEEN, IS NULL, HAVING â†’ conditions
-4. **Sorting / limiting:** ORDER BY â†’ LIMIT / OFFSET â†’ FETCH
-5. **Tables:** CREATE â†’ ALTER â†’ DROP â†’ TRUNCATE â†’ TEMPORARY
+2. **CRUD:** Create, Select, Update, Delete → think order
+3. **Query filters:** WHERE, IN, LIKE, BETWEEN, IS NULL, HAVING → conditions
+4. **Sorting / limiting:** ORDER BY → LIMIT / OFFSET → FETCH
+5. **Tables:** CREATE → ALTER → DROP → TRUNCATE → TEMPORARY
 6. **Auto-increment:** SERIAL or GENERATED AS IDENTITY
 7. **Data types:** Group as numeric / char / date / boolean / json / uuid / enum
 
 ---
-I can also **make a single â€œvisual mind map / flow chartâ€** with **all these commands grouped by Database â†’ Table â†’ Query â†’ Joins â†’ Filters â†’ Advanced**.
+I can also **make a single "visual mind map / flow chart"** with **all these commands grouped by Database → Table → Query → Joins → Filters → Advanced**.
 
 This helps you **recall everything in one glance during interviews**.
 
-Perfect! Letâ€™s do a **deep dive into modifying data and control flow in PostgreSQL**, covering **everything from basic INSERT/UPDATE to conditional logic, loops, and flow control** â€” with **examples, tough scenarios, and explanations** so itâ€™s interview-ready.
+Perfect! Let's do a **deep dive into modifying data and control flow in PostgreSQL**, covering **everything from basic INSERT/UPDATE to conditional logic, loops, and flow control** — with **examples, tough scenarios, and explanations** so it's interview-ready.
 
 ---
-# **1ï¸ Modifying Data â€” DML (INSERT, UPDATE, DELETE, UPSERT)**
+# **1️⃣ Modifying Data — DML (INSERT, UPDATE, DELETE, UPSERT)**
 
 ---
 ### **1. INSERT**
@@ -1830,7 +1630,7 @@ VALUES
 ('Ramesh', 19, 'A');
 ```
 
-âœ… **Tip:** Use `RETURNING *` to get inserted rows:
+✅ **Tip:** Use `RETURNING *` to get inserted rows:
 
 ```sql
 INSERT INTO students(name, age, grade)
@@ -1890,7 +1690,7 @@ DO UPDATE SET name = EXCLUDED.name, grade = EXCLUDED.grade;
 * **Tip:** Always define a **unique key or primary key** for upsert to work.
 
 ---
-### **5. Conditionals â€” CASE Statement**
+### **5. Conditionals — CASE Statement**
 
 **Inline conditional in SELECT**
 
@@ -1971,7 +1771,7 @@ SELECT CAST('123.45' AS NUMERIC);
 ```
 
 ---
-# ** 2ï¸ Control Flow â€” IF, CASE, Loops **
+# ** 2️⃣ Control Flow — IF, CASE, Loops **
 
   ---
 ### 1. IF Statement(PL / pgSQL)
@@ -2089,7 +1889,7 @@ $$;
     * ** Tip:** EXIT = stop loop; CONTINUE = skip iteration
 
 ---
-# ** 3ï¸ Tough Interview Scenarios / Questions **
+# ** 3️⃣ Tough Interview Scenarios / Questions **
 
   1. ** Update based on conditional aggregate **
 
@@ -2143,34 +1943,34 @@ FROM student_subjects;
 ---
 # ** Memory Tips for Interviews **   IMP
 
-* ** DML:** INSERT, UPDATE, DELETE, UPSERT â†’ think CRUD
+* ** DML:** INSERT, UPDATE, DELETE, UPSERT → think CRUD
   * ** Conditionals:** CASE = inline, IF = procedural
     * ** Null Handling:** COALESCE = default, NULLIF = avoid division by zero
-      * ** Control Flow:** LOOP / FOR / WHILE â†’ use EXIT / CONTINUE to control flow
+      * ** Control Flow:** LOOP / FOR / WHILE → use EXIT / CONTINUE to control flow
         * ** Casting:** `::` or CAST()
-          * ** Tough pattern:** Combine loops + conditionals + null handling â†’ often interview favorite
+          * ** Tough pattern:** Combine loops + conditionals + null handling → often interview favorite
 
 ---
-If you want, I can ** make a â€œsingle - page PostgreSQL procedural & DML cheat sheetâ€** that has ** all INSERT / UPDATE / DELETE + CASE + COALESCE + LOOP + IF + EXIT + CONTINUE ** with ** ready - to - use tough examples **, perfect for interviews.
+If you want, I can ** make a "single - page PostgreSQL procedural & DML cheat sheet"** that has ** all INSERT / UPDATE / DELETE + CASE + COALESCE + LOOP + IF + EXIT + CONTINUE ** with ** ready - to - use tough examples **, perfect for interviews.
 
 Do you want me to make that ?
 
   Perfect ⚡ª
-Now letâ€™s cover ** PostgreSQL Transactions, Constraints, Joins, and Schemas ** â€”
+Now let's cover ** PostgreSQL Transactions, Constraints, Joins, and Schemas ** —
 everything you must know for ** interviews + real projects **, explained ** logically, deeply, and with examples ** (and tricks to remember).
 
 ---
-# 🧱 ** 1ï¸ Transactions in PostgreSQL **
+# 🧱 ** 1️⃣ Transactions in PostgreSQL **
 
 ### 💡 What is a Transaction ?
 
   A ** Transaction ** = a group of SQL operations executed as one logical unit.
 It follows the ** ACID ** properties:
 
-* ** A ** tomicity â€“ All or none executed
-  * ** C ** onsistency â€“ Keeps data valid
-    * ** I ** solation â€“ Multiple transactions donâ€™t clash
-      * ** D ** urability â€“ Once committed, data stays even after crash
+* ** A ** tomicity – All or none executed
+  * ** C ** onsistency – Keeps data valid
+    * ** I ** solation – Multiple transactions don't clash
+      * ** D ** urability – Once committed, data stays even after crash
 
 ---
 ### Basic Transaction Syntax
@@ -2184,8 +1984,8 @@ UPDATE accounts SET balance = balance + 500 WHERE id = 2;
 COMMIT;  -- make permanent
 ```
 
-âœ… Both statements succeed â†’ changes saved.
-âŒ Any error â†’ `ROLLBACK` undoes all.
+✅ Both statements succeed → changes saved.
+âŒ Any error → `ROLLBACK` undoes all.
 
 ---
 ### ROLLBACK Example
@@ -2218,20 +2018,20 @@ COMMIT;
 ---
 ### 🧠 ** Remember Shortcut:**
 
-* `BEGIN` â†’ start
-  * `COMMIT` â†’ save
-    * `ROLLBACK` â†’ cancel
-      * `SAVEPOINT` â†’ partial undo
+* `BEGIN` → start
+  * `COMMIT` → save
+    * `ROLLBACK` → cancel
+      * `SAVEPOINT` → partial undo
 
 ---
-# 🧩 ** 2ï¸ Constraints(Data Integrity Rules) **
+# 🧩 ** 2️⃣ Constraints(Data Integrity Rules) **
 
   Constraints = rules to maintain data accuracy.
 
 ---
 ### 1. PRIMARY KEY
 
-â†’ Uniquely identifies each record.
+→ Uniquely identifies each record.
   Automatically ** NOT NULL + UNIQUE **.
 
 ```sql
@@ -2245,7 +2045,7 @@ CREATE TABLE students (
 ---
 ### 2. FOREIGN KEY
 
-â†’ Links two tables.
+→ Links two tables.
 Ensures child rows refer to valid parent rows.
 
 ```sql
@@ -2275,7 +2075,7 @@ ON UPDATE CASCADE;
 ---
 ### 3. UNIQUE
 
-â†’ Prevents duplicate values in a column.
+→ Prevents duplicate values in a column.
 
 ```sql
 ALTER TABLE students
@@ -2285,7 +2085,7 @@ ADD CONSTRAINT unique_name UNIQUE (name);
 ---
 ### 4. CHECK
 
-â†’ Validates a condition before inserting / updating.
+→ Validates a condition before inserting / updating.
 
 ```sql
 CREATE TABLE employees (
@@ -2304,7 +2104,7 @@ ADD CONSTRAINT grade_check CHECK (grade IN ('A','B','C','D'));
 ---
 ### 5. NOT NULL
 
-â†’ Ensures a column must have a value.
+→ Ensures a column must have a value.
 
 ```sql
 CREATE TABLE orders (
@@ -2325,14 +2125,14 @@ CREATE TABLE orders (
 | NOT NULL | Must have value | `NOT NULL` |
 
   ---
-# 🔗 ** 3ï¸ Joins(Combining Data) **
+# 🔗 ** 3️⃣ Joins(Combining Data) **
 
   Joins combine rows from multiple tables using a related column.
 
 ---
 ### 1. INNER JOIN
 
-â†’ Only matching rows from both tables.
+→ Only matching rows from both tables.
 
 ```sql
 SELECT s.name, ss.marks
@@ -2346,7 +2146,7 @@ ON s.student_id = ss.student_id;
 ---
 ### 2. LEFT JOIN
 
-â†’ All rows from left table + matched right table.
+→ All rows from left table + matched right table.
 
 ```sql
 SELECT s.name, ss.marks
@@ -2360,7 +2160,7 @@ ON s.student_id = ss.student_id;
 ---
 ### 3. RIGHT JOIN
 
-â†’ All rows from right table + matched left.
+→ All rows from right table + matched left.
 
 ```sql
 SELECT s.name, ss.marks
@@ -2372,7 +2172,7 @@ ON s.student_id = ss.student_id;
 ---
 ### 4. FULL OUTER JOIN
 
-â†’ All rows from both tables(matched + unmatched).
+→ All rows from both tables(matched + unmatched).
 
 ```sql
 SELECT s.name, ss.marks
@@ -2381,12 +2181,12 @@ FULL OUTER JOIN student_subjects ss
 ON s.student_id = ss.student_id;
 ```
 
-📘 NULL where thereâ€™s no match on either side.
+📘 NULL where there's no match on either side.
 
 ---
 ### 5. SELF JOIN
 
-â†’ Join table with itself(useful for hierarchical data).
+→ Join table with itself(useful for hierarchical data).
 
 ```sql
 SELECT e1.name AS employee, e2.name AS manager
@@ -2409,7 +2209,7 @@ ON e1.manager_id = e2.id;
 | SELF | Same table twice |
 
   ---
-# ðŸ—‚ï¸ ** 4ï¸ Schemas **
+# ðŸ—‚ï¸ ** 4️⃣ Schemas **
 
   Schemas = ** namespaces / logical containers ** for tables, views, and functions.
 Default schema = `public`.
@@ -2469,9 +2269,9 @@ DROP SCHEMA school CASCADE;
 | Access object | `schema.table_name` |
 
   ---
-# âš™ï¸ ** 5ï¸ Advanced: Combining Transactions + Constraints + Joins **
+# ⚙️ ** 5️⃣ Advanced: Combining Transactions + Constraints + Joins **
 
-### âœ… Example: Safe student data update
+### ✅ Example: Safe student data update
 
   ```sql
 BEGIN;
@@ -2495,28 +2295,28 @@ ROLLBACK;
 ```
 
 ---
-# 🧩 ** 6ï¸ Interview - Favorite Questions **
+# 🧩 ** 6️⃣ Interview - Favorite Questions **
 
-âœ… ** Q1:** Difference between `ROLLBACK` and`ROLLBACK TO SAVEPOINT`
-â†’ `ROLLBACK` undoes whole transaction; `ROLLBACK TO SAVEPOINT` undoes from that point onward.
+✅ ** Q1:** Difference between `ROLLBACK` and`ROLLBACK TO SAVEPOINT`
+→ `ROLLBACK` undoes whole transaction; `ROLLBACK TO SAVEPOINT` undoes from that point onward.
 
-âœ… ** Q2:** What happens if you forget`COMMIT` ?
-â†’ Changes stay in memory until session ends â†’ then automatically rolled back.
+✅ ** Q2:** What happens if you forget`COMMIT` ?
+→ Changes stay in memory until session ends → then automatically rolled back.
 
-âœ… ** Q3:** Can a table have multiple unique constraints ?
-â†’ Yes.But only ** one primary key **.
+✅ ** Q3:** Can a table have multiple unique constraints ?
+→ Yes.But only ** one primary key **.
 
-âœ… ** Q4:** How to enforce both `NOT NULL` and`UNIQUE` ?
-â†’ Just use PRIMARY KEY or combine both manually.
+✅ ** Q4:** How to enforce both `NOT NULL` and`UNIQUE` ?
+→ Just use PRIMARY KEY or combine both manually.
 
-âœ… ** Q5:** What is difference between schema and database ?
-â†’ Database = whole container; Schema = section inside it(like folders inside a drive).
+✅ ** Q5:** What is difference between schema and database ?
+→ Database = whole container; Schema = section inside it(like folders inside a drive).
 
-âœ… ** Q6:** Can you join more than 2 tables ?
-â†’ Yes, chain joins using multiple `JOIN` clauses.
+✅ ** Q6:** Can you join more than 2 tables ?
+→ Yes, chain joins using multiple `JOIN` clauses.
 
-âœ… ** Q7:** What is CASCADE in schema / foreign keys ?
-â†’ Automatically apply delete/update changes to dependent rows or objects.
+✅ ** Q7:** What is CASCADE in schema / foreign keys ?
+→ Automatically apply delete/update changes to dependent rows or objects.
 
 ---
 # 🧠 ** Memory Summary **  IMP
@@ -2530,15 +2330,15 @@ ROLLBACK;
 
   ---
 If you want, I can now create the ** final PostgreSQL "Master Sheet" ** (Transactions + Constraints + Joins + Schema + DML + Control Flow)
-â†’ all on ** one printable PDF cheat sheet ** â€” perfect for quick revision before interviews.
+→ all on ** one printable PDF cheat sheet ** — perfect for quick revision before interviews.
 
 Do you want me to generate that next ?
 
-  Bhai perfect ðŸ”¥ â€” ab main ** Roles & Permissions + Working with Sets ** ke sab kuch ekdum ** interview - level + memory - friendly + example - based ** tareeke se samjhaata hoon.
+  Bhai perfect 🔥 — ab main ** Roles & Permissions + Working with Sets ** ke sab kuch ekdum ** interview - level + memory - friendly + example - based ** tareeke se samjhaata hoon.
 Aise likha hai ki ** yaad bhi rahe, confuse bhi na ho **, aur ** tough questions ** handle kar sake.
 
 ---
-## 🧩 1ï¸ ROLES & PERMISSIONS â€” Security & Access Control in SQL(PostgreSQL)
+## 🧩 1️⃣ ROLES & PERMISSIONS — Security & Access Control in SQL(PostgreSQL)
 
 Roles â‰ˆ Users or Groups
 They control ** who can access **, ** what they can do**, and ** on which objects ** (tables, DBs, etc).
@@ -2552,8 +2352,8 @@ Creates a ** new role(user or group) **.
 CREATE ROLE sales_user LOGIN PASSWORD 'sales@123';
 ```
 
-ðŸ”¹ `LOGIN` â†’ means this role can log in (like a user).
-ðŸ”¹ Without LOGIN â†’ acts as a ** group role ** (used only for granting permissions).
+ðŸ”¹ `LOGIN` → means this role can log in (like a user).
+ðŸ”¹ Without LOGIN → acts as a ** group role ** (used only for granting permissions).
 
 ** Example 2:**
 
@@ -2565,7 +2365,7 @@ CREATE ROLE analyst;
 ---
 ### 🧩 ALTER ROLE
 
-Used to modify a roleâ€™s attributes.
+Used to modify a role's attributes.
 
 ```sql
 ALTER ROLE sales_user WITH SUPERUSER;
@@ -2573,13 +2373,13 @@ ALTER ROLE sales_user PASSWORD 'newpass';
 ALTER ROLE sales_user NOLOGIN;
 ```
 
-ðŸ‘‰ Common attributes:
+👉 Common attributes:
 
-* `SUPERUSER` â†’ full access
-  * `CREATEDB` â†’ can create databases
-    * `CREATEROLE` â†’ can create roles
-      * `INHERIT` â†’ inherit privileges
-        * `LOGIN` â†’ can log in
+* `SUPERUSER` → full access
+  * `CREATEDB` → can create databases
+    * `CREATEROLE` → can create roles
+      * `INHERIT` → inherit privileges
+        * `LOGIN` → can log in
 
           ---
 ### âŒ DROP ROLE
@@ -2630,20 +2430,20 @@ GRANT analysts TO analyst2;
 
 | Concept | Question Example | Trick |
 | --- | --- | --- |
-| Role vs User | â€œWhatâ€™s the diff ?â€                     | Every login user is a role with LOGIN privilege. |
-| GRANT vs REVOKE | â€œHow to restrict access ?â€              | Use REVOKE to undo GRANT.                        |
-| Group Role | â€œHow to manage multiple users easily ?â€ | Use Role membership.                             |
+| Role vs User | "What's the diff ?"                     | Every login user is a role with LOGIN privilege. |
+| GRANT vs REVOKE | "How to restrict access ?"              | Use REVOKE to undo GRANT.                        |
+| Group Role | "How to manage multiple users easily ?" | Use Role membership.                             |
 
   ---
-## ðŸ”¥ 2ï¸ WORKING WITH SETS â€” Combining Query Results
+## 🔥 2️⃣ WORKING WITH SETS — Combining Query Results
 
 These operators work ** on result sets(rows) ** of two or more queries.
 
 ---
-### âš™ï¸ UNION
+### ⚙️ UNION
 
 Combines results from multiple SELECT queries
-âœ… Removes duplicates by default.
+✅ Removes duplicates by default.
 
 ```sql
 SELECT name FROM students
@@ -2654,7 +2454,7 @@ SELECT name FROM teachers;
 âž¡ï¸ Both queries must have ** same number of columns + compatible data types **.
 
 🧠 ** Trick:**
-  `UNION ALL` â†’ Keeps duplicates(faster).
+  `UNION ALL` → Keeps duplicates(faster).
 
 ```sql
 SELECT name FROM students
@@ -2704,7 +2504,7 @@ GROUP BY GROUPING SETS (
 );
 ```
 
-âž¡ï¸ It creates multiple groupings in a single query â€”
+âž¡ï¸ It creates multiple groupings in a single query —
 like:
 
 * Region + Product total
@@ -2713,7 +2513,7 @@ like:
       * Grand total
 
 ---
-### ðŸ§® CUBE
+### 🧩 CUBE
 
 Generates ** all possible combinations ** of grouping columns.
 
@@ -2731,7 +2531,7 @@ GROUP BY CUBE (region, product);
   ---
 ### 🧱 ROLLUP
 
-Like CUBE, but ** hierarchical ** â€” generates subtotals along a hierarchy.
+Like CUBE, but ** hierarchical ** — generates subtotals along a hierarchy.
 
 ```sql
 SELECT region, product, SUM(sales)
@@ -2745,23 +2545,23 @@ GROUP BY ROLLUP (region, product);
 2. region subtotal
 3. grand total
 
-🧠 Think: â€œRoll up â†’ roll up the hierarchy to totals.â€
+🧠 Think: "Roll up → roll up the hierarchy to totals."
 
 ---
-### âš¡ Summary Table
+### ⚡ Summary Table
 
   | Operator | Purpose | Removes Duplicates | Example Output |
 | --- | --- | --- | --- |
-| `UNION` | Combines all unique rows | âœ… Yes | A âˆª B |
+| `UNION` | Combines all unique rows | ✅ Yes | A âˆª B |
 | `UNION ALL` | Combines all rows | âŒ No | A + B |
-| `INTERSECT` | Common rows | âœ… Yes | A âˆ© B |
-| `EXCEPT` | Rows in A not in B | âœ… Yes | A âˆ’ B |
-| `GROUPING SETS` | Custom grouping combinations | â€”                  | Region, Product, All |
-| `CUBE` | All combinations of group columns | â€”                  | (R, P), (R), (P), () |
-| `ROLLUP` | Hierarchical subtotals | â€”                  | (R, P), (R), () |
+| `INTERSECT` | Common rows | ✅ Yes | A âˆ© B |
+| `EXCEPT` | Rows in A not in B | ✅ Yes | A âˆ’ B |
+| `GROUPING SETS` | Custom grouping combinations | —                  | Region, Product, All |
+| `CUBE` | All combinations of group columns | —                  | (R, P), (R), (P), () |
+| `ROLLUP` | Hierarchical subtotals | —                  | (R, P), (R), () |
 
   ---
-### âš™ï¸ Practice Question(Interview Level)
+### ⚙️ Practice Question(Interview Level)
 
 1. ** Find all students who are not in alumni list:**
 
@@ -2792,20 +2592,20 @@ GROUP BY ROLLUP (region, product);
 
   | Action | Mnemonic |
 | --- | --- |
-| UNION | â€œAll together now!â€  |
-| INTERSECT | â€œWhatâ€™s common ?â€     |
-| EXCEPT | â€œThis but not that.â€ |
-| CUBE | â€œAll combos.â€        |
-| ROLLUP | â€œRoll up to totals.â€ |
+| UNION | "All together now!"  |
+| INTERSECT | "What's common ?"     |
+| EXCEPT | "This but not that." |
+| CUBE | "All combos."        |
+| ROLLUP | "Roll up to totals." |
 
   ---
-Would you like me to continue next with ðŸ”¹** Views, Indexes & Performance Optimization ** â€” in the same â€œmemory + code + interviewâ€ format ? (Thatâ€™s the next big SQL interview section.)
+Would you like me to continue next with ðŸ”¹** Views, Indexes & Performance Optimization ** — in the same "memory + code + interview" format ? (That's the next big SQL interview section.)
 
-Perfect bhai ðŸ”¥ â€” ab tu enter kar raha hai ** advanced SQL zone ** â€” jahan interviewers tricky subquery & function ke question poochte hain.
+Perfect bhai 🔥 — ab tu enter kar raha hai ** advanced SQL zone ** — jahan interviewers tricky subquery & function ke question poochte hain.
 Main ye sab ** deep + easy - to - remember + example - heavy + interview - style ** way me explain kar raha hoon.
 
 ---
-## 🧩 PART 1ï¸ â€” SUBQUERIES & CTEs(Common Table Expressions)
+## 🧩 PART 1️⃣ — SUBQUERIES & CTEs(Common Table Expressions)
 
 ---
 ### ðŸ”¹ What is a Subquery ?
@@ -2825,7 +2625,7 @@ WHERE salary > (SELECT AVG(salary) FROM employees);
 âž¡ï¸ Finds all employees earning more than the average.
 
 🧠 Trick: Parentheses = nested query.
-Main query reads from subqueryâ€™s result.
+Main query reads from subquery's result.
 
 ---
 ### ðŸ”¸ Types of Subqueries
@@ -2835,7 +2635,7 @@ Main query reads from subqueryâ€™s result.
 | ** Scalar **     | Returns 1 value | `(SELECT COUNT(*) FROM users)` |
 | ** Row **        | Returns 1 row | `(SELECT name, age FROM users WHERE id=1)` |
 | ** Table **      | Returns multiple rows | `(SELECT * FROM employees WHERE dept_id=10)` |
-| ** Correlated ** | Depends on outer query | See below ðŸ‘‡                                 |
+| ** Correlated ** | Depends on outer query | See below 👇                                 |
 
 #### Example 2: Correlated Subquery
 
@@ -2849,15 +2649,15 @@ WHERE e.salary > (
 );
 ```
 
-âž¡ï¸ For each employee, inner query runs separately using outer queryâ€™s value.
+âž¡ï¸ For each employee, inner query runs separately using outer query's value.
 
 🧠 Trick: "Correlated" = inner query depends on outer query.
 
 ---
-## âš™ï¸ Subquery Operators
+## ⚙️ Subquery Operators
 
 ---
-### 1ï¸ `ANY` Operator
+### 1️⃣ `ANY` Operator
 
 Compare with ** any ** value in a subquery result.
 
@@ -2869,10 +2669,10 @@ WHERE salary > ANY (SELECT salary FROM employees WHERE department_id = 2);
 
 âž¡ï¸ Means: employee whose salary > * at least one * salary in department 2.
 
-🧠 Trick: â€œANY = at least one matchâ€.
+🧠 Trick: "ANY = at least one match".
 
 ---
-### 2ï¸ `ALL` Operator
+### 2️⃣ `ALL` Operator
 
 Compare with ** all ** values in subquery.
 
@@ -2882,12 +2682,12 @@ FROM employees
 WHERE salary > ALL (SELECT salary FROM employees WHERE department_id = 2);
 ```
 
-âž¡ï¸ Means: employee whose salary is greater than * everyoneâ€™s * salary in department 2.
+âž¡ï¸ Means: employee whose salary is greater than * everyone's * salary in department 2.
 
-🧠 Trick: â€œALL = better than everyoneâ€.
+🧠 Trick: "ALL = better than everyone".
 
 ---
-### 3ï¸ `EXISTS` Operator
+### 3️⃣ `EXISTS` Operator
 
 Checks **if subquery returns any row ** (boolean true / false).
 
@@ -2903,12 +2703,12 @@ WHERE EXISTS (
 
 âž¡ï¸ Means: show departments having at least one employee.
 
-🧠 Trick: EXISTS = â€œDoes any matching record exist ?â€
+🧠 Trick: EXISTS = "Does any matching record exist ?"
 
 ---
 ### ðŸ§¹ Deleting Duplicate Rows using Subquery
 
-Letâ€™s say table `students(id, name, age)` has duplicates.
+Let's say table `students(id, name, age)` has duplicates.
 
 ```sql
 DELETE FROM students
@@ -2947,7 +2747,7 @@ WHERE e.salary > a.avg_sal;
 
 🧠 Trick:
 `WITH name AS (subquery)`
-â†’ then use it as a table.
+→ then use it as a table.
 
 ---
 ### 🧠 Subquery vs CTE(Interview)
@@ -2957,13 +2757,13 @@ WHERE e.salary > a.avg_sal;
 | Readability | Nested, messy | Clean, readable |
 | Reusability | No | Yes |
 | Performance | Sometimes slower | Sometimes optimized |
-| Recursive Queries | âŒ                | âœ…                   |
+| Recursive Queries | âŒ                | ✅                   |
 
   ---
-## ðŸ§® Practice Question
+## 🧩 Practice Question
 
   ** Q:** Find employees who earn more than average salary of their department.
-âœ… Using CTE:
+✅ Using CTE:
 
 ```sql
 WITH dept_avg AS (
@@ -2978,7 +2778,7 @@ WHERE e.salary > d.avg_salary;
 ```
 
 ---
-## 🧩 PART 2ï¸ â€” USER - DEFINED FUNCTIONS(UDFs)
+## 🧩 PART 2️⃣ — USER - DEFINED FUNCTIONS(UDFs)
 
 ---
 ### ðŸ”¹ CREATE FUNCTION Statement
@@ -3067,7 +2867,7 @@ DROP FUNCTION get_top_students(INT);
 💡 You must specify parameter types when dropping.
 
 ---
-### âš™ï¸ Example â€” Real - World Combined Use
+### ⚙️ Example — Real - World Combined Use
 
   ```sql
 CREATE FUNCTION get_high_earners(min_salary NUMERIC)
@@ -3089,16 +2889,16 @@ SELECT * FROM get_high_earners(50000);
 | --- | --- |
 | Subquery | "Query inside query" |
 | Correlated Subquery | "Inner depends on outer" |
-| ANY | â€œAt least one matchâ€       |
-| ALL | â€œEvery match must passâ€    |
-| EXISTS | â€œDoes it exist ?â€           |
-| CTE | â€œReusable temporary tableâ€ |
-| Function | â€œReusable logic blockâ€     |
-| Function Overloading | â€œSame name, diff paramsâ€   |
-| RETURNS TABLE | â€œReturn multiple rowsâ€     |
+| ANY | "At least one match"       |
+| ALL | "Every match must pass"    |
+| EXISTS | "Does it exist ?"           |
+| CTE | "Reusable temporary table" |
+| Function | "Reusable logic block"     |
+| Function Overloading | "Same name, diff params"   |
+| RETURNS TABLE | "Return multiple rows"     |
 
   ---
-### âš¡ Challenge(Tough Interview Practice)
+### ⚡ Challenge(Tough Interview Practice)
 
   ** Q:** Write a function to return all employees whose salary is above department average(using subquery inside function).
 
@@ -3117,30 +2917,30 @@ $$ LANGUAGE SQL;
 SELECT * FROM get_above_avg();
 ```
 
-âž¡ï¸ This combines ** function + correlated subquery ** â€” high - level interview pattern ⚡ª
+âž¡ï¸ This combines ** function + correlated subquery ** — high - level interview pattern ⚡ª
 
 ---
-Would you like me to continue next with ðŸ”¹** Views, Indexes, and Performance Optimization ** (covering`CREATE VIEW`, `INDEX`, `EXPLAIN ANALYZE`, `CLUSTER`, etc.) â€” next big interview topic after this ?
+Would you like me to continue next with ðŸ”¹** Views, Indexes, and Performance Optimization ** (covering`CREATE VIEW`, `INDEX`, `EXPLAIN ANALYZE`, `CLUSTER`, etc.) — next big interview topic after this ?
 
-    Perfect bhai ðŸ”¥ â€” ab tu aa gaya SQL ke **in -built functions ** ke powerhouse section pe â€” jahan se ** 90 % interviews me direct ya indirect question ** aate hain.
+    Perfect bhai 🔥 — ab tu aa gaya SQL ke **in -built functions ** ke powerhouse section pe — jahan se ** 90 % interviews me direct ya indirect question ** aate hain.
 Main tujhe ** short + deep + mnemonic - based + example - heavy ** format me samjhaata hoon taaki tu ** easily yaad rakhe + confidently explain kare ** ⚡ª
 
 ---
-# 🧩 SQL â€” Important Built -in Functions(PostgreSQL Focus)
+# 🧩 SQL — Important Built -in Functions(PostgreSQL Focus)
 
 ---
-## ðŸ§® 1ï¸ Aggregate Functions
+## 🧩 1️⃣ Aggregate Functions
 
-  > Work on ** sets of rows ** â†’ return ** a single result **.
+  > Work on ** sets of rows ** → return ** a single result **.
 
 ---
-### ðŸ”¹ `AVG()` â€” Average of numeric values
+### ðŸ”¹ `AVG()` — Average of numeric values
 
   ```sql
 SELECT AVG(salary) AS avg_salary FROM employees;
 ```
 
-🧠 * Remember:* â€œA = Averageâ€
+🧠 * Remember:* "A = Average"
 💡 Use with `GROUP BY` for per - department average:
 
   ```sql
@@ -3150,7 +2950,7 @@ GROUP BY department_id;
 ```
 
 ---
-### ðŸ”¹ `COUNT()` â€” Count rows
+### ðŸ”¹ `COUNT()` — Count rows
 
   ```sql
 SELECT COUNT(*) FROM employees;
@@ -3160,7 +2960,7 @@ SELECT COUNT(DISTINCT department_id) FROM employees;
 🧠 * COUNT(*) counts all rows; COUNT(column) skips NULLs.*
 
   ---
-### ðŸ”¹ `MAX()` â€” Maximum value
+### ðŸ”¹ `MAX()` — Maximum value
 
   ```sql
 SELECT MAX(salary) FROM employees;
@@ -3169,7 +2969,7 @@ SELECT MAX(salary) FROM employees;
 💡 * Find the highest salary.*
 
   ---
-### ðŸ”¹ `MIN()` â€” Minimum value
+### ðŸ”¹ `MIN()` — Minimum value
 
   ```sql
 SELECT MIN(salary) FROM employees;
@@ -3178,7 +2978,7 @@ SELECT MIN(salary) FROM employees;
 💡 * Find the smallest or earliest(dates) value.*
 
   ---
-### ðŸ”¹ `SUM()` â€” Sum of all numeric values
+### ðŸ”¹ `SUM()` — Sum of all numeric values
 
   ```sql
 SELECT SUM(salary) FROM employees WHERE department_id = 2;
@@ -3187,12 +2987,12 @@ SELECT SUM(salary) FROM employees WHERE department_id = 2;
 💡 Often used for totals, billing, sales, etc.
 
 ---
-## ðŸ§® 2ï¸ Window(Analytic) Functions
+## 🧩 2️⃣ Window(Analytic) Functions
 
   > Perform calculations across rows ** without collapsing ** into one row.
 
 ---
-### ðŸ”¹ `FIRST_VALUE()` â€” First value in a group / window
+### ðŸ”¹ `FIRST_VALUE()` — First value in a group / window
 
   ```sql
 SELECT 
@@ -3206,7 +3006,7 @@ FROM employees;
 💡 * Gives top salary name per department.*
 
   ---
-### ðŸ”¹ `LAST_VALUE()` â€” Last value in the window
+### ðŸ”¹ `LAST_VALUE()` — Last value in the window
 
   ```sql
 SELECT 
@@ -3224,7 +3024,7 @@ FROM employees;
 🧠 Trick: Always set ** window frame ** properly or it gives partial results.
 
 ---
-### ðŸ”¹ `NTH_VALUE()` â€” nth value in the ordered set
+### ðŸ”¹ `NTH_VALUE()` — nth value in the ordered set
 
   ```sql
 SELECT 
@@ -3236,7 +3036,7 @@ FROM employees;
 💡 * E.g.get 2nd highest salary name.*
 
   ---
-### ðŸ”¹ `ROW_NUMBER()` â€” Assigns sequential numbers
+### ðŸ”¹ `ROW_NUMBER()` — Assigns sequential numbers
 
   ```sql
 SELECT 
@@ -3259,10 +3059,10 @@ SELECT name, salary FROM ranked WHERE r = 3;
 🧠 * ROW_NUMBER resets if you add PARTITION BY.*
 
   ---
-## ðŸ“… 3ï¸ Date & Time Functions
+## ðŸ“… 3️⃣ Date & Time Functions
 
 ---
-### ðŸ”¹ `CURRENT_DATE` â€” Systemâ€™s current date
+### ðŸ”¹ `CURRENT_DATE` — System's current date
 
   ```sql
 SELECT CURRENT_DATE;
@@ -3270,7 +3070,7 @@ SELECT CURRENT_DATE;
 ```
 
 ---
-### ðŸ”¹ `CURRENT_TIME` â€” Systemâ€™s current time
+### ðŸ”¹ `CURRENT_TIME` — System's current time
 
   ```sql
 SELECT CURRENT_TIME;
@@ -3278,7 +3078,7 @@ SELECT CURRENT_TIME;
 ```
 
 ---
-### ðŸ”¹ `EXTRACT()` â€” Extract specific part from date / time
+### ðŸ”¹ `EXTRACT()` — Extract specific part from date / time
 
   ```sql
 SELECT EXTRACT(YEAR FROM CURRENT_DATE);   -- 2025
@@ -3288,13 +3088,13 @@ SELECT EXTRACT(DAY FROM CURRENT_DATE);    -- 13
 
 💡 * Also works for hour, minute, second, etc.*
 
-🧠 Mnemonic: â€œEXTRACT pulls out date parts.â€
+🧠 Mnemonic: "EXTRACT pulls out date parts."
 
 ---
-## ðŸ”¤ 4ï¸ String Functions
+## ðŸ”¤ 4️⃣ String Functions
 
 ---
-### ðŸ”¹ `CONCAT()` â€” Join multiple strings
+### ðŸ”¹ `CONCAT()` — Join multiple strings
 
   ```sql
 SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employees;
@@ -3307,7 +3107,7 @@ SELECT first_name || ' ' || last_name;
 ```
 
 ---
-### ðŸ”¹ `FORMAT()` â€” Dynamic text formatting
+### ðŸ”¹ `FORMAT()` — Dynamic text formatting
 
   ```sql
 SELECT FORMAT('Employee %s earns â‚¹%s', name, salary) AS info FROM employees;
@@ -3316,34 +3116,34 @@ SELECT FORMAT('Employee %s earns â‚¹%s', name, salary) AS info FROM employee
 💡 Similar to`printf()` in C.
 
 ---
-### ðŸ”¹ `UPPER()` â€” Convert to uppercase
+### ðŸ”¹ `UPPER()` — Convert to uppercase
 
   ```sql
 SELECT UPPER(name) FROM employees;
 ```
 
-âž¡ï¸ â€œnikitaâ€ â†’ â€œNIKITAâ€
+âž¡ï¸ "nikita" → "NIKITA"
 
 ---
-### ðŸ”¹ `LOWER()` â€” Convert to lowercase
+### ðŸ”¹ `LOWER()` — Convert to lowercase
 
   ```sql
 SELECT LOWER('HELLO SQL');
 ```
 
-âž¡ï¸ â€œHELLO SQLâ€ â†’ â€œhello sqlâ€
+âž¡ï¸ "HELLO SQL" → "hello sql"
 
 ---
-### ðŸ”¹ `REPLACE()` â€” Replace all occurrences of substring
+### ðŸ”¹ `REPLACE()` — Replace all occurrences of substring
 
   ```sql
 SELECT REPLACE('SQL is hard', 'hard', 'easy');
 ```
 
-âž¡ï¸ Output: â€œSQL is easyâ€
+âž¡ï¸ Output: "SQL is easy"
 
 ---
-### ðŸ”¹ `REGEXP_MATCHES()` â€” Extract pattern using regex
+### ðŸ”¹ `REGEXP_MATCHES()` — Extract pattern using regex
 
 ```sql
 SELECT REGEXP_MATCHES('user123@mail.com', '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}');
@@ -3354,18 +3154,18 @@ SELECT REGEXP_MATCHES('user123@mail.com', '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-
 🧠 Trick: Always returns ** array ** of matches.
 
 ---
-### ðŸ”¹ `REGEXP_REPLACE()` â€” Replace using regex
+### ðŸ”¹ `REGEXP_REPLACE()` — Replace using regex
 
 ```sql
 SELECT REGEXP_REPLACE('Phone: +91-9876543210', '[^0-9]', '', 'g');
 ```
 
-âž¡ï¸ Removes all non - numeric chars â†’ â€œ919876543210â€
+âž¡ï¸ Removes all non - numeric chars → "919876543210"
 
-💡 `'g'` means â€œglobalâ€ replacement.
+💡 `'g'` means "global" replacement.
 
 ---
-## âš™ï¸ 5ï¸ Real - Life Combo Example
+## ⚙️ 5️⃣ Real - Life Combo Example
 
   ```sql
 SELECT
@@ -3403,7 +3203,7 @@ GROUP BY department_id;
 | REGEXP_REPLACE | Regex replace | REGEXP_REPLACE(text, '[^0-9]', '', 'g') |
 
   ---
-### âš¡ Tough Interview Questions
+### ⚡ Tough Interview Questions
 
 1. ** Find 2nd highest salary using window function:**
 
@@ -3444,21 +3244,21 @@ GROUP BY department_id;
 
   | Category | Mnemonic |
 | --- | --- |
-| Aggregates | â€œAVG COUNT MAX MIN SUMâ€ â†’ ACMMS |
-| Windows | â€œRow First Last Nthâ€ â†’ R - F - L - N |
-| Date | â€œCurrent Extractâ€                                                                     |
-| String | â€œC - F - U - L - R - RR - RMâ€ â†’ (Concat, Format, Upper, Lower, Replace, RegexReplace, RegexMatch) |
+| Aggregates | "AVG COUNT MAX MIN SUM" → ACMMS |
+| Windows | "Row First Last Nth" → R - F - L - N |
+| Date | "Current Extract"                                                                     |
+| String | "C - F - U - L - R - RR - RM" → (Concat, Format, Upper, Lower, Replace, RegexReplace, RegexMatch) |
 
   ---
-Would you like me to move next to ðŸ”¹** Views, Indexes & Query Optimization(EXPLAIN ANALYZE, CLUSTER, PARTITION, etc.) ** â€” the most ** interview - heavy performance topic ** after functions ?
+Would you like me to move next to ðŸ”¹** Views, Indexes & Query Optimization(EXPLAIN ANALYZE, CLUSTER, PARTITION, etc.) ** — the most ** interview - heavy performance topic ** after functions ?
 
-    Bhai ðŸ”¥ ab tu aa gaya ** advanced PostgreSQL control structures ** pe â€”
-ye section interview ke â€œreal - world database developerâ€ part me aata hai â€” jahan tu variables, procedures, aur triggers samjhega(pure backend ke backbone).
+    Bhai 🔥 ab tu aa gaya ** advanced PostgreSQL control structures ** pe —
+ye section interview ke "real - world database developer" part me aata hai — jahan tu variables, procedures, aur triggers samjhega(pure backend ke backbone).
 
-Main isko explain kar raha hoon ** flow + examples + interview notes + memory tricks ** ke saath ðŸ‘‡
+Main isko explain kar raha hoon ** flow + examples + interview notes + memory tricks ** ke saath 👇
 
 ---
-# 🧩 PART 1ï¸ â€” Variables & Constants in PostgreSQL(PL / pgSQL)
+# 🧩 PART 1️⃣ — Variables & Constants in PostgreSQL(PL / pgSQL)
 
   > Ye sab ** Stored Procedures / Functions ** ke andar hi use hote hain.
 > Outside, sirf`SELECT INTO` ka limited use hota hai.
@@ -3485,7 +3285,7 @@ END $$;
 
 💡 `DO $$ ... $$;` = anonymous block(temporary procedure to test logic)
 
-🧠 Trick: Always start block with `DECLARE` â†’ variables live inside it.
+🧠 Trick: Always start block with `DECLARE` → variables live inside it.
 
 ---
 ## ðŸ”¹ SELECT INTO(Store Query Result into Variable)
@@ -3522,7 +3322,7 @@ END $$;
 ---
 ## ðŸ”¹ Record Type Variables
 
-Generic record â€” doesnâ€™t depend on a specific table.
+Generic record — doesn't depend on a specific table.
 
 ```sql
 DO $$
@@ -3554,7 +3354,7 @@ END $$;
 🧠 Trick: Constant = Immutable variable.
 
 ---
-# âš™ï¸ PART 2ï¸ â€” Stored Procedures
+# ⚙️ PART 2️⃣ — Stored Procedures
 
 ---
 ## 💡 What is a Stored Procedure ?
@@ -3586,8 +3386,8 @@ CALL update_salary(3, 10);
 
 🧠 Trick:
 
-* Functions â†’ return value
-  * Procedures â†’ perform action(no return)
+* Functions → return value
+  * Procedures → perform action(no return)
 
 ---
 ### ðŸ”¹ Drop Procedure
@@ -3603,14 +3403,14 @@ DROP PROCEDURE update_salary(INT, NUMERIC);
 
   | Feature | Procedure | Function |
 | --- | --- | --- |
-| Return value | âŒ No | âœ… Yes |
+| Return value | âŒ No | ✅ Yes |
 | Call | `CALL proc()` | `SELECT func()` |
-| Used in SELECT | âŒ                | âœ…                          |
+| Used in SELECT | âŒ                | ✅                          |
 | Purpose | Operations / DML | Calculations / Data return |
-| Transaction control | âœ… allowed | âŒ not allowed |
+| Transaction control | ✅ allowed | âŒ not allowed |
 
   ---
-## âš¡ Example: Procedure Using Variables
+## ⚡ Example: Procedure Using Variables
 
   ```sql
 CREATE PROCEDURE transfer_funds(IN from_id INT, IN to_id INT, IN amt NUMERIC)
@@ -3640,7 +3440,7 @@ CALL transfer_funds(1, 2, 1000);
   * Error handling
 
 ---
-# 🧩 PART 3ï¸ â€” Triggers(Automatic Actions)
+# 🧩 PART 3️⃣ — Triggers(Automatic Actions)
 
 ---
 ## 💡 What is a Trigger ?
@@ -3692,9 +3492,9 @@ EXECUTE FUNCTION log_employee_change();
 
 🧠 Trick:
 
-* `NEW` â†’ new record
-  * `OLD` â†’ old record
-    * `TG_OP` â†’ operation type(`INSERT`, `UPDATE`, `DELETE`)
+* `NEW` → new record
+  * `OLD` → old record
+    * `TG_OP` → operation type(`INSERT`, `UPDATE`, `DELETE`)
 
 ---
 ### ðŸ”¹ DROP TRIGGER
@@ -3725,7 +3525,7 @@ ALTER TABLE employees ENABLE TRIGGER employee_audit_trigger;
 ```
 
 ---
-## âš™ï¸ Real - Life Example: Auto - updating â€œlast_modified_atâ€
+## ⚙️ Real - Life Example: Auto - updating "last_modified_at"
 
 ```sql
 CREATE OR REPLACE FUNCTION update_modified_time()
@@ -3745,7 +3545,7 @@ EXECUTE FUNCTION update_modified_time();
 💡 Automatically updates timestamp when record changes.
 
 ---
-## 🧠 INTERVIEW NOTES â€” Variables, Procedures, Triggers
+## 🧠 INTERVIEW NOTES — Variables, Procedures, Triggers
 
   | Concept | Key Point | Example |
 | --- | --- | --- |
@@ -3761,7 +3561,7 @@ EXECUTE FUNCTION update_modified_time();
 | TG_OP | Operation type | `'INSERT'`, `'DELETE'` |
 
   ---
-### âš¡ Tough Interview Questions
+### ⚡ Tough Interview Questions
 
   ** Q1:** Write a trigger that prevents salary from being decreased.
 
@@ -3801,7 +3601,7 @@ CALL delete_inactive_users();
 ```
 
 ---
-** Q3:** Whatâ€™s the difference between BEFORE and AFTER triggers ?
+** Q3:** What's the difference between BEFORE and AFTER triggers ?
 
 | Type | When it fires | Use case                    |
 | --- | --- | --- |
@@ -3813,32 +3613,32 @@ CALL delete_inactive_users();
 
   | Concept | Mnemonic |
 | --- | --- |
-| Variables | â€œDECLARE before you BEGINâ€        |
-| SELECT INTO | â€œPut result INTO variableâ€        |
-| ROWTYPE | â€œRow from table = structure copyâ€ |
-| RECORD | â€œDynamic rowâ€                     |
-| Procedure | â€œCALLable actionâ€                 |
-| Trigger | â€œAUTO reactionâ€                   |
+| Variables | "DECLARE before you BEGIN"        |
+| SELECT INTO | "Put result INTO variable"        |
+| ROWTYPE | "Row from table = structure copy" |
+| RECORD | "Dynamic row"                     |
+| Procedure | "CALLable action"                 |
+| Trigger | "AUTO reaction"                   |
 
   ---
-Would you like me to continue next with ðŸ”¹** Views, Indexes, Query Optimization(EXPLAIN, ANALYZE, PARTITION, CLUSTER) ** â€” the final â€œperformance & tuningâ€ section(most asked in senior - level interviews) ?
+Would you like me to continue next with ðŸ”¹** Views, Indexes, Query Optimization(EXPLAIN, ANALYZE, PARTITION, CLUSTER) ** — the final "performance & tuning" section(most asked in senior - level interviews) ?
 
-    Perfect ðŸ”¥ bhai ab tu SQL ke ** performance aur debugging ** zone me aa gaya â€”
+    Perfect 🔥 bhai ab tu SQL ke ** performance aur debugging ** zone me aa gaya —
 yani wo part jo ** real production systems ** me sabse zyada use hota hai(index tuning + error handling).
 
 Main isko explain kar raha hoon flow me:
-â†’ Indexes(types + usage + examples + interview tricks)
-â†’ Error Handling(EXCEPTION, ASSERT)
+→ Indexes(types + usage + examples + interview tricks)
+→ Error Handling(EXCEPTION, ASSERT)
 
 ---
-# 🧩 PART 1ï¸ â€” INDEXES in PostgreSQL
+# 🧩 PART 1️⃣ — INDEXES in PostgreSQL
 
-  > ** Index ** ek â€œlookup tableâ€ hota hai jo queries ko ** super fast ** banata hai.
+  > ** Index ** ek "lookup table" hota hai jo queries ko ** super fast ** banata hai.
 > Without index = full table scan
   > With index = only few rows accessed
 
 ---
-## ðŸ”¹ Syntax â€” CREATE INDEX
+## ðŸ”¹ Syntax — CREATE INDEX
 
   ```sql
 CREATE INDEX index_name
@@ -3860,11 +3660,11 @@ SELECT * FROM employees WHERE name = 'Rahul';
 💡 ** Default type ** in Postgres = `B-tree` index(balanced tree)
 
 ---
-### âš™ï¸ How Index Works
+### ⚙️ How Index Works
 
-  * Think of it as a ** dictionary lookup ** â€” jumps directly to matching row instead of scanning all.
+  * Think of it as a ** dictionary lookup ** — jumps directly to matching row instead of scanning all.
 * Index lives ** separately from data ** but references it.
-* Needs ** maintenance ** on`INSERT`, `UPDATE`, `DELETE`(so donâ€™t overuse).
+* Needs ** maintenance ** on`INSERT`, `UPDATE`, `DELETE`(so don't overuse).
 
 ---
 ## ðŸ”¹ DROP INDEX
@@ -3922,9 +3722,9 @@ ON users(email)
 WHERE active = true;
 ```
 
-🧠 Trick: â€œPartial index = WHERE condition inside indexâ€.
+🧠 Trick: "Partial index = WHERE condition inside index".
 
-💡 Useful when 80 % data is inactive â†’ reduces bloat.
+💡 Useful when 80 % data is inactive → reduces bloat.
 
 ---
 ## ðŸ”¹ Index on Expression
@@ -3936,7 +3736,7 @@ CREATE INDEX idx_lower_email
 ON users(LOWER(email));
 ```
 
-âœ… Now queries like:
+✅ Now queries like:
 
 ```sql
 SELECT * FROM users WHERE LOWER(email) = 'test@gmail.com';
@@ -3958,8 +3758,8 @@ ON employees(department_id, salary);
 
 💡 Works best for queries filtering on ** both ** columns(in order).
 
-ðŸ“Œ Important Rule:
-Order matters â†’ `(department_id, salary)` â‰  `(salary, department_id)`
+📌 Important Rule:
+Order matters → `(department_id, salary)` â‰  `(salary, department_id)`
 
 ---
 ## ðŸ”¹ REINDEX(Rebuild Index)
@@ -3979,7 +3779,7 @@ REINDEX TABLE employees;
 💡 Used for ** database optimization ** after heavy updates.
 
 ---
-### 🧠 INTERVIEW CHEATSHEET â€” Indexes
+### 🧠 INTERVIEW CHEATSHEET — Indexes
 
   | Type | Purpose | Example |
 | --- | --- | --- |
@@ -3991,7 +3791,7 @@ REINDEX TABLE employees;
 | Reindex | Rebuild old one | `REINDEX TABLE employees` |
 
   ---
-### âš¡ Interview Questions    IMP
+### ⚡ Interview Questions    IMP
 
   ** Q1:** When not to use indexes ?
 âž¡ï¸ When table is small or frequently updated(indexes slow down writes).
@@ -4004,7 +3804,7 @@ REINDEX TABLE employees;
 Unique constraint automatically creates a unique index under the hood.
 
 ---
-# 🧩 PART 2ï¸ â€” Errors & Exception Handling
+# 🧩 PART 2️⃣ — Errors & Exception Handling
 
 ---
 ## ðŸ”¹ Exception Handling Basics
@@ -4023,7 +3823,7 @@ END;
 ```
 
 ---
-### âš¡ Example 1: Handling Division by Zero
+### ⚡ Example 1: Handling Division by Zero
 
   ```sql
 DO $$
@@ -4039,10 +3839,10 @@ BEGIN
 END $$;
 ```
 
-💡 Always use `EXCEPTION WHEN <error_type>` inside`BEGINâ€¦END`.
+💡 Always use `EXCEPTION WHEN <error_type>` inside`BEGIN"¦END`.
 
 ---
-### âš¡ Example 2: Catching Any Error
+### ⚡ Example 2: Catching Any Error
 
   ```sql
 DO $$
@@ -4057,11 +3857,11 @@ END $$;
 
 🧠 Trick:
 
-* `WHEN OTHERS` â†’ catches any error
-  * `SQLERRM` â†’ gives actual error message
+* `WHEN OTHERS` → catches any error
+  * `SQLERRM` → gives actual error message
 
 ---
-### âš¡ Example 3: Custom Exception
+### ⚡ Example 3: Custom Exception
 
   ```sql
 DO $$
@@ -4075,7 +3875,7 @@ END $$;
 💡 `RAISE EXCEPTION` = throw error manually.
 
 ---
-### âš™ï¸ Nested Exception Example
+### ⚙️ Nested Exception Example
 
   ```sql
 DO $$
@@ -4103,7 +3903,7 @@ END $$;
   ---
 ## ðŸ”¹ ASSERT(Debugging Helper)
 
-  > Checks if a condition is true â€” otherwise throws an error.
+  > Checks if a condition is true — otherwise throws an error.
 
 ```sql
 DO $$
@@ -4118,10 +3918,10 @@ END $$;
 💡 `ASSERT` is great for validating assumptions during development.
 
 🧠 Trick:
-Think of it as SQLâ€™s ** unit test **.
+Think of it as SQL's ** unit test **.
 
 ---
-### âš¡ Example: Assertion Failure
+### ⚡ Example: Assertion Failure
 
   ```sql
 DO $$
@@ -4132,10 +3932,10 @@ BEGIN
 END $$;
 ```
 
-âž¡ï¸ If count â‰¥ 500 â†’ raises an exception instantly.
+âž¡ï¸ If count â‰¥ 500 → raises an exception instantly.
 
 ---
-## 🧠 INTERVIEW CHEATSHEET â€” Errors & Messages
+## 🧠 INTERVIEW CHEATSHEET — Errors & Messages
 
   | Command | Purpose | Example |
 | --- | --- | --- |
@@ -4148,12 +3948,12 @@ END $$;
 | ASSERT | Validate condition | `ASSERT count < 10;` |
 
   ---
-### âš¡ Tough Interview Questions
+### ⚡ Tough Interview Questions
 
-  ** Q1:** Whatâ€™s the difference between `RAISE EXCEPTION` and`ASSERT` ?
+  ** Q1:** What's the difference between `RAISE EXCEPTION` and`ASSERT` ?
 
-* `RAISE EXCEPTION` â†’ you manually throw error.
-* `ASSERT` â†’ automatically throws if condition false.
+* `RAISE EXCEPTION` → you manually throw error.
+* `ASSERT` → automatically throws if condition false.
 
 ** Q2:** Can we rollback inside an EXCEPTION block ?
 âž¡ï¸ Yes, PostgreSQL automatically rolls back to the ** beginning of the block **, unless you use ** SAVEPOINTs **.
@@ -4171,21 +3971,21 @@ EXCEPTION
 âž¡ï¸ Just use `RAISE;` inside EXCEPTION block.
 
 ---
-# âœ… SUMMARY
+# ✅ SUMMARY
 
-### ðŸŽ¯ INDEX KEYWORDS
+### 🎯 INDEX KEYWORDS
 
   `CREATE INDEX`, `DROP INDEX`, `UNIQUE INDEX`, `PARTIAL INDEX`,
   `INDEX ON EXPRESSION`, `REINDEX`, `MULTICOLUMN INDEX`
 
-### ðŸŽ¯ ERROR KEYWORDS
+### 🎯 ERROR KEYWORDS
 
   `BEGIN`, `EXCEPTION`, `WHEN`, `RAISE`, `NOTICE`, `WARNING`,
   `EXCEPTION`, `SQLERRM`, `ASSERT`
 
 ---
 Would you like me to continue next with
-ðŸ‘‰ ** Views, Query Optimization(EXPLAIN, ANALYZE, VACUUM, CLUSTER, PARTITIONING) ** â€”
+👉 ** Views, Query Optimization(EXPLAIN, ANALYZE, VACUUM, CLUSTER, PARTITIONING) ** —
 the ** final performance chapter **, which covers how to read query plans & tune databases(a hot interview topic) ?
 
 ## 📚 COMPREHENSIVE COMPARISON: PostgreSQL vs MySQL vs SQL Standard
@@ -4241,15 +4041,15 @@ MySQL (Relational):
 
 Feature                | SQL Standard | PostgreSQL        | MySQL
 ---|---|---|---
-Boolean                | âœ… BOOLEAN   | âœ… BOOLEAN (true) | âŒ TINYINT(1)
+Boolean                | ✅ BOOLEAN   | ✅ BOOLEAN (true) | âŒ TINYINT(1)
 Integer Types          | INT          | INT, BIGINT, etc. | INT, BIGINT, etc.
 String Types           | VARCHAR      | VARCHAR, TEXT     | VARCHAR, TEXT
-JSON Support           | âœ… (SQL:2016)| âœ… JSONB (binary) | âœ… JSON (text)
-Array Support          | âŒ           | âœ… ARRAY[]         | âŒ
-UUID                   | âŒ           | âœ… UUID            | âŒ (v8.0+ UUID() func)
-Range Types            | âŒ           | âœ… RANGE           | âŒ
-HSTORE (key-value)     | âŒ           | âœ… HSTORE          | âŒ
-Full-Text Search       | âŒ           | âœ… tsvector/tsquery| âœ… FULLTEXT index
+JSON Support           | ✅ (SQL:2016)| ✅ JSONB (binary) | ✅ JSON (text)
+Array Support          | âŒ           | ✅ ARRAY[]         | âŒ
+UUID                   | âŒ           | ✅ UUID            | âŒ (v8.0+ UUID() func)
+Range Types            | âŒ           | ✅ RANGE           | âŒ
+HSTORE (key-value)     | âŒ           | ✅ HSTORE          | âŒ
+Full-Text Search       | âŒ           | ✅ tsvector/tsquery| ✅ FULLTEXT index
 
 PostgreSQL JSONB Example:
 CREATE TABLE users (id SERIAL, data JSONB);
@@ -4455,7 +4255,7 @@ MySQL:
 ## 📚 POSTGRESQL INTERVIEW QUESTIONS - TRICKY QUERIES & THEORY
 This section covers advanced PostgreSQL questions commonly asked in interviews
 Focus on both theoretical understanding and practical query skills
-## ðŸ”¥ 1. WHAT IS MVCC (MULTI-VERSION CONCURRENCY CONTROL)?
+## 🔥 1. What is MVCC?
 Answer:
 MVCC is PostgreSQL's mechanism to handle concurrent transactions without locking.
 Instead of locking rows for reads, PostgreSQL maintains multiple versions of data.
@@ -4478,7 +4278,7 @@ T1 still sees old version of R (snapshot isolation)
 T2 sees new version
 Both can proceed without blocking
 
-## ðŸ”¥ 2. EXPLAIN THE DIFFERENCE BETWEEN TRUNCATE, DELETE, AND DROP
+## 🔥 2. Difference between TRUNCATE, DELETE, and DROP
 Answer:
 
 TRUNCATE:
@@ -4507,7 +4307,7 @@ Example: DROP TABLE users;
 Performance Comparison:
 DROP > TRUNCATE >> DELETE (when deleting all rows)
 
-## ðŸ”¥ 3. WHAT IS THE DIFFERENCE BETWEEN INNER JOIN AND LEFT JOIN?
+## 🔥 3. INNER JOIN vs LEFT JOIN
 Answer with Example:
 
 Tables:
@@ -4544,7 +4344,7 @@ Key Difference:
 - INNER JOIN: Only matching rows from both tables
 - LEFT JOIN: All rows from left table + matching from right
 
-## ðŸ”¥ 4. WHAT IS A WINDOW FUNCTION? GIVE EXAMPLES
+## 🔥 4. What is a Window Function?
 Answer:
 Window functions perform calculations across a set of rows related to current row
 without grouping rows into single output row (unlike GROUP BY).
@@ -4579,7 +4379,7 @@ SELECT date, amount,
        SUM(amount) OVER (ORDER BY date) as running_total
 FROM sales;
 
-## ðŸ”¥ 5. EXPLAIN COMMON TABLE EXPRESSIONS (CTEs) vs SUBQUERIES
+## 🔥 5. CTEs vs Subqueries
 Answer:
 
 CTE (WITH clause):
@@ -4622,7 +4422,7 @@ WITH RECURSIVE numbers AS (
 SELECT * FROM numbers;
 -- Returns: 1, 2, 3, ..., 10
 
-## ðŸ”¥ 6. WHAT IS THE DIFFERENCE BETWEEN WHERE AND HAVING?
+## 🔥 6. WHAT IS THE DIFFERENCE BETWEEN WHERE AND HAVING?
 Answer:
 
 WHERE:
@@ -4646,9 +4446,9 @@ HAVING AVG(salary) > 50000  -- Filter groups after grouping
 ORDER BY avg_salary DESC;
 
 Execution Order:
-FROM â†’ WHERE â†’ GROUP BY â†’ HAVING â†’ SELECT â†’ ORDER BY
+FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY
 
-## ðŸ”¥ 7. EXPLAIN TRANSACTION ISOLATION LEVELS
+## 🔥 7. EXPLAIN TRANSACTION ISOLATION LEVELS
 Answer:
 
 Isolation Levels (from least to most strict):
@@ -4685,7 +4485,7 @@ Anomalies:
 - Non-repeatable Read: Same query returns different results
 - Phantom Read: New rows appear between queries
 
-## ðŸ”¥ 8. HOW DOES POSTGRESQL HANDLE NULL VALUES?
+## 🔥 8. HOW DOES POSTGRESQL HANDLE NULL VALUES?
 Answer:
 
 NULL represents missing/unknown data (not empty string or zero).
@@ -4720,7 +4520,7 @@ SELECT COALESCE(age, 0) FROM users;  -- Returns 0 if age is NULL
 -- NULLIF (converts value to NULL):
 SELECT NULLIF(age, 0) FROM users;  -- Returns NULL if age is 0
 
-## ðŸ”¥ 9. WHAT IS A SELF-JOIN? GIVE EXAMPLE
+## 🔥 9. WHAT IS A SELF-JOIN? GIVE EXAMPLE
 Answer:
 
 Self-join: Joining a table with itself
@@ -4755,7 +4555,7 @@ FROM employees e1
 JOIN employees e2 ON e1.salary = e2.salary AND e1.id < e2.id;
 -- e1.id < e2.id prevents duplicate pairs (A-B and B-A)
 
-## ðŸ”¥ 10. EXPLAIN DIFFERENT INDEX TYPES IN POSTGRESQL
+## 🔥 10. EXPLAIN DIFFERENT INDEX TYPES IN POSTGRESQL
 Answer:
 
 1. B-Tree Index (Default):
@@ -4795,7 +4595,7 @@ Choosing Index Type:
 - BRIN: Large sorted tables
 - Hash: Equality only (rarely used)
 
-## ðŸ”¥ 11. WHAT IS VACUUM IN POSTGRESQL?
+## 🔥 11. WHAT IS VACUUM IN POSTGRESQL?
 Answer:
 
 VACUUM: Reclaims storage occupied by dead tuples (deleted/updated rows)
@@ -4834,7 +4634,7 @@ When to run manually:
 - If table size is unexpectedly large
 - Before performance-critical queries
 
-## ðŸ”¥ 12. EXPLAIN EXPLAIN ANALYZE
+## 🔥 12. EXPLAIN EXPLAIN ANALYZE
 Answer:
 
 EXPLAIN: Shows query execution plan (without running query)
@@ -4883,7 +4683,7 @@ Optimization Tips:
 - Compare estimated vs actual rows (statistics may be outdated)
 - Look for high costs (optimize those parts first)
 
-## ðŸ”¥ 13. WHAT IS A PARTIAL INDEX?
+## 🔥 13. WHAT IS A PARTIAL INDEX?
 Answer:
 
 Partial Index: Index on subset of rows (filtered by WHERE clause)
@@ -4913,7 +4713,7 @@ Example - Recent orders only:
 CREATE INDEX idx_recent_orders ON orders(created_at)
 WHERE created_at > '2024-01-01';
 
-## ðŸ”¥ 14. WHAT IS A COMPOSITE INDEX AND INDEX COLUMN ORDER?
+## 🔥 14. WHAT IS A COMPOSITE INDEX AND INDEX COLUMN ORDER?
 Answer:
 
 Composite Index: Index on multiple columns
@@ -4944,7 +4744,7 @@ Example - Wrong Order:
 CREATE INDEX idx_wrong ON employees(salary, department);
 -- Won't help query: WHERE department = 'IT'
 
-## ðŸ”¥ 15. TRICKY QUERY: FIND NTH HIGHEST SALARY
+## 🔥 15. TRICKY QUERY: FIND NTH HIGHEST SALARY
 Answer:
 
 Problem: Find 3rd highest salary
@@ -4977,7 +4777,7 @@ DENSE_RANK() treats ties as same rank (1, 2, 2, 3)
 ROW_NUMBER() gives unique numbers (1, 2, 3, 4)
 RANK() leaves gaps (1, 2, 2, 4)
 
-## ðŸ”¥ 16. TRICKY QUERY: DELETE DUPLICATES
+## 🔥 16. TRICKY QUERY: DELETE DUPLICATES
 Answer:
 
 Problem: Delete duplicate rows, keep one
@@ -5008,7 +4808,7 @@ WHERE EXISTS (
   WHERE u2.email = u1.email AND u2.id < u1.id
 );
 
-## ðŸ”¥ 17. TRICKY QUERY: FIND EMPLOYEES EARNING MORE THAN THEIR MANAGER
+## 🔥 17. TRICKY QUERY: FIND EMPLOYEES EARNING MORE THAN THEIR MANAGER
 Answer:
 
 Problem: Compare employee salary with manager salary
@@ -5027,7 +4827,7 @@ WHERE salary > (
   SELECT salary FROM employees m WHERE m.id = e.manager_id
 );
 
-## ðŸ”¥ 18. TRICKY QUERY: FIND CONSECUTIVE RECORDS
+## 🔥 18. TRICKY QUERY: FIND CONSECUTIVE RECORDS
 Answer:
 
 Problem: Find 3 consecutive login dates for users
@@ -5044,7 +4844,7 @@ FROM logins
 WHERE login_date = prev1 + INTERVAL '1 day'
   AND prev1 = prev2 + INTERVAL '1 day';
 
-## ðŸ”¥ 19. TRICKY QUERY: PIVOT TABLE (ROWS TO COLUMNS)
+## 🔥 19. TRICKY QUERY: PIVOT TABLE (ROWS TO COLUMNS)
 Answer:
 
 Problem: Convert rows to columns (pivot)
@@ -5075,7 +4875,7 @@ SELECT * FROM crosstab(
   'SELECT month, product, amount FROM sales ORDER BY 1,2'
 ) AS (month TEXT, A INT, B INT);
 
-## ðŸ”¥ 20. HOW DOES POSTGRESQL STORE DATA INTERNALLY?
+## 🔥 20. HOW DOES POSTGRESQL STORE DATA INTERNALLY?
 Answer:
 
 ### Storage Structure:
@@ -5100,7 +4900,7 @@ Answer:
 - Ensures durability (can recover after crash)
 - Can be used for replication
 
-## ðŸ”¥ 21. WHAT IS A SEQUENCE IN POSTGRESQL?
+## 🔥 21. WHAT IS A SEQUENCE IN POSTGRESQL?
 Answer:
 
 Sequence: Database object that generates unique numbers
@@ -5123,7 +4923,7 @@ nextval('seq_name'): Get next value
 currval('seq_name'): Get current value
 setval('seq_name', value): Set value
 
-## ðŸ”¥ 22. EXPLAIN JSONB vs JSON IN POSTGRESQL
+## 🔥 22. EXPLAIN JSONB vs JSON IN POSTGRESQL
 Answer:
 
 JSON:
@@ -5161,7 +4961,7 @@ SELECT * FROM products WHERE data_jsonb @> '{"name": "iPhone"}';
 JSON: Need exact formatting, simple storage
 JSONB: Need querying, indexing, better performance
 
-## ðŸ”¥ 23. WHAT IS A FULL OUTER JOIN AND WHEN TO USE IT?
+## 🔥 23. WHAT IS A FULL OUTER JOIN AND WHEN TO USE IT?
 Answer:
 
 FULL OUTER JOIN: Returns all rows from both tables
@@ -5198,7 +4998,7 @@ SELECT a.name, b.city FROM table_a a LEFT JOIN table_b b ON a.id = b.id
 UNION
 SELECT a.name, b.city FROM table_a a RIGHT JOIN table_b b ON a.id = b.id;
 
-## ðŸ”¥ 24. EXPLAIN PREPARED STATEMENTS
+## 🔥 24. EXPLAIN PREPARED STATEMENTS
 Answer:
 
 Prepared Statement: Pre-compiled SQL statement with parameters
@@ -5226,7 +5026,7 @@ SELECT * FROM users WHERE name = '$user_input';  -- Can inject SQL
 PREPARE safe_query AS SELECT * FROM users WHERE name = $1;
 EXECUTE safe_query('user_input');  -- Parameterized, safe
 
-## ðŸ”¥ 25. WHAT IS THE DIFFERENCE BETWEEN CHAR, VARCHAR, AND TEXT?
+## 🔥 25. WHAT IS THE DIFFERENCE BETWEEN CHAR, VARCHAR, AND TEXT?
 Answer:
 
 CHAR(n):
@@ -5285,9 +5085,9 @@ Common Interview Topics:
 
 | Feature | Encoding | Encryption | Hashing |
 | ---| ---| ---| ---|
-| ** Reversible ?** | âœ… Yes(always) | âœ… Yes(with key) | âŒ No(one - way) |
+| ** Reversible ?** | ✅ Yes(always) | ✅ Yes(with key) | âŒ No(one - way) |
 | ** Purpose ** | Data format conversion | Data protection | Data integrity / verification |
-| ** Key Required ?** | âŒ No | âœ… Yes | âŒ No |
+| ** Key Required ?** | âŒ No | ✅ Yes | âŒ No |
 | ** Output Size ** | Variable | Variable | Fixed(for same algorithm) |
 | ** Use Case ** | Data transmission, storage | Secure communication | Password storage, checksums |
 
@@ -5356,11 +5156,11 @@ const decoded = decodeURIComponent(encoded);
 console.log(decoded);  // "user@example.com"
 
 Common URL encoded characters:
-Space â†’ %20
-@ â†’ %40
-# â†’ %23
-& â†’ %26
-= â†’ %3D
+Space → %20
+@ → %40
+# → %23
+& → %26
+= → %3D
 ```
 
 ### HTML Encoding
@@ -5391,10 +5191,10 @@ console.log(div.innerHTML);  // "&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script
 ```
 
 **Encoding Summary:**
-- âœ… Always reversible
-- âœ… No key needed
-- âœ… Not for security
-- âœ… Used for data format conversion
+- ✅ Always reversible
+- ✅ No key needed
+- ✅ Not for security
+- ✅ Used for data format conversion
 
 ---
 ## 2. ENCRYPTION
@@ -5539,10 +5339,10 @@ function hybridDecrypt(encryptedPackage, recipientPrivateKey) {
 ```
 
 **Encryption Summary:**
-- âœ… Reversible (with key)
-- âœ… Requires key(s)
-- âœ… For security/protection
-- âœ… Two types: Symmetric (fast) and Asymmetric (secure)
+- ✅ Reversible (with key)
+- ✅ Requires key(s)
+- ✅ For security/protection
+- ✅ Two types: Symmetric (fast) and Asymmetric (secure)
 
 ---
 ## 3. HASHING
@@ -5582,7 +5382,7 @@ This is why MD5 is insecure
 ```javascript
 --- SHA-256 Hashing ---
 256-bit hash, 64 hex characters
-âœ… Secure for most purposes
+✅ Secure for most purposes
 
 function hashSHA256(text) {
   return crypto.createHash('sha256').update(text).digest('hex');
@@ -5689,7 +5489,7 @@ Server verifies: createHMAC(receivedMessage, apiKey) === receivedSignature
 
 ```javascript
 --- 1. Password Storage ---
-âœ… DO: Store hash of password
+✅ DO: Store hash of password
 âŒ DON'T: Store plaintext password
 
 const userPassword = "user123";
@@ -5765,21 +5565,21 @@ function createBlock(data, previousHash) {
 **Hashing Summary:**
 - âŒ NOT reversible (one-way)
 - âŒ No key needed (but can use salt/secret)
-- âœ… For data integrity, password storage
-- âœ… Fixed output size
-- âœ… Deterministic (same input = same output)
+- ✅ For data integrity, password storage
+- ✅ Fixed output size
+- ✅ Deterministic (same input = same output)
 
 ---
 ## COMPARISON TABLE
 
 | Aspect | Encoding | Encryption | Hashing |
 |---|---|---|---|
-| **Reversible?** | âœ… Always | âœ… With key | âŒ Never |
+| **Reversible?** | ✅ Always | ✅ With key | âŒ Never |
 | **Purpose** | Format conversion | Data protection | Integrity/verification |
-| **Key Required?** | âŒ No | âœ… Yes | âŒ No (but salt helps) |
+| **Key Required?** | âŒ No | ✅ Yes | âŒ No (but salt helps) |
 | **Output Size** | Variable | Variable | Fixed |
-| **Security** | âŒ None | âœ… High | âœ… One-way security |
-| **Speed** | âš¡ Very Fast | ðŸ¢ Slower | âš¡ Fast |
+| **Security** | âŒ None | ✅ High | ✅ One-way security |
+| **Speed** | ⚡ Very Fast | ðŸ¢ Slower | ⚡ Fast |
 | **Use Cases** | URLs, Base64, HTML | Secure communication | Passwords, checksums |
 
 ## REAL-WORLD EXAMPLES
@@ -5847,27 +5647,27 @@ if (receivedHash === sentHash) {
 
 ```javascript
 --- DO's and DON'Ts ---
-âœ… DO: Use bcrypt/argon2 for passwords
+✅ DO: Use bcrypt/argon2 for passwords
 const passwordHash = await bcrypt.hash(password, 10);
 
 âŒ DON'T: Use MD5/SHA-256 directly for passwords (no salt)
 const badHash = hashSHA256(password);  // Vulnerable to rainbow tables
 
-âœ… DO: Use HTTPS (encryption) for data transmission
-âœ… DO: Encrypt sensitive data at rest (database)
-âœ… DO: Use HMAC for API authentication
+✅ DO: Use HTTPS (encryption) for data transmission
+✅ DO: Encrypt sensitive data at rest (database)
+✅ DO: Use HMAC for API authentication
 const signature = createHMAC(message, secretKey);
 
 âŒ DON'T: Use encoding for security (Base64 is NOT encryption)
 const encoded = btoa("password");  // NOT secure! Easily decoded
 
-âœ… DO: Use strong encryption algorithms (AES-256, RSA-2048+)
+✅ DO: Use strong encryption algorithms (AES-256, RSA-2048+)
 âŒ DON'T: Use weak encryption (DES, RC4)
 
-âœ… DO: Store hashes, not plaintext passwords
+✅ DO: Store hashes, not plaintext passwords
 âŒ DON'T: Store passwords in plaintext
 
-âœ… DO: Use salt for password hashing
+✅ DO: Use salt for password hashing
 âŒ DON'T: Hash passwords without salt
 ```
 
@@ -5876,20 +5676,20 @@ const encoded = btoa("password");  // NOT secure! Easily decoded
 
 **Encoding:**
 - Purpose: Format conversion (Base64, URL encoding)
-- Reversible: âœ… Yes
+- Reversible: ✅ Yes
 - Security: âŒ None
-- Example: `btoa("Hello")` â†’ `"SGVsbG8="`
+- Example: `btoa("Hello")` → `"SGVsbG8="`
 
 **Encryption:**
 - Purpose: Data protection
-- Reversible: âœ… Yes (with key)
-- Security: âœ… High
+- Reversible: ✅ Yes (with key)
+- Security: ✅ High
 - Example: AES encryption with secret key
 
 **Hashing:**
 - Purpose: Data integrity, password storage
 - Reversible: âŒ No (one-way)
-- Security: âœ… One-way security
+- Security: ✅ One-way security
 - Example: SHA-256, bcrypt for passwords
 
 **Remember:**

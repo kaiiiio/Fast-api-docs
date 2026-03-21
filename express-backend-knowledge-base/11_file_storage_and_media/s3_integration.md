@@ -119,4 +119,3 @@ S3 integration provides scalable cloud file storage. Use multer-s3 for Express.j
 - Learn [File Handling](01_file_handling_mastery.md) for uploads
 - Study [Image Processing](../11_file_storage_and_media/image_processing.md) for optimization
 - Master [Security](../11_file_storage_and_media/file_security.md) for protection
-

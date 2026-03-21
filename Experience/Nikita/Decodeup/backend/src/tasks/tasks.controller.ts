@@ -1,16 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto, UpdateTaskDto } from './dto/task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 /**
- * TasksController handles HTTP requests for user tasks.
- * It is protected by JwtAuthGuard, meaning a valid JWT token is required in the header.
+ * TasksController handles CRUD operations for user tasks.
+ * Most routes are protected by JwtAuthGuard.
  */
 @ApiTags('tasks')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard) // Protect all routes with JWT and check Roles
 @Controller('tasks')
 export class TasksController {
     constructor(private readonly tasksService: TasksService) { }
@@ -25,29 +27,31 @@ export class TasksController {
 
     // Get all tasks for the logged-in user
     @Get()
-    @ApiOperation({ summary: 'Get all user tasks' })
-    findAll(@Request() req) {
+    @Roles('USER', 'ADMIN') // Both users and admins can list tasks
+    @ApiOperation({ summary: 'Get all tasks for current user' })
+    findAll(@Request() req: any) {
         return this.tasksService.findAll(req.user.id);
     }
 
     // Get a single task by ID (validates ownership inside the service)
     @Get(':id')
     @ApiOperation({ summary: 'Get a specific task' })
-    findOne(@Request() req, @Param('id', ParseIntPipe) id: number) {
+    findOne(@Request() req, @Param('id') id: number) {
         return this.tasksService.findOne(req.user.id, id);
     }
 
     // Update a task (validates ownership)
     @Patch(':id')
     @ApiOperation({ summary: 'Update a task' })
-    update(@Request() req, @Param('id', ParseIntPipe) id: number, @Body() updateTaskDto: UpdateTaskDto) {
+    update(@Request() req, @Param('id') id: number, @Body() updateTaskDto: UpdateTaskDto) {
         return this.tasksService.update(req.user.id, id, updateTaskDto);
     }
 
     // Delete a task (validates ownership)
     @Delete(':id')
+    @Roles('ADMIN') // Example: Only admins can delete tasks globally
     @ApiOperation({ summary: 'Delete a task' })
-    remove(@Request() req, @Param('id', ParseIntPipe) id: number) {
-        return this.tasksService.remove(req.user.id, id);
+    remove(@Request() req: any, @Param('id') id: string) {
+        return this.tasksService.remove(req.user.id, +id);
     }
 }

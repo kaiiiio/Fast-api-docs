@@ -311,7 +311,7 @@ Password hashing in Express.js requires: Using bcrypt for secure hashing, never 
 
 ---
 
-## 🎯 Interview Questions: Password Hashing Best Practices
+## 🎯 Interview Questions: Password Hashing Best Practices   -- IMP
 
 ### Q1: Explain why plaintext password storage is fundamentally insecure, even if the database is protected. What are the attack vectors, and how does hashing mitigate these risks?
 
@@ -379,8 +379,6 @@ Breach → Attacker sees: "$2b$10$abc123..." → Cannot reverse to "MyPassword12
 ---
 
 ### Q2: Explain the concept of "salting" in password hashing. Why is a unique salt per password critical, and what happens if you reuse the same salt for all passwords?
-
-**Answer:**
 
 **Answer:**
 

@@ -1,6 +1,6 @@
 # Scaling Strategies: Growing Your Express.js Application
 
-Scaling strategies help applications handle increasing load. This guide covers vertical and horizontal scaling approaches for Express.js applications.
+Scaling strategies help applications handle increasing load. This guide covers vertical and horizontal scaling approaches for Express.js applications.  -- IMP
 
 ## Scaling Types
 
@@ -218,4 +218,3 @@ Scaling strategies help applications handle increasing load. Start with code opt
 - Learn [Performance Optimization](performance_optimization.md) for tuning
 - Study [Dockerizing Express](dockerizing_express.md) for containerization
 - Master [Monitoring](../14_observability/) for performance tracking
-

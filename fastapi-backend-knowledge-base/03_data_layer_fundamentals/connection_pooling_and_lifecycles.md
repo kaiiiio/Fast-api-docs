@@ -317,7 +317,7 @@ Proper pool management ensures your application can handle load efficiently with
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI   --- IMP
 
 ### Q1: Explain database connection pooling in FastAPI, including how it works, why it's important, how to configure it properly, and common issues. Provide examples showing connection pool setup for both SQLAlchemy and MongoDB.
 

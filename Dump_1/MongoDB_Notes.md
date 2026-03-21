@@ -10516,7 +10516,7 @@ db.dailySales.aggregate([
 **Detailed Explanation of `$merge`:**
 
 ```javascript
-// ========== WHAT IS $merge? ==========   IMP
+// ========== WHAT IS $merge? ==========   
 // $merge writes aggregation results to a collection
 // Unlike $out (which replaces), $merge can update existing documents or insert new ones
 // Perfect for: Incremental updates, data warehousing, materialized views, ETL processes
@@ -10530,7 +10530,7 @@ db.dailySales.aggregate([
 // ========== BREAKDOWN OF YOUR CODE ==========
 
 {
-  $merge: {
+  $merge: {IMP
     into: "monthlySales",       // Target collection
     whenMatched: "replace",     // Action when document exists (by _id)
     whenNotMatched: "insert"    // Action when document doesn't exist

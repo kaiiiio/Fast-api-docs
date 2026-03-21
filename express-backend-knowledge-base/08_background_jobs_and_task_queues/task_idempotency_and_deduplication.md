@@ -2,7 +2,7 @@
 
 Idempotency ensures tasks can be safely retried without side effects. Deduplication prevents processing the same task multiple times. This guide covers implementing idempotency in Express.js background jobs.
 
-## What is Idempotency?
+## What is Idempotency?  IMP
 
 **Idempotency** means performing an operation multiple times has the same effect as performing it once.
 
@@ -242,7 +242,7 @@ Idempotency ensures tasks can be safely retried without side effects. Use idempo
 
 ---
 
-## 🎯 Interview Questions: Task Idempotency and Deduplication
+## 🎯 Interview Questions: Task Idempotency and Deduplication   --- IMP
 
 ### Q1: What is the fundamental difference between "idempotency" and "deduplication" in the context of background job processing? Provide a clear conceptual explanation with examples.
 
@@ -566,7 +566,7 @@ HTTP Request → Idempotency Check → Process Payment → Store Result → Retu
    Response: { id: 'pay-123', status: 'completed', amount: 100 }
    ```
 
-**Key Properties:**
+**Key Properties:**   IMP
 
 - **Idempotency Key Uniqueness**: Each operation gets unique key (client-provided or server-generated)
 - **Caching**: Results cached in Redis/DB for quick lookup on retries

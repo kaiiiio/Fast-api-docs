@@ -182,7 +182,7 @@ wss.on('connection', (ws, req) => {
 4. **Message Format**: Use structured message format (JSON)
 5. **Rate Limiting**: Limit message frequency
 
-## Summary
+## Summary   -- IMP
 
 **WebSocket Theory and Internals:**
 

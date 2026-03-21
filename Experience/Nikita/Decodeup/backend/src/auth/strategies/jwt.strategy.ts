@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         if (!user) {
             throw new UnauthorizedException();
         }
-        // Whatever is returned here is attached to the 'req.user' object in controllers
-        return { id: user.id, email: user.email };
+        // Return user info including role to be attached to req.user
+        return { id: user.id, email: user.email, role: user.role };
     }
 }

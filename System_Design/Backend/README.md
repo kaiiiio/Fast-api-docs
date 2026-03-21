@@ -4,7 +4,7 @@ This directory contains 16+ comprehensive system design solutions covering real-
 
 ## 📚 Complete System Design Topics
 
-### ✅ Completed Topics (10/16)
+### ✅ Completed Topics (11/17)
 
 1. **[Twitter Timeline System](./06_Twitter/06_Twitter_Timeline_System.md)** - Social media feed with hybrid push-pull architecture
 2. **[URL Shortener](./07_URL_Shortener/07_URL_Shortener_System.md)** - Scalable URL shortening service like bit.ly
@@ -16,6 +16,7 @@ This directory contains 16+ comprehensive system design solutions covering real-
 8. **[Real-time Inventory Tracking](./20_Realtime_Inventory_Tracking/20_Realtime_Inventory_Tracking_System.md)** - Event-driven inventory management
 9. **[Parking Lot Reservation](./19_Parking_Lot_Reservation/19_Parking_Lot_Reservation_System.md)** - Reservation system with concurrency control
 10. **[Rating System for E-commerce](./21_Rating_System_Ecommerce/21_Rating_System_Ecommerce.md)** - Product reviews with spam detection
+11. **[Instagram Data Ingestion](./22_Instagram_Data_Ingestion/22_Instagram_Data_Ingestion.md)** - Scheduled ETL pipeline for influencer analytics
 
 ### 📝 Additional Topics (6 remaining)
 
@@ -107,6 +108,7 @@ Every system design document contains:
 | Logging | 1M logs/s | \u003c 100ms | 99.9% |
 | Inventory | 50K updates/s | \u003c 200ms | 99.9% |
 | Parking | 1K reservations/min | \u003c 300ms | 99.99% |
+| Instagram ETL | 100K influencers/day | \u003c 2s/creator | 99.9% |
 
 ---
 

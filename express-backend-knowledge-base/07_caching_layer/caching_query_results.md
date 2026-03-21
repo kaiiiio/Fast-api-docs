@@ -139,7 +139,7 @@ const user = await getData(
 );
 ```
 
-## Best Practices
+## Best Practices   -- IMP
 
 1. **Cache Hot Data**: Cache frequently accessed data
 2. **Set TTL**: Use appropriate expiration times

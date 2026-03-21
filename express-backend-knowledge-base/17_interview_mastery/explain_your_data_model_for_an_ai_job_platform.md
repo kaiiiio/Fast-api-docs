@@ -80,7 +80,7 @@ const Employer = sequelize.define('Employer', {
 });
 ```
 
-## Best Practices
+## Best Practices  -- IMP
 
 1. **Polymorphic Design**: Handle different user types
 2. **Embeddings**: Store vector embeddings for semantic search

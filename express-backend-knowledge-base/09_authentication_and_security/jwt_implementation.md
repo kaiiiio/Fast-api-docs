@@ -459,8 +459,6 @@ Client → Server2: Session ID → Lookup Redis → Process Request
 
 **Answer:**
 
-**Answer:**
-
 The dual-token strategy is a **security-in-depth pattern** designed to balance session longevity with the risk of token theft. Access tokens act as short-lived keys for immediate API consumption, while refresh tokens reside in more secure storage to handle session renewal without requiring the user to repeatedly re-authenticate.
 
 **Access Token**: Short-lived token (e.g., 15 minutes) used for API requests. Contains user identity and permissions.

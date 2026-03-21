@@ -43,7 +43,7 @@ IMP
 
 # Interview Preparation Guide: DecodeUp (Full Stack Lead)
 
-## 1. Microservices Architecture: Key Patterns
+## 1. Microservices Architecture: Key Patterns ---   IMP
 Since the JD mentions Microservices as a plus point, expect these foundational questions.
 
 ### Main Patterns
@@ -58,7 +58,11 @@ Since the JD mentions Microservices as a plus point, expect these foundational q
    - **Challenge**: Can become a single point of failure if not scaled properly.
 
 3. **Saga Pattern (Consistency across services)**:
-   - **Choreography**: Each service publishes an event that triggers the next service. **Pros**: No single point of control, easy for simple flows. **Cons**: Hard to track state across many services; can lead to cyclic dependencies.
+   - **Choreography**: Each service publishes an event that triggers the next service. 
+
+   **Pros**: No single point of control, easy for simple flows. 
+
+   **Cons**: Hard to track state across many services; can lead to cyclic dependencies.
    - **Orchestration**: A central "Orchestrator" service coordinates all transactions. **Pros**: State is centralized and easy to monitor; prevents cyclic dependencies. **Cons**: Orchestrator becomes a complex "God Service" and a single point of failure.
    - **Compensating Transactions**: Every Saga step must have a "Rollback" action if a later step fails (e.g., if Payment fails, notify Shipping to cancel).
 
@@ -204,7 +208,7 @@ function SearchPage({ query }) {
 
 ## 3. Lead & Architectural Questions
 
-**Q: How do you handle a bottleneck in a SQL database?**
+**Q: How do you handle a bottleneck in a SQL database?**   IMP
 **A:** Identify if the bottleneck is **RAM, CPU, or I/O**:
 - **Read Replicas**: Offload READ traffic to replicas. Handle the **Replication Lag** (reading stale data) by forcing "Critical Reads" (e.g., profile updates) to hit the Primary DB.
 - **Connection Pooling**: Use a tool like **PgBouncer** to prevent the "Too many connections" error in high-concurrency Node.js apps.
@@ -237,7 +241,7 @@ function SearchPage({ query }) {
 - **The Extension**: PACELC adds: "Else (in the absence of a partition), how does the system behave (Latency vs. Consistency)?" 
     - E.g., DynamoDB (AP) vs. MongoDB (CP).
 
-**Q: What is the Circuit Breaker pattern and why is it important specifically for microservices?**
+**Q: What is the Circuit Breaker pattern and why is it important specifically for microservices?**  --- IMP
 **A:** It prevents a failure in one provider service from cascading to the rest of the system.
 - **States of a Circuit Breaker**:
     1. **CLOSED**: Request flows normally. Failures are tracked.
@@ -263,7 +267,7 @@ circuit.fire(args).then(console.log).catch(console.error);
 - **Performance**: Are there nested loops or unoptimized DB queries?
 - **Maintainability**: Does it follow the established architecture?
 
-**Q: Experience with Serverless/AWS? (Lambda + NestJS)**
+**Q: Experience with Serverless/AWS? (Lambda + NestJS)**  --- IMP
 **A:** 
 - **Concept**: Serverless doesn't mean "no servers". It means you don't manage them. It's **Event-driven** and **Auto-scaling**.
 - **Pros**: Pay-only-for-what-you-use, zero maintenance, high availability.
@@ -318,7 +322,7 @@ export class LoggingInterceptor implements NestInterceptor {
 }
 ```
 
-**Syntax Breakdown:**
+**Syntax Breakdown:**   --- IMP
 1.  **`intercept(...)`**: The core method required by the `NestInterceptor` interface. It is the entry point for the interception logic.
 2.  **`context: ExecutionContext`**: An object that provides information about the current request. It allows you to:
     - Determine which controller/class is being called (`context.getClass()`).
@@ -563,7 +567,7 @@ SELECT * FROM OrgChart ORDER BY level;
 ```
 
 ---
-
+``
 ## 9. Performance Tuning (Node.js & React)
 
 **Q: How do you identify and fix a memory leak in Node.js?**
@@ -836,7 +840,8 @@ const module: TestingModule = await Test.createTestingModule({
 
 ## 20. Database Indexing Deep Dive
 
-**Q: Difference between B-Tree and Hash Index?**
+**Q: Difference between B-Tree and Hash Index?** ---  IMP
+
 **A:** 
 - **B-Tree**: Balanced tree structure. Excellent for **Range Queries** (`>`, `<`, `BETWEEN`) and sorting. Default in Postgres/MySQL.
 - **Hash Index**: Uses a hash table. Extremely fast (`O(1)`) for **Equality Checks** (`=`, `IN`) but cannot be used for ranges or sorting.
@@ -848,7 +853,8 @@ const module: TestingModule = await Test.createTestingModule({
 
 ## 21. Microservices Data Filtering & Search
 
-**Q: How do you implement global search across multiple microservices?**
+**Q: How do you implement global search across multiple microservices?**   IMP
+
 **A:** 
 - **Option A: API Aggregation**: Gateway calls all services and merges results. (Slow).
 - **Option B: Search Service (CQRS)**: All services sync data (via events) to a central **ElasticSearch** instance.
@@ -882,7 +888,7 @@ on('user.updated', async (event) => {
 
 ## 23. Observability & Monitoring
 
-**Q: How do you monitor a production app?**
+**Q: How do you monitor a production app?**   -- IMP
 **A:** 
 - **Logging**: Error tracking with **Sentry** or **ELK Stack**.
 - **Metrics**: **Prometheus & Grafana** for CPU/RAM and custom metrics (e.g., successful checkouts).
@@ -915,7 +921,7 @@ type Order {
 
 ## 25. Large Scale Node.js: Streams
 
-**Q: How do you handle 1GB file upload/processing in Node.js?**
+**Q: How do you handle 1GB file upload/processing in Node.js?**  --- IMP
 **A:** Never load the whole file into buffer memory. Use **Streams**.
 - **The Concept**: Process data chunk-by-chunk. `fs.createReadStream() -> pipe() -> res`.
 - **Backpressure**: Node pauses the reader if the writer is overwhelmed.
@@ -978,7 +984,7 @@ new ModuleFederationPlugin({
 
 ---
 
-## 29. Redis Deep Dive
+## 29. Redis Deep Dive    --- IMP
 
 **Q: Why is Redis so fast?**
 **A:** 
@@ -1039,7 +1045,7 @@ async function getUser(id) {
 
 ## 32. API Design & Versioning
 
-**Q: How do you ensure an API remains idempotent?**
+**Q: How do you ensure an API remains idempotent?**   --- IMP
 **A:** Ensure that making the same call multiple times has the same result as one call.
 - **POST**: Use an `Idempotency-Key` header. If the server sees the same key again, it returns the cached response.
 
@@ -1103,7 +1109,7 @@ async intercept(context: ExecutionContext, next: CallHandler) {
 
 ## 36. Database: Distributed Transactions & ACID vs BASE
 
-**Q: ACID vs. BASE?**
+**Q: ACID vs. BASE?**   IMP
 **A:** 
 - **ACID (SQl)**: Atomicity, Consistency, Isolation, Durability. Focuses on immediate consistency (e.g., Banking).
 - **BASE (NoSQL)**: Basically Available, Soft state, Eventual consistency. Focuses on high availability and scaling (e.g., Social Media feeds).
@@ -1137,7 +1143,7 @@ IMP
 - **OAuth2**: Focused on **Authorization** (Accessing resources). It gives you an `access_token`.
 - **OIDC**: An identity layer on top of OAuth2 focused on **Authentication** (Who you are). It gives you an `id_token`.
 
-**Q: How do you prevent XSS (Cross-Site Scripting) in a React app?**
+**Q: How do you prevent XSS (Cross-Site Scripting) in a React app?**   -- IMP
 **A:** 
 - React automatically escapes content rendered in JSX.
 - Avoid `dangerouslySetInnerHTML` unless absolutely necessary (and sanitize it using `DOMPurify`).

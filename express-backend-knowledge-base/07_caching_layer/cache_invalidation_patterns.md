@@ -309,7 +309,7 @@ Cache invalidation keeps cached data fresh by removing or updating cache when so
 
 ---
 
-## 🎯 Interview Questions: Cache Invalidation
+## 🎯 Interview Questions: Cache Invalidation  -- IMP
 
 ### Q1: Why is cache invalidation considered a hard problem? Explain the main strategies conceptually.
 

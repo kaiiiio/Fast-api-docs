@@ -14,23 +14,19 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    /**
-     * Registers a new user.
-     * Hashes the password using bcrypt before saving.
-     */
-    async register(email: string, pass: string, name?: string) {
+    async register(email: string, pass: string, name?: string, role?: string): Promise<any> {
         // Check if the user already exists in the database
         const existingUser = await this.usersService.findOneByEmail(email);
         if (existingUser) {
-            throw new ConflictException('Email already exists');
+            throw new ConflictException('User with this email already exists');
         }
 
-        // Hash the raw password (10 salt rounds is standard practice)
         const hashedPassword = await bcrypt.hash(pass, 10);
         const user = await this.usersService.create({
             email,
             password: hashedPassword,
             name,
+            role: role ? (role as any) : 'USER',
         });
 
         // Remove password from the returned object for security
@@ -39,28 +35,25 @@ export class AuthService {
     }
 
     /**
-     * Validates user credentials and returns a JWT token.
+     * User login: validates credentials and returns a JWT.
      */
-    async login(email: string, pass: string) {
+    async login(email: string, pass: string): Promise<any> {
         const user = await this.usersService.findOneByEmail(email);
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
 
-        // Compare the plain text password with the hashed one in the database
-        const isMatch = await bcrypt.compare(pass, user.password);
-        if (!isMatch) {
+        // Compare the provided password with the hashed password in the DB
+        if (!user || !(await bcrypt.compare(pass, user.password))) {
             throw new UnauthorizedException('Invalid credentials');
         }
 
         // Create JWT payload (sub is conventional for subject/id)
-        const payload = { sub: user.id, email: user.email };
+        const payload = { email: user.email, sub: user.id, role: user.role };
         return {
             access_token: await this.jwtService.signAsync(payload),
             user: {
                 id: user.id,
                 email: user.email,
                 name: user.name,
+                role: user.role,
             },
         };
     }

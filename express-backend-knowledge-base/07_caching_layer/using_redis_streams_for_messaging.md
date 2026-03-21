@@ -2,7 +2,7 @@
 
 Redis Streams provide a log-like data structure for messaging and event streaming. This guide covers using Redis Streams in Express.js applications.
 
-## What are Redis Streams?
+## What are Redis Streams?  -- IMP
 
 **Redis Streams** are append-only logs that enable:
 - Message queuing

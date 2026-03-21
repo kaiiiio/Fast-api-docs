@@ -9,6 +9,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Role Enum: Defines the possible user access levels
+enum Role {
+  USER
+  ADMIN
+}
+
 /**
  * User Model: Stores personal credentials and associations.
  */
@@ -17,6 +23,7 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  role      Role     @default(USER) // Default role is USER
   tasks     Task[]   // One-to-Many relationship with Tasks
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

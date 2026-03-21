@@ -16,7 +16,12 @@ export class AuthController {
     @ApiOperation({ summary: 'Register a new user' })
     @ApiResponse({ status: 201, description: 'User successfully registered' })
     register(@Body() registerDto: RegisterDto) {
-        return this.authService.register(registerDto.email, registerDto.password, registerDto.name);
+        return this.authService.register(
+            registerDto.email,
+            registerDto.password,
+            registerDto.name,
+            registerDto.role,
+        );
     }
 
     // POST /auth/login - Authenticate user and return a JWT

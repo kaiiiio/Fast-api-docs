@@ -117,4 +117,3 @@ Database query logging tracks SQL queries for debugging and performance analysis
 - Learn [Structured Logging](structured_logging.md) for logging
 - Study [Metrics Collection](metrics_collection.md) for monitoring
 - Master [Performance Optimization](../15_deployment_and_performance/performance_optimization.md) for tuning
-

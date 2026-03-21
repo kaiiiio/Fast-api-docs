@@ -569,4 +569,3 @@ class Settings(BaseSettings):
 **Key Benefits:** Type-safe configuration, automatic environment variable loading, validation of configuration values, support for nested configuration, environment-specific configurations, and easy testing with overrides.
 
 **Use for:** Application settings, database configuration, security settings, external service URLs, feature flags, and environment-specific overrides.
-

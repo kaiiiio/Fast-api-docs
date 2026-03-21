@@ -237,7 +237,7 @@ Retry with exponential backoff handles transient failures by retrying with incre
 
 ---
 
-## 🎯 Interview Questions: Retry with Exponential Backoff
+## 🎯 Interview Questions: Retry with Exponential Backoff   --- IMP
 
 ### Q1: Explain the fundamental problem that exponential backoff solves in distributed systems. Why is a linear retry strategy insufficient, and what are the consequences of not using backoff?
 

@@ -280,7 +280,6 @@ Express.js apps deploy easily to:
 
 ### Q1: When would you choose Express.js over NestJS or FastAPI? What are the trade-offs?
 --- IMP
-**Answer:**
 
 **Answer:**
 

@@ -294,7 +294,7 @@ def test_get_user():
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI    --- IMP
 
 ### Q1: Explain why FastAPI is preferred over other Python frameworks like Flask and Django for building modern APIs. Discuss its key advantages including performance, type safety, automatic validation, and developer experience. Provide detailed examples showing how FastAPI handles these aspects better than traditional frameworks.
 

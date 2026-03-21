@@ -93,7 +93,7 @@ app.get('/health', async (req, res) => {
 });
 ```
 
-## Best Practices
+## Best Practices   -- IMP
 
 1. **Separate Endpoints**: Liveness vs readiness
 2. **Check Dependencies**: Database, cache, external services

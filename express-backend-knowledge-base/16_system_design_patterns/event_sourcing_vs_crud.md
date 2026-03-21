@@ -1,6 +1,6 @@
 # Event Sourcing vs CRUD: Complete Comparison Guide
 
-Event Sourcing stores changes as a sequence of events rather than updating state. This guide explains when to use Event Sourcing versus traditional CRUD in Express.js applications.
+Event Sourcing stores changes as a sequence of events rather than updating state. This guide explains when to use Event Sourcing versus traditional CRUD in Express.js applications.  -- IMP
 
 ## Understanding CRUD (Traditional Approach)
 

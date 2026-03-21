@@ -204,7 +204,7 @@ app.get('/reports', requireRole('admin'), async (req, res) => {
 });
 ```
 
-### Example 2: Multi-Tenant RBAC
+### Example 2: Multi-Tenant RBAC   --- IMP
 
 ```javascript
 // RBAC with tenant isolation
@@ -379,7 +379,7 @@ RBAC restricts access based on user roles rather than individual permissions. Im
 
 ---
 
-## 🎯 Interview Questions: Role-Based Access Control
+## 🎯 Interview Questions: Role-Based Access Control   --- IMP
 
 ### Q1: Explain the fundamental concepts of RBAC (Role-Based Access Control) and how it differs from ACL (Access Control Lists) and ABAC (Attribute-Based Access Control). When would you choose RBAC for an Express.js application?
 
@@ -1121,4 +1121,3 @@ async function getResourceAccessHistory(resourceType, resourceId) {
 ```
 
 **System Design Consideration**: Audit logging is **essential for compliance** (GDPR, SOC2, HIPAA) and **security investigations** (detect unauthorized access, investigate breaches). Log all access decisions (allowed and denied), include sufficient context (user, resource, reason), and index logs for efficient querying. Store logs in **immutable storage** (append-only) and **retain for compliance period** (typically 1-7 years). Consider **log aggregation** (ELK stack, Splunk) for large-scale systems.
-

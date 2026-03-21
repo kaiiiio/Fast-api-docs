@@ -233,7 +233,7 @@ class Product(Base):
     order_items = relationship("OrderItem", back_populates="product")
 ```
 
-**Understanding cascade:**
+**Understanding cascade:**   --- IMP
 
 `cascade="all, delete-orphan"` means:
 - When you delete an order, automatically delete its items

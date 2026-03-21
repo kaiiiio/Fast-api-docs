@@ -1,6 +1,6 @@
 # CQRS for Read-Heavy Systems: Complete Implementation Guide
 
-CQRS (Command Query Responsibility Segregation) separates read and write operations, optimizing each independently. This guide covers CQRS implementation in Express.js applications.
+CQRS (Command Query Responsibility Segregation) separates read and write operations, optimizing each independently. This guide covers CQRS implementation in Express.js applications.  -- IMP
 
 ## Understanding CQRS
 

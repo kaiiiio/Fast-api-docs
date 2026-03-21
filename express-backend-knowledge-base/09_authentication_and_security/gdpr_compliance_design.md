@@ -263,7 +263,7 @@ GDPR compliance requires proper handling of personal data. Implement right to ac
 
 ---
 
-## 🎯 Interview Questions: GDPR Compliance Design
+## 🎯 Interview Questions: GDPR Compliance Design   -- IMP
 
 ### Q1: Explain the fundamental principles of GDPR (General Data Protection Regulation) and how they impact the design of Express.js applications. What are the key requirements that must be implemented?
 

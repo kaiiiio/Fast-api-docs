@@ -338,7 +338,7 @@ Choose based on your use case: offset for simple cases, cursor/seek for large da
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI  --- IMP
 
 ### Q1: Explain pagination strategies in FastAPI, including offset-based, cursor-based, and seek pagination. Discuss when to use each, performance implications, and best practices. Provide detailed examples showing implementation of each strategy.
 
@@ -669,5 +669,3 @@ if not users:
 4. **Efficiency**: No total count needed
 
 Understanding cursor-based pagination, edge cases, encoding, and when to use it is essential for building scalable APIs. Always use composite cursors for stable sorting, handle edge cases gracefully, and choose the right pagination strategy based on use case.
-
-

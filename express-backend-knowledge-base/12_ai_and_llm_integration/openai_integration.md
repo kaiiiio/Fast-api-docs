@@ -182,4 +182,3 @@ OpenAI integration enables AI-powered features in Express.js applications. Use c
 - Learn [Structured Output](../12_ai_and_llm_integration/structured_output.md) for parsing responses
 - Study [Cost Tracking](../12_ai_and_llm_integration/cost_tracking.md) for monitoring
 - Master [Error Handling](../12_ai_and_llm_integration/error_handling.md) for reliability
-

@@ -12,7 +12,7 @@ Redis is an in-memory data store that acts as a cache, session store, and messag
 
 ## Step 1: Installation and Basic Setup
 
-### Installation
+### Installation   -- IMP
 
 ```bash
 npm install redis
@@ -311,7 +311,7 @@ async function sessionMiddleware(req, res, next) {
 }
 ```
 
-## Best Practices
+## Best Practices  -- IMP
 
 ### 1. **Key Naming Conventions**
 

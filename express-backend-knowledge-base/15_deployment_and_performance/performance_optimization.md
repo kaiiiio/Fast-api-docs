@@ -154,7 +154,7 @@ app.get('/stats', async (req, res) => {
 });
 ```
 
-## Best Practices
+## Best Practices    -- IMP
 
 1. **Enable Compression**: Use gzip compression
 2. **Connection Pooling**: Pool database connections

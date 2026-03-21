@@ -947,7 +947,7 @@ In **microservices**, each runs separately:
 
 ---
 
-## ⚙️ 3. Core Design Principles
+## ⚙️ 3. Core Design Principles   --- IMP
 
 1. **Single Responsibility** – one service per domain.
 2. **Loose Coupling** – use APIs/events, not shared memory.

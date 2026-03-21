@@ -786,7 +786,7 @@ async function queryWithFailover(query, params, isWrite = false) {
 }
 ```
 
-**Trade-offs:**
+**Trade-offs:**   -- IMP
 
 | Strategy | Pros | Cons | Use Case |
 |----------|------|------|----------|

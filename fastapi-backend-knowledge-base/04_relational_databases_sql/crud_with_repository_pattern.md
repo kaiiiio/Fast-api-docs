@@ -952,7 +952,7 @@ Repositories provide clean separation: business logic in services, data access i
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI    --- IMP
 
 ### Q1: Explain the Repository pattern in FastAPI, including its benefits, how to implement it with async SQLAlchemy, and how it integrates with dependency injection. Provide examples showing a complete repository implementation with CRUD operations.
 

@@ -5,6 +5,7 @@ Understanding different SQL database engines helps you choose the right one for 
 ## Overview
 
 **SQL Database Engines:**
+
 - **PostgreSQL**: Advanced features, open-source
 - **MySQL**: Popular, widely used
 - **MariaDB**: MySQL fork, community-driven
@@ -259,20 +260,21 @@ VALUES ('user@example.com', 'John Doe');
 
 ## Comparison Matrix
 
-| Feature | PostgreSQL | MySQL | MariaDB | SQLite |
-|---------|------------|-------|---------|--------|
-| **Type** | Server | Server | Server | Embedded |
-| **Complexity** | High | Medium | Medium | Low |
-| **Performance** | Excellent | Fast | Fast | Fast (small) |
-| **JSON Support** | ✅ Excellent | ⚠️ Limited | ⚠️ Limited | ⚠️ Limited |
-| **Advanced Features** | ✅ Many | ⚠️ Some | ⚠️ Some | ❌ Few |
-| **Ease of Use** | Medium | Easy | Easy | Very Easy |
-| **Hosting Support** | Good | Excellent | Good | N/A |
-| **Best For** | Complex apps | Web apps | Open-source | Embedded |
+| Feature               | PostgreSQL   | MySQL      | MariaDB     | SQLite       |
+| --------------------- | ------------ | ---------- | ----------- | ------------ |
+| **Type**              | Server       | Server     | Server      | Embedded     |
+| **Complexity**        | High         | Medium     | Medium      | Low          |
+| **Performance**       | Excellent    | Fast       | Fast        | Fast (small) |
+| **JSON Support**      | ✅ Excellent | ⚠️ Limited | ⚠️ Limited  | ⚠️ Limited   |
+| **Advanced Features** | ✅ Many      | ⚠️ Some    | ⚠️ Some     | ❌ Few       |
+| **Ease of Use**       | Medium       | Easy       | Easy        | Very Easy    |
+| **Hosting Support**   | Good         | Excellent  | Good        | N/A          |
+| **Best For**          | Complex apps | Web apps   | Open-source | Embedded     |
 
 ## When to Choose Which
 
 ### Choose PostgreSQL When:
+
 - You need advanced features (JSON, arrays, full-text search)
 - Building complex applications
 - Need geospatial data (PostGIS)
@@ -280,6 +282,7 @@ VALUES ('user@example.com', 'John Doe');
 - Data warehousing
 
 ### Choose MySQL When:
+
 - Building web applications
 - Need wide hosting support
 - Want large community
@@ -287,12 +290,14 @@ VALUES ('user@example.com', 'John Doe');
 - High-traffic websites
 
 ### Choose MariaDB When:
+
 - Want MySQL without Oracle
 - Prefer fully open-source
 - Community-driven projects
 - Need MySQL compatibility
 
 ### Choose SQLite When:
+
 - Building mobile/desktop apps
 - Small websites
 - Development/testing
@@ -354,13 +359,14 @@ CREATE TABLE users (
 Each database engine has strengths. PostgreSQL for advanced features, MySQL for popularity and ease, MariaDB for open-source MySQL alternative, SQLite for embedded applications. Choose based on your specific needs, not just popularity.
 
 **Decision Guide:**
+
 - Complex features? → PostgreSQL
 - Web applications? → MySQL/MariaDB
 - Embedded/mobile? → SQLite
 - Team expertise? → Use what they know
 
 **Next Steps:**
+
 - Learn [SQL Dialects](sql_dialects.md) for syntax differences
 - Study [Relational Concepts](relational_concepts.md) for database design
 - Master [Performance Optimization](../10_performance_optimization/) for tuning
-

@@ -2,6 +2,19 @@
 
 A comprehensive reference of Linux commands needed for deploying and managing applications on AWS EC2 instances.
 
+## Key Terms
+
+* **Process** (running program): Node, Nginx, Redis, or any active command.
+* **PID** (process ID): unique number used to inspect/kill a process.
+* **Port** (network door): app listens on ports like 3000, 80, 443.
+* **Service** (managed background app): controlled by `systemd`.
+* **Unit file** (systemd service config): defines how a service starts/restarts.
+* **Permission** (read/write/execute access): controls who can access files.
+* **Owner/group** (file access identity): user/group attached to a file.
+* **Log** (debug history): records app/system events.
+* **Disk usage** (storage consumed): checked with `df`/`du`.
+* **Firewall** (traffic filter): allows/blocks network access.
+
 ## Table of Contents
 1. [System Management](#system-management)
 2. [File Operations](#file-operations)

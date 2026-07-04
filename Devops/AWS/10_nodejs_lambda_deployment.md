@@ -2,6 +2,21 @@
 
 Deploying event-driven, scalable Node.js functions without managing servers.
 
+## Key Terms
+
+* **Serverless** (no server management): AWS runs/scales the runtime.
+* **Lambda function** (event-run code): code executes only when triggered.
+* **Cold start** (startup delay): first request after idle may be slower.
+* **API Gateway** (HTTP front door): exposes Lambda as REST/HTTP API.
+* **Event source** (trigger): S3 upload, cron, queue, HTTP request.
+* **Execution role** (Lambda permissions): IAM role Lambda uses.
+* **Timeout** (max runtime): Lambda stops after configured time.
+* **Memory setting** (RAM and CPU share): more memory also gives more CPU.
+* **Stage** (deployment environment): dev, staging, prod.
+* **Serverless Framework** (deployment tool): packages and deploys Lambda config.
+
+---
+
 ## 1. When to go Serverless?
 - **Cost:** You only pay for exact execution time.
 - **Scale:** Scales automatically to handle traffic spikes.

@@ -12,6 +12,21 @@ GitHub Actions is a **CI/CD platform integrated into GitHub** that automates wor
 
 ---
 
+## Key Terms
+
+* **Workflow** (automation file): YAML file inside `.github/workflows`.
+* **Event** (trigger): push, pull request, schedule, manual dispatch.
+* **Job** (group of steps): runs on one runner.
+* **Step** (single command/action): one task inside a job.
+* **Action** (reusable step): prebuilt automation from marketplace or repo.
+* **Runner** (machine executing job): GitHub-hosted or self-hosted.
+* **Matrix** (run same job many ways): test multiple Node/Python versions.
+* **Artifact** (saved output): build files, reports, coverage.
+* **Cache** (reuse dependencies): speeds up installs between runs.
+* **Secret** (encrypted sensitive value): API keys, deploy keys, tokens.
+
+---
+
 ## Core Concepts
 
 ### 1. Workflow

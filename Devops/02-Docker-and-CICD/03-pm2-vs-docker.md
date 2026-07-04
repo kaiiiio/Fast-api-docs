@@ -13,6 +13,19 @@ Features:
 
 ---
 
+## Key Terms
+
+* **Process manager** (keeps app running): starts, restarts, and monitors app processes.
+* **Daemon** (background manager process): PM2 itself keeps running in the background.
+* **Cluster mode** (multiple Node processes): uses multiple CPU cores for one app.
+* **Zero-downtime reload** (restart without dropping traffic): reloads workers one by one.
+* **Startup script** (auto-start after reboot): restores PM2 apps when server restarts.
+* **Container isolation** (Docker boundary): app gets isolated filesystem, network, and dependencies.
+* **Restart policy** (auto-restart rule): Docker restarts crashed containers.
+* **Immutable image** (same package everywhere): deploy a built image instead of changing server manually.
+
+---
+
 ## What is Docker?
 
 Docker is a **containerization platform** for any application.

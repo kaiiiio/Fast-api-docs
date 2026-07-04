@@ -49,3 +49,7 @@ Each topic contains:
 - UI/UX engineers
 - Full-stack developers
 
+## New Networking Guide
+
+- [React + Express WebSockets with Socket.IO](03_networking/websockets_react_express_socketio.md)
+

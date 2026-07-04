@@ -14,6 +14,23 @@
 
 ---
 
+## Key Terms
+
+* **Image** (read-only app package): code + dependencies + runtime.
+* **Container** (running image): isolated process created from an image.
+* **Dockerfile** (image recipe): instructions to build an image.
+* **Layer** (cached build step): each Dockerfile instruction creates reusable image history.
+* **Build context** (files sent to Docker): usually current project folder.
+* **Registry** (image storage): Docker Hub, ECR, GitHub Container Registry.
+* **Volume** (persistent container data): keeps data after container is removed.
+* **Bind mount** (host folder mounted inside container): useful in local development.
+* **Port mapping** (host port to container port): example `-p 3000:3000`.
+* **Health check** (container self-test): tells Docker/orchestrator if app is healthy.
+* **Multi-stage build** (build in one stage, run in another): reduces final image size.
+* **Layer caching** (reuse unchanged build steps): makes builds faster.
+
+---
+
 ## Docker Lifecycle
 
 ```

@@ -22,6 +22,21 @@ NGINX handles:
 
 ---
 
+## Key Terms
+
+* **Reverse proxy** (server in front of backend): receives client traffic and forwards to app servers.
+* **SSL/TLS termination** (HTTPS handled at NGINX): NGINX decrypts HTTPS before forwarding HTTP internally.
+* **Upstream** (backend server group): list of app servers NGINX can forward to.
+* **Load balancing** (spread traffic): sends requests across multiple backend instances.
+* **Rate limiting** (request speed control): protects app from abuse or sudden spikes.
+* **Static file serving** (serve files directly): NGINX sends images/CSS/JS without hitting backend.
+* **Proxy headers** (original request info): pass client IP, host, and protocol to backend.
+* **Timeout** (max wait time): prevents hanging backend requests from consuming resources forever.
+* **Buffering** (temporary request/response storage): helps handle slow clients safely.
+* **Cache** (store repeated responses): reduces backend load for repeated reads.
+
+---
+
 ## What is a Reverse Proxy?
 
 ### Forward Proxy

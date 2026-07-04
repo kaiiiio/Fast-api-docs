@@ -2,6 +2,21 @@
 
 Keeping visibility into your production environment.
 
+## Key Terms
+
+* **CloudWatch metric** (number over time): CPU, memory, errors, latency.
+* **CloudWatch log group** (log container): stores related log streams.
+* **Log stream** (one source of logs): logs from one instance/container/function.
+* **Alarm** (condition-based alert): notifies when metric crosses threshold.
+* **SNS** (notification service): sends alerts to email/SMS/webhooks.
+* **CloudTrail** (AWS API audit log): records who changed what and when.
+* **X-Ray trace** (request path map): shows latency/errors across services.
+* **EventBridge** (event router): connects AWS/SaaS events to targets.
+* **Bottleneck** (slowest part): component limiting total performance.
+* **Audit log** (security history): evidence for investigations/compliance.
+
+---
+
 ## 1. Amazon CloudWatch
 **Metrics & Logs:** The central hub for monitoring.
 

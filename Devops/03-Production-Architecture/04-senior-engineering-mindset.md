@@ -1,5 +1,22 @@
 # Production Mindset & Senior Engineering
 
+## Key Terms
+
+* **Ownership** (care after deployment): engineer is responsible for production behavior.
+* **Blast radius** (damage size): how much system/users are affected by a failure.
+* **Root cause** (real underlying reason): not just the visible symptom.
+* **Postmortem** (incident learning document): what happened, why, and prevention steps.
+* **Runbook** (step-by-step ops guide): how to handle known incidents.
+* **SLO** (service level objective): target reliability, like 99.9% success.
+* **SLA** (service level agreement): customer-facing reliability promise.
+* **SLI** (service level indicator): metric used to measure reliability.
+* **Error budget** (allowed failure amount): how much unreliability is acceptable.
+* **Tech debt** (future cost of shortcuts): code/system choices that slow later work.
+* **Toil** (manual repetitive ops work): should be automated over time.
+* **Tradeoff** (choose one benefit over another): cost vs speed, simplicity vs flexibility.
+
+---
+
 ## The Mindset Shift
 
 ### Junior Developer

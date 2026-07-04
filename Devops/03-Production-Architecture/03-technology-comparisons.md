@@ -1,5 +1,22 @@
 # Technology Comparisons — Interview Gold
 
+## Key Terms
+
+* **Latency** (response delay): how long one request takes.
+* **Throughput** (work per second): how many requests/messages can be handled.
+* **Durability** (data survives failure): data is not lost after restart/crash.
+* **Availability** (system stays usable): service continues during failures.
+* **Consistency** (same correct data everywhere): reads reflect expected writes.
+* **Horizontal scaling** (add more machines): scale out.
+* **Vertical scaling** (bigger machine): scale up.
+* **Replay** (read old events again): common in Kafka/event logs.
+* **Retention** (how long data is kept): message/event/log storage duration.
+* **Schema** (data shape/rules): strict in SQL, flexible in many NoSQL systems.
+* **ACID** (transaction safety): atomicity, consistency, isolation, durability.
+* **Eventual consistency** (sync later): data becomes consistent after delay.
+
+---
+
 ## Redis vs Memcached
 
 | Feature | Redis | Memcached |

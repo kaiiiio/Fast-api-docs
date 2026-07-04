@@ -188,6 +188,26 @@ worker.process(job => sendEmail(job.data));
 * Node.js ecosystem
 * Simpler setup
 
+Important BullMQ terms:
+
+* **Queue** (place where jobs wait)
+* **Producer** (API/service that adds jobs)
+* **Worker** (process that performs jobs)
+* **Retry** (run a failed job again)
+* **Backoff** (wait longer between retries)
+* **Idempotent job** (safe to run more than once)
+* **Stalled job** (worker crashed or stopped renewing job lock)
+
+Example mental model:
+
+```txt
+API receives signup
+API saves user
+API adds send-welcome-email job to BullMQ
+Worker sends email later
+User does not wait for email provider
+```
+
 ---
 
 ### RabbitMQ (Message Broker)
@@ -200,6 +220,17 @@ Use cases:
 * Event‑driven systems
 * Cross‑language messaging
 
+Important RabbitMQ terms:
+
+* **Exchange** (routes messages)
+* **Queue** (stores messages for a service)
+* **Binding** (rule connecting exchange to queue)
+* **Routing key** (label used for routing)
+* **Ack** (success confirmation)
+* **Nack** (failure confirmation)
+* **DLQ** (failed-message queue)
+* **Prefetch** (unacked message limit)
+
 **RabbitMQ vs BullMQ**
 
 | Feature    | BullMQ | RabbitMQ  |
@@ -207,6 +238,14 @@ Use cases:
 | Backend    | Redis  | AMQP      |
 | Simplicity | ⭐⭐⭐⭐   | ⭐⭐        |
 | Scale      | Medium | Very High |
+
+Quick decision:
+
+```txt
+Need simple Node.js background jobs? -> BullMQ
+Need service-to-service routing across many services/languages? -> RabbitMQ
+Need event replay and analytics stream? -> Kafka
+```
 
 **Alternatives**:
 

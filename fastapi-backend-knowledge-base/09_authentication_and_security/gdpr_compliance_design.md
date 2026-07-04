@@ -2,7 +2,7 @@
 
 Designing for GDPR compliance ensures data privacy and regulatory compliance. This guide covers comprehensive GDPR implementation with code examples and best practices.
 
-## Understanding GDPR Requirements
+## Understanding GDPR Requirements   --- IMP
 
 **What is GDPR?**
 General Data Protection Regulation - EU law governing data protection and privacy.

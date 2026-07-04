@@ -443,7 +443,7 @@ Implement exponential backoff properly and your system will handle failures grac
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI   --- IMP
 
 ### Q1: Explain exponential backoff for retries in Celery/FastAPI, including how it works, formulas, jitter, maximum delay caps, error classification, and best practices. Provide detailed examples showing retry strategies.
 

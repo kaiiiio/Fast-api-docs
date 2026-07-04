@@ -2,6 +2,20 @@
 
 A comprehensive guide covering all deployment methods for Node.js applications on AWS with step-by-step procedures, Linux commands, and best practices.
 
+## Key Terms
+
+* **PM2** (Node process manager): keeps Node app running and restarts on crash.
+* **Cluster mode** (multi-core Node): runs multiple app instances on one server.
+* **Nginx reverse proxy** (front server): handles HTTPS and forwards traffic to Node.
+* **Elastic IP** (fixed public IP): IP stays same after EC2 restart.
+* **Security Group** (server firewall): opens SSH/HTTP/HTTPS ports.
+* **Environment variable** (runtime config): `DATABASE_URL`, `JWT_SECRET`, `PORT`.
+* **Secrets Manager** (secure secret storage): safer than hardcoded `.env` secrets.
+* **ECR** (Docker image registry): stores images for ECS/Fargate.
+* **Task definition** (ECS container blueprint): image, ports, env vars, resources.
+* **Health check** (is app alive test): used by Docker/ECS/load balancer.
+* **SSL certificate** (HTTPS identity): proves domain and encrypts traffic.
+
 ## Table of Contents
 1. [Deployment Methods Comparison](#deployment-methods-comparison)
 2. [Method 1: EC2 with PM2](#method-1-ec2-with-pm2-recommended)

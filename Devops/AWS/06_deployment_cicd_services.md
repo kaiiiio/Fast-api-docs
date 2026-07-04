@@ -2,6 +2,21 @@
 
 Automating the journey from code commit to production.
 
+## Key Terms
+
+* **CodePipeline** (deployment orchestrator): connects source, build, and deploy stages.
+* **CodeBuild** (managed build runner): runs tests/builds using `buildspec.yml`.
+* **CodeDeploy** (deployment engine): updates EC2/Lambda/ECS with deployment strategies.
+* **Source stage** (code input): GitHub, CodeCommit, Bitbucket, S3.
+* **Build artifact** (deployable output): zip, package, compiled files, Docker image reference.
+* **buildspec.yml** (build instructions): commands CodeBuild runs.
+* **appspec.yml** (deployment instructions): files/hooks CodeDeploy uses.
+* **Hook** (deployment script point): before install, after install, start app, validate service.
+* **Rollback** (restore previous version): automatic/manual recovery after failed deployment.
+* **Blue-green deployment** (old/new environments): switch traffic after new version is healthy.
+
+---
+
 ## 1. AWS CodePipeline
 **Orchestration:** The glue that connects your source code to your build and deployment steps.
 

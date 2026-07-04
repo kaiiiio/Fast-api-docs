@@ -2,6 +2,21 @@
 
 Understanding how to store and manage data in the AWS ecosystem.
 
+## Key Terms
+
+* **Object storage** (file-like storage): stores objects such as images, PDFs, backups.
+* **Bucket** (S3 container): top-level place where S3 objects live.
+* **Object** (file + metadata): actual item stored in S3.
+* **Presigned URL** (temporary private link): lets user upload/download without making bucket public.
+* **Storage class** (cost/access tier): Standard, IA, Glacier, Intelligent-Tiering.
+* **Lifecycle policy** (automatic movement/deletion): moves old files to cheaper tiers.
+* **Block storage** (virtual disk): EBS volume attached to EC2.
+* **Snapshot** (point-in-time backup): backup of EBS volume.
+* **File storage** (shared filesystem): EFS mounted by multiple servers.
+* **IOPS** (disk operations/sec): storage performance measure.
+
+---
+
 ## 1. Amazon S3 (Simple Storage Service)
 **Object Storage:** The go-to service for user uploads, static sites, and backups.
 

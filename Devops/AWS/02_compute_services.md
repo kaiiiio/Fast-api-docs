@@ -2,6 +2,21 @@
 
 A deep dive into the primary compute options on AWS for fullstack developers.
 
+## Key Terms
+
+* **Compute** (place where code runs): EC2, Lambda, ECS, Fargate.
+* **EC2 instance** (virtual server): full OS control, manual server management.
+* **AMI** (server template): prebuilt OS/image used to launch EC2.
+* **Instance type** (CPU/RAM size): example `t3.micro`, `c6g.large`.
+* **Lambda** (serverless function): runs code on events without managing servers.
+* **Cold start** (first-run delay): Lambda startup time after inactivity.
+* **ECS task** (running container unit): one or more containers defined together.
+* **Task definition** (container blueprint): image, ports, env vars, CPU/memory.
+* **Fargate** (serverless containers): run ECS containers without managing EC2.
+* **Auto Scaling Group / ASG** (EC2 scaling group): adds/removes EC2 instances.
+
+---
+
 ## 1. Amazon EC2 (Elastic Compute Cloud)
 **The Foundation:** Virtual machines where you have full control over the OS and stack.
 

@@ -1140,6 +1140,26 @@ Use cases:
 * Notifications
 * Cron jobs
 
+In simple words, BullMQ lets your API put slow work into Redis and lets workers process that work later.
+
+Example:
+
+```txt
+API -> add "send-email" job -> BullMQ/Redis -> Email Worker
+```
+
+BullMQ helps with:
+
+* **Retries** (try failed jobs again)
+* **Backoff** (wait longer between retries)
+* **Delayed jobs** (run a job later)
+* **Repeatable jobs** (cron-like scheduled jobs)
+* **Job states** (waiting, active, completed, failed, delayed)
+* **Progress tracking** (useful for long-running jobs)
+* **Idempotency support** (custom job IDs can help avoid duplicate jobs)
+
+Important: BullMQ jobs should still be **idempotent**, meaning safe to run more than once. Retries and worker crashes can cause the same job to execute again.
+
 ---
 
 ### Q18. BullMQ vs RabbitMQ vs Kafka?
@@ -1149,6 +1169,47 @@ Use cases:
 | BullMQ   | Background jobs |
 | RabbitMQ | Message broker  |
 | Kafka    | Event streaming |
+
+Use **BullMQ** when:
+
+* You are in Node.js
+* You need background jobs
+* You want simple retries, delays, priorities, and cron jobs
+* Redis is already part of your stack
+
+Use **RabbitMQ** when:
+
+* Multiple services need to communicate
+* Services are in different languages
+* You need exchanges, routing keys, bindings, pub/sub, or request/reply
+* You need strong broker-level delivery control with acknowledgments
+
+Use **Kafka** when:
+
+* You need event streaming
+* Events must be stored for replay
+* Many independent consumers need to read the same event history
+* Analytics or event sourcing is important
+
+Plain-English comparison:
+
+```txt
+BullMQ = do this job later
+RabbitMQ = deliver this message to the right service
+Kafka = store this event stream so many systems can read/replay it
+```
+
+Key vocabulary:
+
+* **Dead letter queue / DLQ** (failed-items queue after retries)
+* **Idempotent** (safe to repeat)
+* **Ack** (success confirmation)
+* **Nack** (failure confirmation)
+* **Backpressure** (slow producers when workers cannot keep up)
+* **Memory bloat** (memory grows because old data is not cleaned)
+* **Eviction policy** (Redis rule for deleting keys when memory is full)
+* **Atomic** (all-or-nothing operation)
+* **Lock contention** (many processes waiting for same lock/resource)
 
 ---
 

@@ -2,7 +2,7 @@
 
 Understanding Celery's architecture is crucial for production deployments. This guide explains the internals, message flow, and how each component works together.
 
-## Understanding Celery's Purpose
+## Understanding Celery's Purpose  --- IMP
 
 **What is Celery?** Celery is a distributed task queue that allows you to execute tasks asynchronously across multiple worker processes or machines.
 

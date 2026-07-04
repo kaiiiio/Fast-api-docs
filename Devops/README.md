@@ -72,6 +72,17 @@ Devops/
 
 **Key Concepts**: Redis vs Memcached, BullMQ vs RabbitMQ vs Kafka, Queue patterns
 
+Extra beginner vocabulary now covered in this section:
+
+* Atomic operations
+* Lock contention
+* Memory bloat
+* Redis eviction policies
+* Dead letter queues
+* Idempotent jobs/consumers
+* Acknowledgments, retries, backoff, stalled jobs
+* RabbitMQ exchanges, bindings, routing keys, prefetch
+
 ---
 
 ### 02-Docker-and-CICD (6 files)

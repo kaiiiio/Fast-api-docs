@@ -19,6 +19,21 @@ Jenkins is a **self-hosted, open-source automation server** for CI/CD.
 
 ---
 
+## Key Terms
+
+* **Controller/Master** (central Jenkins server): schedules jobs and manages configuration.
+* **Agent/Node** (worker machine): runs pipeline jobs.
+* **Jenkinsfile** (pipeline as code): version-controlled pipeline definition.
+* **Declarative pipeline** (structured syntax): simpler, recommended Jenkinsfile style.
+* **Scripted pipeline** (Groovy logic): more flexible but harder to read.
+* **Stage** (pipeline phase): checkout, test, build, deploy.
+* **Workspace** (job working folder): files checked out for a build.
+* **Credential** (stored secret): password, token, SSH key managed by Jenkins.
+* **Multibranch pipeline** (pipeline per branch): auto-discovers branches/PRs.
+* **Post action** (after-build cleanup/notification): runs on success/failure/always.
+
+---
+
 ## Jenkins vs GitHub Actions
 
 | Feature | Jenkins | GitHub Actions |

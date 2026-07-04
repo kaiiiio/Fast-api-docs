@@ -7,6 +7,23 @@
 
 ---
 
+## Key Terms
+
+* **Pipeline** (automated workflow): test, build, and deploy steps.
+* **Stage** (major pipeline phase): example test, build, deploy.
+* **Job** (unit of pipeline work): one runnable task inside CI/CD.
+* **Runner/Agent** (machine that runs jobs): GitHub runner, Jenkins agent, GitLab runner.
+* **Artifact** (build output): compiled app, Docker image, report, or package.
+* **Environment** (deployment target): dev, staging, production.
+* **Rollback** (return to previous version): used when deployment breaks.
+* **Blue-green deployment** (two production environments): switch traffic from old to new.
+* **Canary deployment** (small traffic first): release to a few users before everyone.
+* **Secret** (sensitive value): token, password, SSH key; never hardcode.
+* **Idempotent pipeline** (safe to rerun): rerunning should not corrupt deploy state.
+* **Health check** (post-deploy test): confirms app is actually working.
+
+---
+
 ## The Problem Without CI/CD
 
 ```

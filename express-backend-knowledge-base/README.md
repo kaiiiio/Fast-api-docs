@@ -73,6 +73,7 @@ A comprehensive knowledge base for building production-grade Express.js backends
 - [Scaling Architecture](10_Sockets/03_scaling_architecture.md)
 - [Security and Auth](10_Sockets/04_security_and_auth.md)
 - [Reliability and Performance](10_Sockets/05_reliability_and_performance.md)
+- [React + Express Socket.IO End-to-End](10_Sockets/06_react_express_socketio_end_to_end.md)
 
 ### 11 - File Storage and Media
 - [File Handling Mastery](11_file_storage_and_media/01_file_handling_mastery.md)

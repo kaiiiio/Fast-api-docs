@@ -1,4 +1,4 @@
-# Creating Vector Index: A Step-by-Step Guide
+# Creating Vector Index: A Step-by-Step Guide   --- IMP
 
 Vector indexes are crucial for fast similarity search in AI applications. This guide walks you through creating and optimizing vector indexes in PostgreSQL using pgvector, explaining each step clearly.
 
@@ -338,4 +338,3 @@ Creating vector indexes is a multi-step process:
 7. Tune based on performance
 
 The key is understanding what each parameter does and starting with sensible defaults, then tuning based on your specific needs.
-

@@ -2,7 +2,7 @@
 
 Protecting Personally Identifiable Information (PII) at rest is critical for compliance and security. This guide covers comprehensive encryption strategies for sensitive data.
 
-## Understanding PII Encryption
+## Understanding PII Encryption   --- IMP
 
 **What is PII?** Personally Identifiable Information - data that can identify individuals: names, emails, phone numbers, social security numbers, credit card numbers, addresses, and biometric data.
 

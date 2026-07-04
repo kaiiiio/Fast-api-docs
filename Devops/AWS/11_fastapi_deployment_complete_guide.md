@@ -2,6 +2,19 @@
 
 A comprehensive guide covering all deployment methods for FastAPI applications on AWS with step-by-step procedures, Linux commands, and best practices.
 
+## Key Terms
+
+* **Uvicorn** (ASGI server): runs FastAPI async app.
+* **Gunicorn** (process manager): manages multiple Uvicorn workers.
+* **ASGI** (async Python web interface): standard FastAPI uses.
+* **Nginx reverse proxy** (front server): handles HTTPS and forwards to Uvicorn/Gunicorn.
+* **Mangum** (Lambda adapter): lets FastAPI run on AWS Lambda.
+* **ECS task definition** (container blueprint): image, env vars, ports, CPU/memory.
+* **Fargate** (serverless containers): runs Docker containers without EC2 management.
+* **Health check** (is app alive test): confirms FastAPI endpoint works.
+* **Environment variable** (runtime config): DB URL, secret key, environment.
+* **SSL certificate** (HTTPS identity): encrypts traffic and proves domain.
+
 ## Table of Contents
 1. [Deployment Methods Comparison](#deployment-methods-comparison)
 2. [Method 1: EC2 with Uvicorn + Nginx](#method-1-ec2-with-uvicorn--nginx-recommended)

@@ -2,6 +2,21 @@
 
 A comprehensive guide to AWS services organized by importance for fullstack developers deploying Node.js and FastAPI applications.
 
+## Key AWS Terms
+
+* **Region** (geographic AWS area): example `us-east-1`, `ap-south-1`.
+* **Availability Zone / AZ** (separate data center): used for high availability inside a region.
+* **IAM** (identity and permissions): controls who/what can access AWS resources.
+* **VPC** (private cloud network): isolated network for your AWS resources.
+* **Subnet** (smaller network section): public for internet-facing, private for internal resources.
+* **Security Group** (instance firewall): controls inbound/outbound traffic.
+* **Managed service** (AWS handles operations): backups, patching, scaling handled by AWS.
+* **Serverless** (no server management): AWS runs/scales compute for you.
+* **High availability / HA** (survives failures): app continues if one instance/AZ fails.
+* **Auto scaling** (automatic capacity changes): adds/removes compute based on load.
+
+---
+
 ## Quick Reference Table
 
 | Service | Category | Importance | Use Case | Monthly Cost (Estimate) |

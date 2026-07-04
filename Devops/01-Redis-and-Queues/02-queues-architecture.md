@@ -80,6 +80,29 @@ Failed Job → Retry 3x → Move to DLQ → Manual Review
 
 ---
 
+## Queue Vocabulary You Must Know
+
+* **Producer** (adds work): API/service that pushes a job/message into the queue.
+* **Consumer / Worker** (does work): process that picks jobs/messages and executes them.
+* **Job / Message** (one unit of work): BullMQ usually says job; RabbitMQ usually says message.
+* **Ack** (success confirmation): worker tells the queue the job/message is done.
+* **Nack** (failure confirmation): worker tells the queue processing failed.
+* **Retry** (try again): queue runs a failed job/message again.
+* **Exponential backoff** (longer wait after each failure): prevents repeatedly hitting a broken dependency.
+* **Dead Letter Queue / DLQ** (failed-items queue): stores jobs/messages that failed after retries.
+* **Idempotent** (safe to repeat): running the same job twice should not duplicate side effects.
+* **Visibility timeout / lock duration** (worker ownership time): if worker dies before finishing, another worker can retry later.
+* **Backpressure** (slow producers when workers are overloaded): prevents infinite queue growth.
+
+Example of idempotency:
+
+```txt
+Bad: retry payment job -> customer charged twice
+Good: retry payment job with paymentId=pay_123 -> worker sees it already processed and skips
+```
+
+---
+
 ## When to Use Queues
 
 ✅ Email sending
@@ -106,6 +129,12 @@ A: Implement retry logic with exponential backoff, maximum retry count, and dead
 
 **Q: Queue vs Event Stream (like Kafka)?**
 A: Queues are for task distribution (job consumed once). Streams are for event logs (multiple consumers can read).
+
+**Q: Why must queue jobs be idempotent?**
+A: Because retries and worker crashes can cause the same job to run more than once. Idempotency prevents duplicate emails, duplicate payments, duplicate inventory updates, and other repeated side effects.
+
+**Q: What is a dead letter queue?**
+A: A DLQ stores jobs/messages that failed permanently after retries. It helps teams inspect, fix, alert, and replay failed work instead of losing it silently.
 
 ---
 

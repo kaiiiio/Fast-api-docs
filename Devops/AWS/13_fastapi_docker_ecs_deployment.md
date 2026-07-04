@@ -2,6 +2,21 @@
 
 The modern, containerized approach to deploying FastAPI at scale.
 
+## Key Terms
+
+* **Docker image** (packaged app): FastAPI code + Python runtime + dependencies.
+* **Container** (running image): isolated FastAPI process.
+* **ECR** (AWS image registry): stores Docker images for ECS.
+* **ECS cluster** (container environment): logical group for running tasks.
+* **Task definition** (container blueprint): image, ports, env vars, CPU/memory.
+* **Service** (keeps tasks running): maintains desired number of containers.
+* **Fargate** (serverless container runtime): no EC2 server management.
+* **Load balancer** (traffic distributor): sends requests to healthy tasks.
+* **Target group** (backend task group): load balancer health-checks and routes here.
+* **Rolling deployment** (replace gradually): updates tasks without full downtime.
+
+---
+
 ## 1. Dockerizing FastAPI
 **Dockerfile (Optimized for Production):**
 ```dockerfile

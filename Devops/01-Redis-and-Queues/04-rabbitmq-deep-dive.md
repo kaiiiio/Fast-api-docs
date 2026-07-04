@@ -12,6 +12,12 @@ It supports:
 * Dead-letter queues
 * Multiple protocols (AMQP, MQTT, STOMP)
 
+Plain-English definition:
+
+> RabbitMQ is a dedicated message broker. Producers send messages to RabbitMQ, RabbitMQ routes those messages using exchanges and bindings, and consumers process messages from queues with acknowledgments.
+
+RabbitMQ exists for service-to-service communication where routing and delivery control matter more than simple background job convenience.
+
 ---
 
 ## RabbitMQ Architecture
@@ -27,6 +33,20 @@ Producer → Exchange → Queue → Consumer
 3. **Queue**: Stores messages
 4. **Consumer**: Receives messages
 5. **Binding**: Links exchange to queue
+
+### RabbitMQ Component Meanings
+
+* **Producer** (message sender): service that publishes messages.
+* **Exchange** (message router): decides which queue(s) should receive a message.
+* **Queue** (message storage): waits until a consumer processes the message.
+* **Consumer** (message processor): service that reads and handles messages.
+* **Binding** (routing rule): connects exchange to queue.
+
+Mental model:
+
+```txt
+Producer -> Exchange (router) -> Queue (waiting line) -> Consumer
+```
 
 ---
 
@@ -66,6 +86,30 @@ Routes based on message headers (rarely used)
 
 ---
 
+## RabbitMQ Concepts in Depth
+
+* **Routing key** (message label): used by exchanges to decide routing, like `order.created`.
+* **Durable queue** (queue survives restart): queue definition remains after RabbitMQ restarts.
+* **Persistent message** (message saved to disk): important messages can survive broker restart.
+* **Manual ack** (consumer confirms success): RabbitMQ removes message only after consumer confirms.
+* **Nack** (consumer reports failure): message can be requeued or dead-lettered.
+* **Prefetch** (unacked message limit): prevents one slow consumer from grabbing too much work.
+* **Publisher confirm** (broker accepted message): producer knows RabbitMQ received the message.
+* **DLX** (dead letter exchange): routes failed/expired/rejected messages.
+* **DLQ** (dead letter queue): stores failed messages for debugging/replay.
+* **Poison message** (always-failing message): should go to DLQ after limited retries.
+* **Idempotent consumer** (safe if message repeats): prevents duplicate refunds, emails, or stock updates.
+
+Example:
+
+```txt
+order.paid with eventId=evt_123
+Consumer checks if evt_123 was already handled.
+If yes, skip duplicate work.
+```
+
+---
+
 ## RabbitMQ vs BullMQ
 
 | Feature          | BullMQ      | RabbitMQ     |
@@ -77,6 +121,41 @@ Routes based on message headers (rarely used)
 | Routing          | Simple      | Advanced     |
 | Multi-language   | Node.js     | Any          |
 | Message patterns | Work queue  | Pub/Sub, RPC |
+
+### Detailed Decision Guide
+
+Use **BullMQ** when you are mostly asking:
+
+* "How do I run this slow task later?"
+* "How do I retry this email/webhook/PDF job?"
+* "How do I schedule jobs in Node.js?"
+* "How do I track job progress?"
+
+Use **RabbitMQ** when you are mostly asking:
+
+* "How do multiple services communicate reliably?"
+* "How do I route one event to different services?"
+* "How do I support services written in Node.js, Python, Java, Go, etc.?"
+* "How do I build event-driven workflows without direct service calls?"
+
+Example:
+
+```txt
+BullMQ:
+API -> Redis queue -> Email worker
+
+RabbitMQ:
+Order Service -> Exchange
+  -> Payment queue
+  -> Inventory queue
+  -> Email queue
+  -> Analytics queue
+```
+
+In short:
+
+* BullMQ is excellent for **jobs**.
+* RabbitMQ is excellent for **messages between services**.
 
 ---
 
@@ -191,6 +270,15 @@ A: Through acknowledgments, persistence, and publisher confirms. Messages are on
 
 **Q: When would you choose RabbitMQ over BullMQ?**
 A: When you need complex routing, multi-language support, or don't want Redis dependency.
+
+**Q: What does an exchange do in RabbitMQ?**
+A: An exchange routes messages to queues. It lets producers publish one message without knowing exactly which services will receive it.
+
+**Q: What does prefetch help with?**
+A: Prefetch controls how many unacknowledged messages a consumer can hold. It prevents slow consumers from being overloaded and improves fair message distribution.
+
+**Q: Why do RabbitMQ consumers need to be idempotent?**
+A: A message can be delivered again if a consumer crashes before ack. Idempotency prevents duplicate side effects like sending the same refund, email, or inventory update twice.
 
 ---
 

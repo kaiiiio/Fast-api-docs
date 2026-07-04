@@ -1,4 +1,4 @@
-# Hybrid Search: SQL + Vector Search Combined
+# Hybrid Search: SQL + Vector Search Combined   --- IMP
 
 Hybrid search combines traditional SQL queries with vector similarity search, giving you the best of both worlds: structured filtering AND semantic search. This guide shows you how to build production-ready hybrid search systems.
 

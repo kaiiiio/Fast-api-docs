@@ -2,7 +2,7 @@
 
 Configuring database connections correctly is critical for production. This guide explains connection URIs, SSL setup, and security best practices step by step.
 
-## Understanding Connection URIs
+## Understanding Connection URIs   --- IMP
 
 **What is a connection URI?**
 A connection URI (Uniform Resource Identifier) is a string that contains all information needed to connect to a database.

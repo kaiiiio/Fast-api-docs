@@ -2,6 +2,22 @@
 
 A comprehensive guide to securing your Node.js and FastAPI applications on AWS.
 
+## Key Terms
+
+* **IAM policy** (permission document): defines allowed/denied AWS actions.
+* **IAM role** (temporary permissions): attached to EC2/Lambda/ECS instead of hardcoded keys.
+* **Least privilege** (minimum required access): only grant what app/user needs.
+* **MFA** (second login factor): protects accounts even if password leaks.
+* **Security Group** (stateful firewall): controls instance/service traffic.
+* **WAF** (web application firewall): blocks common web attacks.
+* **Secrets Manager** (managed secret storage): stores/rotates DB passwords/API keys.
+* **KMS** (key management service): manages encryption keys.
+* **TLS/SSL** (encrypted network traffic): HTTPS and secure DB connections.
+* **Rotation** (regular secret replacement): limits damage from leaked credentials.
+* **CloudTrail** (audit history): records AWS API activity for investigations.
+
+---
+
 ## Table of Contents
 1. [IAM Security](#iam-security)
 2. [EC2 Security](#ec2-security)

@@ -1,5 +1,21 @@
 # Production Failures — Why Systems Fail
 
+## Key Terms
+
+* **Retry** (try again after temporary failure): useful for network/provider glitches.
+* **Exponential backoff** (increasing retry delay): avoids hammering a failing dependency.
+* **Timeout** (max wait time): prevents stuck calls from consuming resources forever.
+* **Circuit breaker** (stop calling broken service): prevents cascading failures.
+* **Cascading failure** (one failure spreads): failing dependency overloads other services.
+* **Fallback** (backup behavior): return cached/default response when dependency fails.
+* **Bulkhead** (failure isolation): separate pools so one broken area does not sink all traffic.
+* **Backpressure** (slow/reject input): protects system when workers cannot keep up.
+* **Rate limit** (request cap): protects API from abuse or overload.
+* **Graceful degradation** (reduced but working service): non-critical features fail without full outage.
+* **Idempotency** (safe to repeat): retrying should not duplicate payments/emails/updates.
+
+---
+
 ## Common Production Failure Patterns
 
 ### 1. No Retries

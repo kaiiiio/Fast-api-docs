@@ -4,6 +4,21 @@ This is a comprehensive revision guide detailing *what* each AWS service does, *
 
 ---
 
+## Key Terms
+
+* **MERN** (MongoDB, Express, React, Node): common full-stack JavaScript stack.
+* **Backend API** (server logic): Express/Node routes, auth, database calls.
+* **Static frontend** (built React files): HTML/CSS/JS served from S3/CloudFront.
+* **Object storage** (file storage): S3 for uploads and frontend assets.
+* **CDN** (global cache): CloudFront serves frontend/assets closer to users.
+* **DNS** (domain to target): Route 53 maps domain names to AWS resources.
+* **Reverse proxy** (front server): Nginx forwards requests to Node backend.
+* **Managed database** (AWS-operated DB): RDS handles backups/patching/failover.
+* **Cache** (fast temporary data): ElastiCache/Redis reduces DB load.
+* **CI/CD** (automated build/deploy): CodePipeline/GitHub Actions deploy changes.
+
+---
+
 ## 🧭 Overview of Services & Their Roles
 
 | Service | Category | Importance | Purpose in a MERN Application | Est. Cost |

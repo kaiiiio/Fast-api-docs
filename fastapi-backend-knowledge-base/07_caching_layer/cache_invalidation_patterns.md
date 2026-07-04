@@ -165,7 +165,7 @@ Choose the pattern that matches your consistency requirements!
 
 ---
 
-## 🎯 Interview Questions: FastAPI
+## 🎯 Interview Questions: FastAPI   --- IMP
 
 ### Q1: Explain cache invalidation patterns in FastAPI, including TTL-based, event-based, tag-based, version-based, and write-through patterns. Discuss when to use each, trade-offs, and best practices. Provide detailed examples.
 
@@ -421,5 +421,3 @@ async def get_user_with_lock(user_id: int):
 4. **Monitoring**: Track invalidation performance
 
 Understanding cache stampede prevention, warming strategies, and distributed invalidation is essential for building scalable caching systems. Always implement proper locking, use cache warming, and coordinate invalidation in distributed systems.
-
-

@@ -68,6 +68,25 @@ Solutions:
 
 ---
 
+## Important Redis Terms
+
+* **Atomic** (all-or-nothing operation): Redis finishes one command fully before another command interrupts it.
+* **Lock contention** (many processes waiting for the same lock): causes slowdowns when many workers fight for one shared resource.
+* **Memory bloat** (memory growing due to old/large data): happens when keys, completed jobs, or failed jobs are not cleaned up.
+* **Eviction policy** (rule for what Redis removes when memory is full): safe for cache Redis, risky for queue Redis if job keys get removed.
+
+Common eviction policies:
+
+| Policy | Short Meaning |
+| ------ | ------------- |
+| `noeviction` | Do not delete keys; reject writes |
+| `allkeys-lru` | Remove least recently used key |
+| `allkeys-lfu` | Remove least frequently used key |
+| `volatile-lru` | Remove least recently used key only if it has TTL |
+| `volatile-ttl` | Remove key nearest to expiry |
+
+---
+
 ## Interview Questions
 
 **Q: Why is Redis single-threaded?**

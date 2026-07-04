@@ -1,5 +1,22 @@
 # Monitoring Stack — Prometheus, Grafana, Loki/ELK
 
+## Key Terms
+
+* **Monitoring** (watch system health): metrics, logs, alerts, dashboards.
+* **Observability** (understand unknown failures): logs + metrics + traces with context.
+* **Metric** (number over time): CPU, memory, request count, latency.
+* **Log** (event record): detailed text/JSON of what happened.
+* **Trace** (request journey): path of one request across services.
+* **Dashboard** (visual summary): Grafana panels for health and trends.
+* **Alert** (notification on bad condition): tells team before users complain.
+* **Alert fatigue** (too many noisy alerts): engineers start ignoring alerts.
+* **Prometheus scrape** (pull metrics): Prometheus reads `/metrics` periodically.
+* **PromQL** (Prometheus query language): used to calculate rates, percentiles, errors.
+* **Loki** (log aggregation): stores/searches logs with labels.
+* **ELK** (Elasticsearch, Logstash, Kibana): powerful full-text log search stack.
+
+---
+
 ## Why Monitoring is Critical
 
 **Without monitoring**:

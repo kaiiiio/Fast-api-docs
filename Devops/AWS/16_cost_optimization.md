@@ -2,6 +2,21 @@
 
 Don't let your cloud bill surprise you.
 
+## Key Terms
+
+* **Rightsizing** (match size to real usage): reduce oversized EC2/RDS resources.
+* **Overprovisioning** (buying more than needed): paying for unused CPU/RAM/storage.
+* **On-demand** (pay without commitment): flexible but more expensive.
+* **Reserved Instance / RI** (commitment discount): cheaper for predictable EC2/RDS usage.
+* **Savings Plan** (spend commitment): discount in exchange for 1/3-year usage commitment.
+* **Spot Instance** (cheap spare capacity): can be interrupted by AWS.
+* **Lifecycle policy** (automatic storage tiering): moves old S3 data to cheaper storage.
+* **Egress** (data leaving AWS): can become a major cost.
+* **Budget alert** (spending warning): notifies before bill surprises you.
+* **Idle resource** (unused but billed): stopped app, unattached EBS, unused load balancer.
+
+---
+
 ## 1. Rightsizing
 **Stop Overprovisioning:** Check CloudWatch metrics. If your `t3.large` instance never exceeds 5% CPU, move it to a `t3.small` or `t3.micro`.
 

@@ -397,6 +397,162 @@ Typical customer prompt: *"When a vendor onboarding request comes in, someone ch
 
 ---
 
+## Architecture 5: Agentic data pipeline with quality gates
+
+**When a customer asks for this:** "We ingest unstructured data from customers every day — emails, documents, forms. We need a system that extracts, validates, normalizes, and loads it into our database, but we can't let bad data through, and we need perfect audit trails."
+
+Typical customer prompt: *"Our team spends 20% of their time on data intake — cleaning, validating, chasing customers for corrections. Can an agent do the grunt work and only escalate when it's unsure?"*
+
+### Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ DATA SOURCE (email, upload, SFTP, event)                        │
+└────────────────┬────────────────────────────────────────────────┘
+                 ▼
+      ┌──────────────────────┐
+      │ Normalize & extract  │
+      │ (structured text →   │
+      │  JSON fields)        │
+      └──────┬───────────────┘
+             ▼
+┌────────────────────────────────────────┐
+│ EXTRACTION AGENT                       │
+│ (claude-opus-4-8)                      │
+│                                        │
+│ CONTEXT: schema, field types, rules,  │
+│  examples of well-formed records      │
+│                                        │
+│ TOOLS:                                 │
+│  - extract_field(name, value, conf.)  │
+│  - flag_ambiguity(reason, guidance)   │
+│  - escalate_for_human(reason)          │
+└───────────┬──────────────────┬─────────┘
+            │                  │
+      extracted           uncertain?
+       → confidence       ▼
+            │      ┌──────────────┐
+            │      │ Confidence   │ <0.75 → escalate
+            │      │ gate         │
+            │      └──────┬───────┘
+            ▼             ▼
+      ┌──────────────────────────────┐
+      │ VALIDATION RULES ENGINE      │
+      │ (deterministic; not ML)      │
+      │  • field type ✓              │
+      │  • constraints (min/max,    │
+      │    enum values, patterns)   │
+      │  • dependencies (if A=X,     │
+      │    then B is required)      │
+      │  • referential (does order   │
+      │    ID exist?)                │
+      └──────┬─────────────┬────────┘
+             │             │
+          valid         invalid
+             ▼             ▼
+    ┌──────────────┐  ┌────────────────────┐
+    │ Load to DB   │  │ Flag for escalation │
+    │ (dedupe,     │  │ with:              │
+    │ enrich,      │  │ • rule that failed │
+    │ timestamp)   │  │ • suggested fix    │
+    └──────┬───────┘  │ • query to find    │
+           │          │   examples         │
+           ▼          └────────────┬───────┘
+    ┌──────────────┐              ▼
+    │ AUDIT LOG    │   ┌────────────────────────┐
+    │ (per-record: │   │ Escalation queue       │
+    │  source,     │   │ (agent-assisted triage │
+    │  extraction, │   │  before human review)  │
+    │  validation, │   └────────────────────────┘
+    │  load result)│
+    └──────────────┘
+```
+
+### Deconstruction
+
+**Why this matters:** data pipelines are where most data-quality issues actually live. Bad extraction → downstream analytics are unreliable. Bad validation → database constraints fail in production. Missing audit → you can't trace a GDPR deletion or debug a customer dispute. An FDE's pipeline is the floor: it runs every day, handles degradation gracefully, and never silently lets bad data through.
+
+**Three-layer quality assurance:**
+
+1. **Extraction (ML-driven, probabilistic).** The agent reads the source (email, PDF, form) and outputs structured JSON. It's good at this (few-shot examples + schema) but not perfect. Confidence scores matter.
+
+2. **Validation (rule-based, deterministic).** Does the extracted record *conform*? Rust/Postgres `CHECK` constraints are the inspiration — the rules are declarative, immutable, and fail loudly.
+
+3. **Escalation (human feedback, training data).** Things that fail validation get flagged with context ("order ID 'XYZ-99' does not exist in our system"). A human corrects it, and that becomes a labeled example for future runs.
+
+| Box | Why it exists | What to use |
+|---|---|---|
+| Extract agent | Reading unstructured → structured is exactly what LLMs are good at; few-shot examples ground it; confidence scores tell you when to escalate | Opus for complex layouts; Sonnet for routine; Haiku for pre-processing (ID extraction, language detection) |
+| Confidence gate | Extraction confidence <75%? Escalate — humans catch edge cases faster than retraining. | Score from the agent (e.g., avg field confidence, schema match) + a structural confidence check ("does this look like a valid record?") |
+| Validation rules | These are the contract with the downstream system; they must be **auditable and version-controlled** | SQL `CHECK` constraints + stored procedures, or a YAML ruleset evaluated by a library (kyverno-style); live them in the same repo as migrations |
+| Escalation queue | The human's inbox for "things the automated pipeline is unsure about." Prioritize by: dependency (an order ID missing is high-impact), frequency (see patterns), urgency. | An inbox interface showing the record, the extraction, the reason it failed/was escalated, and a quick fix form; fixes are logged and feed back into future examples |
+| Audit log | For disputes ("I never said my zip code was 90210") and GDPR, you must replay: source → extracted → validated → loaded. | One row per record per stage, immutable; `source`, `extracted_values`, `validation_result`, `load_status`, actor (AI vs human), timestamp |
+
+### Failure modes
+
+| Failure | Symptom | Mitigation |
+|---|---|---|
+| Silent bad extraction | Agent outputs plausible-looking JSON with the wrong value; confidence score doesn't catch it (the agent was confidently wrong) | Validation rules catch structural issues, but not semantic errors; use deterministic sanity checks (e.g., "if order_amount > $100K, flag for human review") + periodic spot-check audits |
+| Extraction drift over time | First 1K records extracted perfectly; source system changes format; next 1K are garbage; pipeline happily loads all of it | Monitoring: track extraction-confidence by date and by source; alert if avg confidence drops 20%; run A/B on changed sources with a human review sample |
+| Validation rules become stale | New SKU prefixes ship; validation still rejects them; escalation queue fills with false positives | Rules are code — they have a deployment process, a version, and a rollback plan, just like any database schema change; rules are also *business logic*, so the customer owns the edits |
+| Feedback loop never closes | Humans correct 100 records, but the agent still extracts the same way | Log every human correction as a labeled example; fine-tune the extraction agent monthly or add the example to few-shot; measure: is the false-rejection rate declining? |
+| Reconciliation debt | "We'll reconcile later" becomes a graveyard of escalated records no one touches; disputes arrive 6 months later | SLA: escalated records must be resolved in 5 business days or auto-reject/request resubmission from the customer; audit the age of the escalation queue weekly |
+
+### Key design decisions & trade-offs
+
+1. **ML-driven extraction vs hard-coded parsing.** Parsing (regex, DOM scraping) is fast and exact but brittle to format changes; extraction (LLM) is adaptable but slower and imperfect. Hybrid: use parsing for structured data (form fields), extraction for unstructured (email body). FDE answer: start with extraction, monitor confidence, if it drops below 85%, invest in parsing for that source.
+
+2. **Where validation lives.** *Inside* the database as `CHECK` constraints and foreign-key constraints, or *outside* in application code? Inside is auditable and guaranteed to hold; outside is flexible. Hybrid: non-negotiable rules in the DB (referential integrity), business rules in a version-controlled rules engine.
+
+3. **Confidence threshold.** 75% escalates? 85%? There's a ROI curve: at 75%, escalation volume is high and human time is wasted; at 90%, you miss real errors. Empirical answer: start at 80%, measure human-correction rate on escalated records, and tune weekly.
+
+4. **Model choice for extraction.** Opus for variable/complex formats, Sonnet for routine (invoices, standard forms), Haiku for pre-processing. One product design: route by source type.
+
+5. **Feedback loop frequency.** Daily vs. monthly model updates? Daily is slow and risks regressions; monthly is stale when volumes are high. Hybrid: continuous example collection (every human fix logged), weekly eval (test on a held-out set of new sources), monthly model refresh.
+
+**Production war story:** A customer's invoice pipeline extracted PO numbers correctly 90% of the time but with systematic bias: malformed POs ("PO-2024-0042A" written by customer A) got rejected; well-formatted POs from competitor invoicing systems got accepted and mismatched with the customer's internal ID scheme. The solution was not to retrain — it was to add a validation rule: "extracted_po_id must match pattern for our process" (i.e., `^[0-9]{4}-[0-9]{4}$`), which caught the semantic error that the extraction agent couldn't see. The lesson: ML extraction is pattern-matching; validation is where you enforce your domain's semantics. An FDE's pipeline has both layers, not one.
+
+**Cost/latency envelope:** extraction ≈ $0.015 per record (haiku pre-processing + opus extraction + validation); validation is <1ms; 100K records/month ≈ $1.5K compute + ops. Latency: 2–5s/record extraction (parallelized), DB load <100ms per batch. Queue wait for human review is hours to days depending on SLA — which is fine, because it's not on the critical path.
+
+---
+
+## Deep-dive questions for the FDE interview
+
+### Q1. Describe a production incident where an agent's assumptions about data format or schema broke mid-flight. How do you prevent it?
+
+Not covered explicitly above, but real: an agent ingests an API response and assumes a field is always present. The API adds a new pagination mode where the field is optional. Agent silently produces incomplete records. Prevention: agents should *fail loudly* on schema mismatches (type errors, missing required fields), not gracefully degrade. Use runtime type-checking (zod, pydantic) on every ingested payload, and alert on schema-mismatch rates.
+
+### Q2. You're asked to parallelize an agent's work across multiple machines. What breaks?
+
+State sharing. If runs are distributed, you need durable state (the workflow engine in Architecture 4). Naive approach: start N identical agents against the same queue → race conditions on approvals, double-execution, lost updates. Correct approach: all state writes go through a database transaction layer, agents are stateless workers, the database is the source of truth for "which step is next?" This is why Architecture 4 emphasizes persisting state — it's not just for crash-recovery, it's the foundation for parallelism.
+
+### Q3. An agent that worked perfectly in your demo — reading a Confluence export — now fails on the customer's real Confluence when ingested via their API. What's the difference, and what do you check?
+
+Export is static snapshot; API is live. Differences: encoding (export might be UTF-8, API might be UTF-16 or with character replacements), pagination (export has page-by-page structure, API might re-structure), and mutation (live API returns records as they change — an invoice's status might shift between the agent's read and its write). Mitigations: handle encoding at the ingestion boundary, confirm pagination matches agent's assumptions, and make reads idempotent so re-runs are safe.
+
+---
+
+## Quick-reference: what to reach for
+
+| Need | Reach for |
+|---|---|
+| Confidentiality + integrity of app data | AES-256-GCM via `node:crypto`, random 12-byte IV, AAD, KMS data keys |
+| Bulk data at rest in AWS | SSE-KMS (S3, with Bucket Keys), storage-level encryption (RDS/EBS) + field-level for PII |
+| Trust a webhook/token | HMAC-SHA256 + `timingSafeEqual`, or a vetted JWT/PASETO library |
+| Store passwords | argon2id (or scrypt/bcrypt) — never a fast hash |
+| Service-to-service identity | mTLS with short-lived certs (Vault PKI / mesh) |
+| Secrets at runtime | Secrets Manager / Vault fetched via platform identity; TTL cache; dynamic secrets where possible |
+| AWS API traffic from private subnets | Gateway endpoint (S3/DynamoDB, free) or interface endpoints + endpoint policies |
+| Block a hostile CIDR at the subnet | NACL deny rule (SGs can't deny) |
+| Detect AI injection | Behavioral baseline anomaly detection + audit log analysis |
+| Measure injection blast radius | Query audit logs for affected docs/users/tool calls; compute mitigation latency |
+| Extract data reliably | LLM extraction (few-shot examples, confidence scoring) + deterministic validation rules + human escalation queue |
+| Validate data without ML | Declarative rule engine (SQL constraints, YAML rules) with versioned, auditable rules |
+| Parallelize agent work | Durable state in a database; agents are stateless workers; state is the serialization point for coordination |
+| Audit agent behavior for compliance | Append-only, tamper-evident audit log (not app-writable); include source, extraction, validation, actor, timestamp; export view |
+
+---
+
 ## Architecture 5: Text-to-SQL analytics assistant
 
 **When a customer asks for this:** "Let business users ask data questions in English instead of filing tickets to the analytics team."

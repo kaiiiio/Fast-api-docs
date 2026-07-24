@@ -1,0 +1,27 @@
+# Module 11 — CS & ML Foundations (Live-Coding + ML-Fundamentals Rounds)
+
+> Level: Senior/Staff | FDE / AI-Engineer Interview Prep
+
+This module covers the CS and ML foundations that show up in FDE and AI-engineer interview loops but aren't covered elsewhere in this repo (which already has Node, LLD, machine-coding, HLD, distributed systems, databases, security, and AI-engineering). Real FDE mock interviews feature exactly this material: a live DSA coding round (binary search done right, with edge-case rigor), classical-ML fundamentals (precision/recall/F1, class imbalance, over/underfitting, the ML-vs-GenAI decision), computer vision (YOLO, bounding boxes, IoU/NMS), and the signature "walk me through RNN → Transformer and *why* each step happened" question. The rounds are not competitive-programming-hard, but they demand correctness, clear communication, cost-aware judgment, and the ability to speak to ML/DL as an architect. This module drills precisely that.
+
+## Files & Study Order
+
+Study in numerical order — the DSA files build the coding-round skills, then the ML files build the fundamentals-round judgment, and each references the ones before it.
+
+| # | File | One-line description |
+|---|------|----------------------|
+| 1 | [01_dsa_for_interviews.md](./01_dsa_for_interviews.md) | The DSA that actually appears in FDE/AI live-coding: binary search in every variant (exact, lower/upper bound, rotated, answer-space) with overflow-safe mid and termination reasoning, two pointers, sliding window, hashing patterns, stack/queue (monotonic stack, queue-from-stacks, LRU), recursion complexity, and the clarify→examples→brute-force→optimize→test communication protocol. Complete TypeScript with tests. |
+| 2 | [02_core_dsa_patterns.md](./02_core_dsa_patterns.md) | The structural patterns: trees (traversals, BST ops, LCA), graphs (adjacency repr, BFS/DFS, topological sort, Dijkstra, union-find), recursion/backtracking (subsets/permutations/N-Queens), dynamic programming (recognize→formulate→memoize→tabulate, knapsack, LCS/edit distance, greedy-vs-DP), heaps (top-K, merge-K), and intervals (merge/sweep-line — the Calendly HLD tie-in). Complete TypeScript with tests. |
+| 3 | [03_classical_ml_fundamentals.md](./03_classical_ml_fundamentals.md) | When classical ML beats GenAI (cost/latency/labels/interpretability decision table), the algorithm zoo an FDE reasons about (linear/logistic regression, trees/forests, gradient boosting/XGBoost, k-NN/k-means/SVM), the bias-variance tradeoff, over/underfitting diagnosis and fixes, regularization (L1/L2), feature engineering, and the validation discipline — train/val/test, cross-validation, and data leakage (the #1 real-world mistake). |
+| 4 | [04_ml_evaluation_and_metrics.md](./04_ml_evaluation_and_metrics.md) | The metrics interviewers grill on, with worked numeric examples: confusion matrix, precision vs recall (chosen by the cost of FP vs FN), F1/F-beta, ROC-AUC vs PR-AUC (and why PR-AUC for imbalance), accuracy's trap, threshold selection, calibration, regression metrics (MAE/RMSE/R²), class-imbalance handling (resampling/SMOTE/class weights), and ranking/retrieval metrics (precision@k, recall@k, MRR, nDCG — the RAG-eval tie-in). |
+| 5 | [05_deep_learning_and_cv_essentials.md](./05_deep_learning_and_cv_essentials.md) | Just enough DL to speak to as an architect: neural-net + backprop + vanishing-gradient intuition, the RNN → LSTM → attention → Transformer evolution and *why each step happened* (the signature FDE question), embeddings, CNNs (convolution/pooling), object detection (YOLO grid/anchors/bounding boxes, IoU and NMS in TypeScript, mAP), transfer learning/fine-tuning, and when vision/VLM beats an OCR pipeline. |
+
+## How to use this module
+
+- **Coding-round prep (files 01–02):** don't just read — *solve each problem out loud* and reproduce the TypeScript from scratch, running the tests. Binary search (all variants) and the communication protocol in file 01 are the highest-yield items; drill them until the invariant-and-termination reasoning is reflexive.
+- **ML-fundamentals prep (files 03–05):** re-read every `**Interview trap:**` and `**Production war story:**` callout — they encode the exact distinctions interviewers probe (accuracy's imbalance trap, data leakage, precision-vs-recall by cost, the RNN→Transformer causality). Practice the RNN→Transformer narrative and the ML-vs-GenAI decision aloud.
+- **Cross-references:** file 04's ranking metrics tie into RAG eval (module 08); file 02's intervals tie into the Calendly HLD (module 04); files 03–05 unify around one theme — diagnose with evidence, choose by cost/constraint, and state your reasoning and its preconditions.
+
+## Why this module exists
+
+Everything else in this repo assumes you're past the fundamentals — but FDE and AI-engineer loops explicitly re-test them, because a Forward Deployed Engineer writes correct code under mild pressure in front of a customer *and* makes sound ML/DL judgment calls (which model, which metric, which architecture) in ambiguous customer environments. These are the foundations that appear in the live-coding and ML-fundamentals rounds specifically, gathered in one place so you can walk in able to solve a rotated-binary-search cleanly while narrating your invariant, explain why PR-AUC beats accuracy on imbalanced fraud data, and tell the RNN-to-Transformer story as a chain of problems solved — the exact things those rounds grade.

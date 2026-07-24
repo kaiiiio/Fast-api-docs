@@ -56,6 +56,7 @@ A comprehensive knowledge base for building production-grade Express.js backends
 ### 08 - Background Jobs and Task Queues
 - [Queues and Brokers Fundamentals](08_background_jobs_and_task_queues/01_queues_and_brokers_fundamentals.md)
 - [Bull Queue Mastery](08_background_jobs_and_task_queues/02_bull_queue_mastery.md)
+- [🔥 BullMQ Internals & Hard Interview Questions](08_background_jobs_and_task_queues/03_bullmq_internals_and_hard_questions.md)
 - [Background Tasks vs Bull vs RabbitMQ](08_background_jobs_and_task_queues/background_tasks_vs_bull_vs_rabbitmq.md)
 - [Retry with Exponential Backoff](08_background_jobs_and_task_queues/retry_with_exponential_backoff.md)
 - [Sending Tasks from Express](08_background_jobs_and_task_queues/sending_tasks_from_express.md)
@@ -84,6 +85,7 @@ A comprehensive knowledge base for building production-grade Express.js backends
 - [AI Call Retry and Circuit Breaking](12_ai_and_llm_integration/ai_call_retry_and_circuit_breaking.md)
 - [Embedding Generation and Storage](12_ai_and_llm_integration/embedding_generation_and_storage.md)
 - [AI Cost Tracking](12_ai_and_llm_integration/ai_cost_tracking.md)
+- [🔥 LLM Systems Hard Interview Questions](12_ai_and_llm_integration/06_llm_systems_hard_interview_questions.md)
 
 ### 13 - Testing
 - [Unit Testing Services](13_testing/unit_testing_services.md)
@@ -112,6 +114,7 @@ A comprehensive knowledge base for building production-grade Express.js backends
 ### 17 - Interview Mastery
 - [How Node.js Handles Concurrency](17_interview_mastery/how_nodejs_handles_concurrency.md)
 - [Design Patterns for Express](17_interview_mastery/design_patterns_for_express.md)
+- [🔥 Hard Backend Drills — Node/Redis/Postgres/Distributed](17_interview_mastery/hard_backend_drills.md)
 
 ## 🎯 Learning Path
 

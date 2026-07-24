@@ -40,6 +40,45 @@ Interview-ready questions and answers with detailed explanations:
 - **Optimization** - Image/font optimization, performance tuning
 - **Real-World Scenarios** - Authentication, error handling, performance optimization
 
+### 4. [Fullstack Application Guide](04_nextjs_fullstack_guide.md)
+Building complete fullstack apps: App Router setup, API routes, database integration, authentication, server actions, middleware, file upload, deployment.
+
+### 5. [Backend Deep Dive](05_nextjs_backend_deep_dive.md)
+How the Next.js server layer actually works:
+- **Request Flow** - CDN → middleware → router → render → stream
+- **Runtimes** - Node.js vs Edge, when each wins, DB-from-edge traps
+- **Route Handlers** - Web Request/Response, body streams, static vs dynamic, SSE/streaming
+- **Server Actions Internals** - Next-Action protocol, security model, serialization limits
+- **The Four Caching Layers** - Request memoization, data cache, full route cache, router cache; tag-based invalidation; Next 14 vs 15 defaults
+- **Middleware In Depth** - JWT verification with jose, matchers, rewrite vs redirect, why middleware auth is only optimistic
+- **Database Patterns** - Serverless connection pooling, Prisma singleton, Data Access Layer, transactions, N+1 in RSC
+- **Streaming & RSC Payload** - Suspense streaming, parallel fetching, avoiding waterfalls
+- **Background Jobs** - after(), queues (QStash/Inngest/BullMQ), cron, webhook signature verification
+- **Error Handling & Validation** - Expected vs unexpected errors, error.tsx, Zod at trust boundaries
+
+### 6. [Hydration & Rendering Internals](06_hydration_and_rendering_internals.md)
+What happens between HTML arriving and the page being interactive:
+- **Full Rendering Pipeline** - RSC payload → SSR HTML → paint → hydration → interactive
+- **What Hydration Is** - DOM adoption, delegated events, the uncanny valley
+- **Hydration Mismatches** - All five causes (non-determinism, browser-only state, invalid nesting, extensions, env drift) with fixes
+- **Selective & Progressive Hydration** - React 18 Suspense-based out-of-order hydration
+- **RSC vs SSR** - Why they're different things and how they compose
+- **Boundaries & Serialization** - 'use client' as a module boundary, the children/slot pattern, serializable props
+- **Hydration Performance** - Pushing 'use client' to leaves, dynamic imports, measuring INP/TBT
+- **Interview Q&A** - URL-to-interactive walkthrough and more
+
+### 7. [Production Backend Patterns](07_production_backend_patterns.md)
+The operational half of a fullstack role:
+- **Authentication Architecture** - JWT vs DB sessions, cookie flags, defense-in-depth check placement, Auth.js
+- **Authorization** - RBAC, ownership-in-the-query, DTOs, multi-tenancy
+- **Security Checklist** - Injection, XSS, CSRF, SSRF, secrets in bundles, CSP, middleware-bypass CVE
+- **Rate Limiting** - Shared-store sliding window on serverless
+- **File Uploads** - Presigned URL pattern, validation, size limits
+- **Observability** - Structured logs, request IDs, OpenTelemetry, Sentry
+- **Testing** - Route handlers as functions, action tests, Testcontainers, E2E for RSC
+- **Deployment & Scaling** - Vercel vs self-hosted, ISR across replicas, WebSockets, graceful shutdown
+- **System-Design Scenarios** - Blog, checkout, fresh-but-fast feed, stale-data and slow-API debugging walkthroughs
+
 ## 🎯 Quick Reference
 
 ### Data Fetching Methods

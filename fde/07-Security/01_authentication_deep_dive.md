@@ -665,3 +665,151 @@ function safeEqual(a: string, b: string): boolean {
 - **Validate** every claim: signature, exp/nbf, iss, aud.
 
 The consistent theme: **push authority to a place you can revoke, and never trust attacker-controllable inputs (alg, kid, session id) to decide how you verify.**
+
+---
+
+### Q23. Explain cryptographic agility and why you must never hardcode an algorithm. Show a real customer scenario.
+
+**Answer:**
+
+**Cryptographic agility** is the ability to *swap the underlying crypto algorithm without rewriting application code* — the algorithm is a *configuration*, not hardwired into branches or comments. This matters because (a) algorithms age, (b) new breaks emerge, (c) compliance requirements evolve, and (d) you need to migrate a fleet from old-to-new without downtime.
+
+**The dangerous patterns:**
+
+```typescript
+// VULNERABLE — algorithm baked in stone
+if (env === 'prod') {
+  return jwt.sign(payload, secret, { algorithm: 'HS256' }); // hardcoded
+} else {
+  return jwt.sign(payload, secret, { algorithm: 'HS256' }); // even here
+}
+
+// Later, when HS256 is broken or policy says "RS256 only":
+// You must recompile, re-test, re-deploy every language/region.
+```
+
+**Correct — algorithm from config:**
+
+```typescript
+const ALG = process.env.JWT_ALGORITHM ?? 'RS256'; // environment-determined
+const KEY_TYPE = ALG.startsWith('HS') ? 'symmetric' : 'asymmetric';
+
+export function signToken(payload: object): string {
+  const key = KEY_TYPE === 'symmetric' ? process.env.JWT_SECRET! : process.env.JWT_PRIVATE_KEY!;
+  return jwt.sign(payload, key, { algorithm: ALG });
+}
+
+export async function verifyToken(token: string): Promise<object | null> {
+  const key = KEY_TYPE === 'symmetric' ? process.env.JWT_SECRET! : process.env.JWT_PUBLIC_KEY!;
+  try {
+    return jwt.verify(token, key, { algorithms: [ALG] });
+  } catch { return null; }
+}
+```
+
+**Production war story:** A customer running HS256 across their entire fleet received a compliance mandate to move to RS256 (asymmetric for federation with partners' IdPs). The auth library had hardcoded `HS256` in three places across two codebases. The migration took six weeks, three separate deployments, and a coordinated secret rotation because they couldn't just flip a config — they rewrote code, tested in staging, fought with backwards compatibility of old HS256 tokens. The fix would have been algorithm as environment config with a phased rotation where tokens from both algorithms were accepted during the grace period:
+
+```typescript
+const ACCEPTED_ALGOS = process.env.JWT_ACCEPTED.split(','); // e.g., 'HS256,RS256'
+const NEW_ALGO = process.env.JWT_SIGN_ALGORITHM; // e.g., 'RS256'
+
+jwt.verify(token, determineKey(token.header), { algorithms: ACCEPTED_ALGOS }); // accept both
+jwt.sign(payload, newKey, { algorithm: NEW_ALGO }); // sign with new
+```
+
+The moral: **every cryptographic choice must be environment-driven, and rotation must support a phased acceptance window.** This is how you migrate a fleet without a flag day.
+
+---
+
+### Q24. How do you handle token audience and subject mismatches in a multi-service architecture, and what bugs emerge?
+
+**Answer:**
+
+In a microservices topology, tokens flow between services: the API gateway mints tokens for clients, clients present them to service A, service A calls service B. Each hop needs to verify the token is *valid for this service*, not just "signed by an IdP I trust."
+
+**Bugs that happen when audience scoping is sloppy:**
+
+1. **Service A accepts tokens minted for Service B.** Both trust the same IdP, both verify signature, but neither checks `aud`. An attacker obtains a token scoped to write the support-ticket API, then hits the admin-events API with it. Both verify, both are compromised.
+
+2. **A service trusts the wrong issuer entirely.** Typo in `iss` — the service checks for `https://idp.example.com` but ingests a token from `https://idp.example.co` (attacker's domain). Similar issuers, both "reasonable," silent failure.
+
+3. **Subject confusion in M2M.** When service A calls service B, A includes `sub: service-a` in its auth header. B's logs show "service-a" did it, which is technically true but masks that *a specific request from a client* caused service A to call B. The `sub` doesn't tell you *whose* data was touched.
+
+**Correct pattern:**
+
+```typescript
+// Config per service
+const SERVICE_CONFIG = {
+  gateway: { aud: 'gateway', expected_iss: 'https://auth.example.com' },
+  support_api: { aud: 'support-api', expected_iss: 'https://auth.example.com' },
+  admin_api: { aud: 'admin-api', expected_iss: 'https://auth.example.com' },
+};
+
+export async function verifyForService(token: string, serviceName: keyof typeof SERVICE_CONFIG): Promise<Claims> {
+  const cfg = SERVICE_CONFIG[serviceName];
+  const claims = jwt.verify(token, getPublicKey(cfg.expected_iss), {
+    audience: cfg.aud,      // MUST match; reject if not
+    issuer: cfg.expected_iss, // explicit iss check
+    algorithms: ['RS256'],
+  }) as Claims;
+
+  // For M2M: trace back through the chain
+  if (claims.sub?.startsWith('service-')) {
+    // This is a service-to-service call. Log the *original* client (upstream).
+    const upstreamClient = claims.upstream_sub ?? 'unknown';
+    logger.info('service call', { from: claims.sub, original: upstreamClient, resource: claims.resource });
+  }
+  return claims;
+}
+
+// Service A calling Service B includes a trace:
+const tokenForB = jwt.sign({
+  sub: 'service-a',
+  aud: 'service-b',
+  upstream_sub: originalClientId, // the client that started this chain
+  resource: 'customer:42',
+}, signingKey, { algorithm: 'RS256' });
+```
+
+**Interview trap:** "We use a single token for all services, so it must be fine." That logic is backwards — it makes the vulnerability *widespread*. The correct logic: different services, different tokens with different `aud`. The audit trail becomes much cleaner, and a compromised service cannot use its own tokens to impersonate a call to another service.
+
+---
+
+### Q25. Describe the attack surface of session cookies in a browser SPA vs mobile app.
+
+**Answer:**
+
+Session cookies in the browser are governed by the Same-Origin Policy (SOP) — a built-in browser sandbox. Cookies from `example.com` can only be read/modified by JavaScript running at `example.com`. This is *table stakes* security, but it's also *transparent* — most developers have never thought about what's actually protecting their session.
+
+**Browser SPA:**
+- **Readable by:** JS on the same origin (SameSite protects against cross-origin *sending*, not cross-origin *reading*; if you're on `example.com`, you already own the page).
+- **XSS threat:** any XSS on the page can read the HttpOnly cookie *indirectly* — it can't access the bytes, but it can make authenticated requests *using* the cookie. An XSS stealing the `Authorization` header carrying a JWT is an exfiltration that does not require HttpOnly-bypass.
+- **CSRF protection:** `SameSite=Lax/Strict` + CSRF token for state-changing operations. The cookie is auto-sent, but the token must come from a preceding GET that the attacker cannot see (SOP).
+
+**Mobile app:**
+- **Readability:** depends entirely on whether you store in `localStorage` (readable by JS, but no auto-send), app's secure storage (iOS Keychain, Android Keystore — readable only by the app binary), or HTTP-only cookies (auto-sent by the native HTTP stack like a browser, but must be enabled per-request and not all clients honor it).
+- **No SOP in the classical sense.** Native apps do not inherit the SOP; instead, they must implement it via certificate pinning (Q16 in encryption notes) — verifying the server's TLS cert fingerprint so a compromised network path (WiFi, proxy, ISP) cannot intercept.
+- **Interception risk:** a rogue proxy or WiFi AP with a forged cert can capture tokens in transit unless certificate pinning is active.
+
+**The asymmetry:** browsers protect via SOP (implicit); mobile apps protect via pinning (explicit, easy to get wrong). A mobile app without pinning is as vulnerable as a browser over an untrusted network.
+
+**Practical deployment:**
+
+```typescript
+// Browser: HttpOnly, SameSite, CSRF token
+res.cookie('__Host-sid', sessionId, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'lax',
+  path: '/',
+});
+
+// Mobile app: certificate pinning for TLS, store token in secure storage
+// (iOS Keychain / Android Keystore managed by the native HTTP library)
+
+// Web code calling a backend: check SameSite on the response and CSRF token alignment
+app.post('/api/risky', csrfCheck, (req, res) => { /* ... */ });
+```
+
+The interview-worthy insight: **browser SOP is an invisible guardian; mobile SOP is a visible contract you must implement.** An FDE shipping a mobile client without pinning has handed every WiFi-hooking attacker a way to capture tokens.
+
